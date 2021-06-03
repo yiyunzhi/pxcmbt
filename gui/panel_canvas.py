@@ -37,11 +37,19 @@ class CanvasPanel2(wx.Panel):
         evt.Skip()
 
 
+class CanvasSetting:
+    def __init__(self):
+        self.mFScale = 1.0
+        self.mFMinScale = 0.3
+        self.mFMaxScale = 3.0
+
+
 class CanvasPanel(wx.ScrolledWindow):
     def __init__(self, parent, wx_id, size=wx.DefaultSize):
         wx.ScrolledWindow.__init__(self, parent, wx_id, (0, 0), size=size, style=wx.SUNKEN_BORDER)
         self.uuid = None
         self.role = EnumPanelRole.STATE_CHART_CANVAS
+        self.setting = CanvasSetting()
         self.nodes = {}
         self.srcNode = None
         self.srcPort = None
@@ -51,10 +59,13 @@ class CanvasPanel(wx.ScrolledWindow):
         self.maxWidth = CANVAS_MAX_W
         self.maxHeight = CANVAS_MAX_H
         self.canvasToolbarMode = EnumCanvasToolbarMode.POINTER
-        self.SetBackgroundColour(wx.LIGHT_GREY)
         self.SetVirtualSize((self.maxWidth, self.maxHeight))
         self.SetScrollRate(20, 20)
-
+        # better ui
+        #self.SetScrollbars(5, 5, 100, 100)
+        self.SetBackgroundColour(wx.LIGHT_GREY)
+        #self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+        #self.SetDoubleBuffered(True)
         # create a PseudoDC to record our drawing
         self.pdc = wx.adv.PseudoDC()
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
@@ -73,16 +84,22 @@ class CanvasPanel(wx.ScrolledWindow):
     def set_canvas_toolbar_mode(self, mode: EnumCanvasToolbarMode):
         self.canvasToolbarMode = mode
 
+    def set_scale(self, scale):
+        if scale != 0:
+            self.setting.mFScale = scale
+        else:
+            self.setting.mFScale = 1
+        # todo: all node scaled
+        # self.update_virtual_size()
+
     def on_mouse_wheel(self, evt: wx.MouseEvent):
-        _k_ctrl_pressed = wx.GetKeyState(wx.WXK_CONTROL)
-        print('on_mouse_wheel')
-        if _k_ctrl_pressed:
-            self.SetScale(0.5, 0.5)
-            _wheel_axis = evt.GetWheelAxis()
-            _wheel_delta = evt.GetWheelDelta()
-            _wheel_rt = evt.GetWheelRotation()
-            print(_wheel_axis, _wheel_delta, _wheel_rt, evt.IsPageScroll(), evt.GetMagnification(),
-                  evt.GetLinesPerAction())
+        if evt.ControlDown():
+            _scale = self.setting.mFScale
+            _scale += evt.GetWheelRotation() / (evt.GetWheelDelta() * 10)
+            if _scale < self.setting.mFMinScale: _scale = self.setting.mFMinScale
+            if _scale > self.setting.mFMaxScale: _scale = self.setting.mFMaxScale
+            self.set_scale(_scale)
+            self.Refresh(False)
 
         evt.Skip()
 
