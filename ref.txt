@@ -1,0 +1,15 @@
+https://github.com/jchanvfx/NodeGraphQt
+
+https://github.com/firodj/wxOgl
+
+https://github.com/iwbnwif/wxShapeFramework
+
+PySimpleGUI or dearPyGUI
+
+------------MBT-------------------------
+https://altom.gitlab.io/altwalker/altwalker/overview.html#model-based-testing
+
+http://staff.washington.edu/jon/pymodel/www/
+http://mit.bme.hu/~micskeiz/pages/modelbased_testing.html
+-----MBT altwalker-----------
+https://gitlab.com/altom/altwalker/altwalker/-/blob/develop/altwalker/generate.py
