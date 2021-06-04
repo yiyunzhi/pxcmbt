@@ -3,7 +3,7 @@ import wx
 from application.define import *
 
 
-class Wire(object):
+class WireShape(object):
 
     def __init__(self, pnt1, pnt2, dir_):
         self.pnt1 = pnt1

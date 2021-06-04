@@ -3,10 +3,10 @@ import math
 import wx
 
 from application.define import *
-from .wire import Wire
+from .shape_wire import WireShape
 
 
-class Port( object ):
+class PortShape( object ):
 
     def __init__( self, text, pos, radius, type_, node ):
         self._text = text

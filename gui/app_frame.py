@@ -23,7 +23,7 @@ import sys, os, traceback, threading
 import wx
 import wx.lib.agw.aui as aui
 from .assets_images import *
-from .panel_canvas import CanvasPanel
+from .panel_canvas import StateChartCanvasViewPanel
 from .panel_feature import GuiFeaturePanel
 from .panel_props_container import PropContainerPanel
 from .panel_console import ConsolePanel
@@ -32,7 +32,7 @@ from application.log_logger import get_logger
 from application.define import EnumAppSignals, EnumPanelRole
 
 
-# from ps_lib.ps_core import helper
+#todo: integration with tcs.
 
 class WxLog:
     def WriteText(self, text):
@@ -70,7 +70,7 @@ class FrameMain(wx.Frame):
         # Attributes
         self._currentCanvasPane = None
         self._canvasPanelCache = dict()
-        self._canvasToolbar = None
+        self._toolbar = None
         self._propsPaneCaptionFmt = "%s Properties"
         self._currentPropPane = None
         self._textCount = 1
@@ -98,8 +98,8 @@ class FrameMain(wx.Frame):
         self.CreateStatusBar()
         self.GetStatusBar().SetStatusText("Ready")
         self.create_menu_bar()
-        self.create_tool_bar()
-        self._show_canvas_toolbar(False)
+        # self.create_tool_bar()
+        self._show_toolbar(False)
         self.build_panes()
         self.bind_events()
         self.Fit()
@@ -107,14 +107,13 @@ class FrameMain(wx.Frame):
         wx.CallAfter(self.SendSizeEvent)
         self._consolePane.write_info_content('---App Initial finished---')
 
-    def _show_canvas_toolbar(self, state=True):
-        if self._canvasToolbar is not None:
-            self._auiMgr.ShowPane(self._canvasToolbar, state)
+    def _show_toolbar(self, state=True):
+        pass
 
     def _set_canvas_toolbar_mode(self, mode: EnumCanvasToolbarMode):
-        _tool = self._canvasToolbar.FindToolByIndex(mode)
+        _tool = self._toolbar.FindToolByIndex(mode)
         if _tool is not None:
-            self._canvasToolbar.ToggleTool(_tool.GetId(), True)
+            self._toolbar.ToggleTool(_tool.GetId(), True)
 
     def except_hook(self, etype, value, tb):
         """
@@ -168,69 +167,22 @@ class FrameMain(wx.Frame):
 
     def create_tool_bar(self):
         _tb_icon_size = wx.Size(16, 16)
-        _tb4 = aui.AuiToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
-                              agwStyle=aui.AUI_TB_DEFAULT_STYLE | aui.AUI_TB_OVERFLOW)
-        _tb4.SetToolBitmapSize(_tb_icon_size)
-        _pointer_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_pointer_bk.png', wx.BITMAP_TYPE_PNG).Scale(
-            *_tb_icon_size).ConvertToBitmap()
-        _state_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_state.png', wx.BITMAP_TYPE_PNG).Scale(
-            *_tb_icon_size).ConvertToBitmap()
-        _state_sub_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_substate.png', wx.BITMAP_TYPE_PNG).Scale(
-            *_tb_icon_size).ConvertToBitmap()
-        _init_state_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_initstate.png', wx.BITMAP_TYPE_PNG).Scale(
-            *_tb_icon_size).ConvertToBitmap()
-        _final_state_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_finalstate.png', wx.BITMAP_TYPE_PNG).Scale(
-            *_tb_icon_size).ConvertToBitmap()
-        _wire_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_wire.png', wx.BITMAP_TYPE_PNG).Scale(
-            *_tb_icon_size).ConvertToBitmap()
-        _note_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_note.png', wx.BITMAP_TYPE_PNG).Scale(
-            *_tb_icon_size).ConvertToBitmap()
-
-        _tb4_pointer = wx.NewIdRef()
-        _tb4_state = wx.NewIdRef()
-        _tb4_sub_state = wx.NewIdRef()
-        _tb4_init_state = wx.NewIdRef()
-        _tb4_final_state = wx.NewIdRef()
-        _tb4_wire_state = wx.NewIdRef()
-        _tb4_note = wx.NewIdRef()
-        _tb4.AddRadioTool(_tb4_pointer, "Pointer", _pointer_shape_icon,
-                          disabled_bitmap=wx.NullBitmap, short_help_string='Pointer',
-                          client_data=EnumCanvasToolbarMode.POINTER)
-        _tb4.AddRadioTool(_tb4_state, "State", _state_shape_icon,
-                          disabled_bitmap=wx.NullBitmap, short_help_string='State',
-                          client_data=EnumCanvasToolbarMode.STATE)
-        _tb4.AddRadioTool(_tb4_sub_state, "Sub State", _state_sub_shape_icon,
-                          disabled_bitmap=wx.NullBitmap, short_help_string='Sub State',
-                          client_data=EnumCanvasToolbarMode.SUB_STATE)
-        _tb4.AddRadioTool(_tb4_init_state, "Init State", _init_state_shape_icon,
-                          disabled_bitmap=wx.NullBitmap, short_help_string='Init State',
-                          client_data=EnumCanvasToolbarMode.INIT_STATE)
-        _tb4.AddRadioTool(_tb4_final_state, "Final State", _final_state_shape_icon,
-                          disabled_bitmap=wx.NullBitmap, short_help_string='Final State',
-                          client_data=EnumCanvasToolbarMode.FINAL_STATE)
-        _tb4.AddRadioTool(_tb4_wire_state, "Connection", _wire_shape_icon,
-                          disabled_bitmap=wx.NullBitmap, short_help_string='Connection',
-                          client_data=EnumCanvasToolbarMode.CONNECTION)
-        _tb4.AddRadioTool(_tb4_note, "Note", _note_shape_icon,
-                          disabled_bitmap=wx.NullBitmap, short_help_string='Note',
-                          client_data=EnumCanvasToolbarMode.NOTE)
-        _tb4.AddSeparator()
-        _tb4.Realize()
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.POINTER),
-                  _tb4_pointer)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.STATE), _tb4_state)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.SUB_STATE),
-                  _tb4_sub_state)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.INIT_STATE),
-                  _tb4_init_state)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.FINAL_STATE),
-                  _tb4_final_state)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.CONNECTION),
-                  _tb4_wire_state)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.NOTE), _tb4_note)
-        self._canvasToolbar = _tb4
-        self._auiMgr.AddPane(_tb4, aui.AuiPaneInfo().Name("CanvasTool").Caption("General Tools").
-                             ToolbarPane().Left().Layer(0).Position(0).BestSize((-1, 24)))
+        _tb = aui.AuiToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
+                             agwStyle=aui.AUI_TB_DEFAULT_STYLE | aui.AUI_TB_OVERFLOW)
+        _tb.SetToolBitmapSize(_tb_icon_size)
+        # _pointer_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_pointer_bk.png', wx.BITMAP_TYPE_PNG).Scale(
+        #     *_tb_icon_size).ConvertToBitmap()
+        # _tb_pointer = wx.NewIdRef()
+        # _tb.AddRadioTool(_tb_pointer, "Pointer", _pointer_shape_icon,
+        #                   disabled_bitmap=wx.NullBitmap, short_help_string='Pointer',
+        #                   client_data=EnumCanvasToolbarMode.POINTER)
+        _tb.AddSeparator()
+        _tb.Realize()
+        # self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.POINTER),
+        #          _tb_pointer)
+        self._toolbar = _tb
+        self._auiMgr.AddPane(_tb, aui.AuiPaneInfo().Name("CanvasTool").Caption("General Tools").
+                             ToolbarPane().Left().Layer(1).Position(0).BestSize((-1, 24)))
 
     def create_menu_bar(self):
         # create menu
@@ -285,17 +237,11 @@ class FrameMain(wx.Frame):
                 self._panelFeature.highlight_item_by_uuid(_pane.uuid)
             if _pane.role == EnumPanelRole.STATE_CHART_CANVAS:
                 self._currentCanvasPane = _pane
-                self._auiMgr.ShowPane(self._canvasToolbar, True)
-                self._set_canvas_toolbar_mode(_pane.get_canvas_toolbar_mode())
-
+                self._auiMgr.ShowPane(self._toolbar, True)
         evt.Skip()
 
     def on_window_closed(self, evt):
         evt.Skip()
-
-    def on_canvas_tool_changed(self, evt, flag):
-        if self._currentCanvasPane is not None:
-            self._currentCanvasPane.set_canvas_toolbar_mode(flag)
 
     def on_menu_new_clicked(self, evt):
         _win = wx.MDIChildFrame(self, -1, "Child Window: %d" % self._childWinCount, style=wx.DEFAULT_FRAME_STYLE)
@@ -309,7 +255,7 @@ class FrameMain(wx.Frame):
         if not _exist.IsOk():
             _path = self._panelFeature.get_item_path_by_uuid(uuid)
             _caption = '%s' % _path
-            _panel = CanvasPanel(self, wx.ID_ANY)
+            _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
             _panel.uuid = uuid
             _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
                 DestroyOnClose(False).Center().Snappable().Dockable(). \
@@ -324,7 +270,6 @@ class FrameMain(wx.Frame):
             else:
                 self._auiMgr.ShowPane(_panel, True)
         _panel.SetFocus()
-        self._set_canvas_toolbar_mode(_panel.get_canvas_toolbar_mode())
 
     def on_ext_sig_prop_show_required(self, sender, uuid):
         self._propContainerPane.toggle_panel_by_uuid(uuid)

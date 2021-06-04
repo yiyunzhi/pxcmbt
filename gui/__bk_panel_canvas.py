@@ -1,13 +1,11 @@
-import time
 import wx
 import wx.adv
 import wx.lib.agw.aui as aui
 import json
 from gui.define_gui import *
 from application.define import EnumPanelRole
-from application.shape_wire import WireShape
-from application.shape_node import BaseNodeShape
-from application.shape_state_node import RectNodeShape
+from application.wire import Wire
+from application.node import Node
 
 
 # todo: canvas scale, selection, selected
@@ -16,25 +14,9 @@ from application.shape_state_node import RectNodeShape
 
 class CanvasSetting:
     def __init__(self):
-        self.mGCDCEnabled = False
         self.mFScale = 1.0
-        self.mFMinScale = 0.2
-        self.mFMaxScale = 4.0
-        self.mStyle = EnumCanvasStyle.STYLE_DEFAULT
-        self.mBackgroundColor: wx.Colour = wx.Colour(240, 240, 240)
-        self.mCommonHoverColor: wx.Colour = wx.Colour(120, 120, 255)
-        self.mGradientFrom: wx.Colour = wx.Colour(240, 240, 240)
-        self.mGradientTo: wx.Colour = wx.Colour(200, 200, 255)
-        self.mGridSize: wx.Size = wx.Size(20, 20)
-        self.mGridLineMult: int = 5
-        self.mGridColor: wx.Colour = wx.Colour(200, 200, 200)
-        self.mGridStyle: int = wx.SHORT_DASH
-        self.mShadowOffset: wx.RealPoint = wx.RealPoint(4, 4)
-        self.mShadowFill: wx.Brush = wx.Brush(wx.Colour(150, 150, 150, 128), wx.BRUSHSTYLE_SOLID)
-        # self.mLstAcceptedShapes = list()
-        # self.mIPrintHAlign: int = EnumHAlign.halignCENTER
-        # self.mIPrintVAlign: int = EnumVAlign.valignMIDDLE
-        # self.mIPrintMode: int = EnumPrintMode.prnFIT_TO_MARGINS
+        self.mFMinScale = 0.3
+        self.mFMaxScale = 3.0
 
 
 class StateChartCanvasViewPanel(wx.Panel):
@@ -48,7 +30,6 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.canvasToolbar = self._create_toolbar()
         self.mainSizer.Add(self.canvasToolbar, 0, wx.EXPAND)
         self.mainSizer.Add(self.canvas, 1, wx.EXPAND)
-        self._bind_event()
         self.SetSizer(self.mainSizer)
         self.Layout()
 
@@ -117,7 +98,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.Bind(wx.EVT_TOOL,
                   lambda evt: self.on_tool_changed(evt, EnumCanvasToolbarMode.CONNECTION),
                   _tb_wire_state)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.on_tool_changed(evt, EnumCanvasToolbarMode.NOTE),
+        self.Bind(wx.EVT_TOOL, lambda evt: self.canvas.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.NOTE),
                   _tb_note)
         _tb.ToggleTool(_tb_pointer, True)
         self.on_tool_changed(None, EnumCanvasToolbarMode.POINTER)
@@ -127,22 +108,14 @@ class StateChartCanvasViewPanel(wx.Panel):
         pass
 
     def on_tool_changed(self, evt, flag):
-        self.canvas.set_canvas_tool_mode(flag)
-
-    def process_key_down(self, k_code):
-        if k_code == wx.WXK_ESCAPE:
-            _tool=self.canvasToolbar.FindToolByIndex(EnumCanvasToolbarMode.POINTER)
-            if _tool is not None:
-                self.canvasToolbar.ToggleTool(_tool.GetId(), True)
-                self.on_tool_changed(None, EnumCanvasToolbarMode.POINTER)
-                self.canvasToolbar.Refresh()
+        print('--->on_tool_changed')
+        self.canvas.set_canvas_toolbar_mode(flag)
 
 
 class Canvas(wx.ScrolledWindow):
     def __init__(self, parent, wx_id, size=wx.DefaultSize):
         wx.ScrolledWindow.__init__(self, parent, wx_id, (0, 0), size=size, style=wx.SUNKEN_BORDER)
         self.setting = CanvasSetting()
-        self.currentProcessingItem = None
         self.nodes = {}
         self.srcNode = None
         self.srcPort = None
@@ -152,16 +125,15 @@ class Canvas(wx.ScrolledWindow):
         self.maxWidth = CANVAS_MAX_W
         self.maxHeight = CANVAS_MAX_H
         self.canvasToolbarMode = EnumCanvasToolbarMode.POINTER
-        # self.SetVirtualSize((self.maxWidth, self.maxHeight))
+        self.SetVirtualSize((self.maxWidth, self.maxHeight))
         self.SetScrollRate(20, 20)
         # better ui
         # self.SetScrollbars(5, 5, 100, 100)
-        # self.SetBackgroundColour(wx.LIGHT_GREY)
-        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
-        self.SetDoubleBuffered(True)
+        self.SetBackgroundColour(wx.LIGHT_GREY)
+        # self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+        # self.SetDoubleBuffered(True)
         # create a PseudoDC to record our drawing
         self.pdc = wx.adv.PseudoDC()
-        self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SCROLLWIN, self.on_scroll)
@@ -172,27 +144,14 @@ class Canvas(wx.ScrolledWindow):
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_UP, self.on_key_up)
 
-    def get_style(self):
-        return self.setting.mStyle
-
-    def add_style(self, style):
-        self.setting.mStyle |= style
-
-    def remove_style(self, style):
-        self.setting.mStyle &= ~style
-
-    def has_style(self, style):
-        return (self.setting.mStyle & style) != 0
-
-    def get_scale(self):
-        return self.setting.mFScale
-
-    def get_canvas_tool_mode(self):
+    def get_canvas_toolbar_mode(self):
         return self.canvasToolbarMode
 
-    def set_canvas_tool_mode(self, mode: EnumCanvasToolbarMode):
-        print('mode=',mode)
+    def set_canvas_toolbar_mode(self, mode: EnumCanvasToolbarMode):
         self.canvasToolbarMode = mode
+
+    def on_canvas_tool_changed(self, evt, flag):
+        print('canvas toolbar changed', evt, flag)
 
     def set_scale(self, scale):
         if scale != 0:
@@ -201,11 +160,6 @@ class Canvas(wx.ScrolledWindow):
             self.setting.mFScale = 1
         # todo: all node scaled
         # self.update_virtual_size()
-
-    def on_resize(self, evt):
-        if self.has_style(EnumCanvasStyle.STYLE_GRADIENT_BACKGROUND):
-            self.Refresh(False)
-        evt.Skip()
 
     def on_mouse_wheel(self, evt: wx.MouseEvent):
         if evt.ControlDown():
@@ -218,15 +172,10 @@ class Canvas(wx.ScrolledWindow):
 
         evt.Skip()
 
-    def on_key_down(self, evt:wx.KeyEvent):
-        _k_code=evt.GetKeyCode()
-        _parent=self.GetParent()
-        if _parent:
-            _parent.process_key_down(_k_code)
+    def on_key_down(self, evt):
         evt.Skip()
 
     def on_key_up(self, evt):
-        #print('canvas key_up')
         evt.Skip()
 
     def on_scroll(self, evt):
@@ -244,15 +193,8 @@ class Canvas(wx.ScrolledWindow):
         _x_delta, _y_delta = self.GetScrollPixelsPerUnit()
         rect.Offset(-(_x_view * _x_delta), -(_y_view * _y_delta))
 
-    def add_item(self, item: BaseNodeShape):
-        _nid = item.get_id()
-        self.pdc.SetId(_nid)
-        item.draw(self.pdc)
-        self.pdc.SetIdBounds(_nid, item.get_bounding_box())
-        self.nodes[_nid] = item
-
-    def ___append_node(self, label, pos, ins, outs, colour=None):
-        _node = BaseNodeShape(self, label, colour, rect=wx.Rect(pos.x, pos.y, 150, 100), ins=ins, outs=outs)
+    def append_node(self, label, pos, ins, outs, colour=None):
+        _node = Node(self, label, colour, rect=wx.Rect(pos.x, pos.y, 150, 100), ins=ins, outs=outs)
         _n_id = _node.GetId()
         self.pdc.SetId(_n_id)
         _node.draw(self.pdc)
@@ -261,36 +203,24 @@ class Canvas(wx.ScrolledWindow):
         return _node
 
     def on_left_down(self, evt):
+        print('left down', self.HasFocus())
         _pt = evt.GetPosition()
         _win_pt = self.convert_coords(_pt)
-        _mode = self.canvasToolbarMode
-        if _mode == EnumCanvasToolbarMode.POINTER:
-            pass
-        elif _mode == EnumCanvasToolbarMode.CONNECTION:
-            self.srcNode = self.HitTest(_win_pt)
-            if self.srcNode is not None:
-                self.srcPort = self.srcNode.HitTest(_win_pt.x, _win_pt.y)
-                if self.srcPort is not None:
-                    self.srcPort.Disconnect()
-                    self.tmpWire = WireShape(self.srcNode.GetRect().GetPosition() + self.srcPort.GetPosition(), _pt,
-                                             self.srcPort.GetType())
-            self.lastPnt = _pt
-        else:
-            if _mode == EnumCanvasToolbarMode.STATE:
-                self.currentProcessingItem = RectNodeShape(self, size=wx.Size(100, 50), pos=_win_pt)
-            elif _mode == EnumCanvasToolbarMode.SUB_STATE:
-                pass
-            elif _mode == EnumCanvasToolbarMode.INIT_STATE:
-                pass
-            elif _mode == EnumCanvasToolbarMode.FINAL_STATE:
-                pass
+        self.srcNode = self.HitTest(_win_pt)
+        if self.srcNode is not None:
+            self.srcPort = self.srcNode.HitTest(_win_pt.x, _win_pt.y)
+            if self.srcPort is not None:
+                self.srcPort.Disconnect()
+                self.tmpWire = Wire(self.srcNode.GetRect().GetPosition() + self.srcPort.GetPosition(), _pt,
+                                    self.srcPort.GetType())
+        self.lastPnt = _pt
         evt.Skip()
 
     def on_motion(self, evt):
-        _pt = evt.GetPosition()
-        _win_pt = self.convert_coords(_pt)
         if not evt.LeftIsDown() or self.srcNode is None:
             return
+        _pt = evt.GetPosition()
+        _win_pt = self.convert_coords(_pt)
         if self.srcPort is None:
             _d_pt = _pt - self.lastPnt
             _rect = self.pdc.GetIdBounds(self.srcNode.GetId())
@@ -314,18 +244,10 @@ class Canvas(wx.ScrolledWindow):
         evt.Skip()
 
     def on_left_up(self, evt):
-        _pt = evt.GetPosition()
-        _win_pt = self.convert_coords(_pt)
-        if self.canvasToolbarMode in [EnumCanvasToolbarMode.STATE,
-                                      EnumCanvasToolbarMode.SUB_STATE,
-                                      EnumCanvasToolbarMode.INIT_STATE,
-                                      EnumCanvasToolbarMode.FINAL_STATE]:
-            if self.currentProcessingItem is not None:
-                self.currentProcessingItem.set_position(_win_pt)
-                self.add_item(self.currentProcessingItem)
-                self.Refresh(False)
         # Attempt to make a connection.
         if self.srcNode is not None:
+            _pt = evt.GetPosition()
+            _win_pt = self.convert_coords(_pt)
             _dst_node = self.HitTest(_win_pt)
             if _dst_node is not None:
                 _dst_port = _dst_node.HitTest(_win_pt.x, _win_pt.y)
@@ -350,59 +272,30 @@ class Canvas(wx.ScrolledWindow):
         return self.nodes[hits[0]] if hits else None
 
     def on_paint(self, event):
-        _t1 = time.time()
         # Create a buffered paint DC.  It will create the real wx.PaintDC and
         # then blit the bitmap to it when dc is deleted.
         _dc = wx.BufferedPaintDC(self)
-        if self.setting.mGCDCEnabled:
-            _dc = wx.GCDC(_dc)
+        _dc = wx.GCDC(_dc)
 
-        # Use PrepareDC to set position correctly.
+        # Use PrepateDC to set position correctly.
         self.PrepareDC(_dc)
 
-        # draw the background
-        self.draw_background(_dc)
+        # We need to clear the dc BEFORE calling PrepareDC.
+        _bg = wx.Brush(self.GetBackgroundColour())
+        _dc.SetBackground(_bg)
+        _dc.Clear()
 
-        # Create a clipping rect from our position and size and the Update Region.
+        # Create a clipping rect from our position and size and the Update
+        # Region.
         _xv, _yv = self.GetViewStart()
         _dx, _dy = self.GetScrollPixelsPerUnit()
-        _x, _y = (_xv * _dx, _yv * _dy)
+        x, y = (_xv * _dx, _yv * _dy)
         _rgn = self.GetUpdateRegion()
-        _rgn.Offset(_x, _y)
+        _rgn.Offset(x, y)
         _rect = _rgn.GetBox()
 
         # Draw to the dc using the calculated clipping rect.
         self.pdc.DrawToDCClipped(_dc, _rect)
-        print('repaint %.2F ms' % ((time.time() - _t1) * 100))
-
-    def draw_background(self, dc):
-        # erase the background
-        if self.has_style(EnumCanvasStyle.STYLE_GRADIENT_BACKGROUND):
-            _bk_size = self.GetVirtualSize() + wx.Size(self.setting.mGridSize.x, self.setting.mGridSize.y)
-            if self.setting.mFScale != 1.0:
-                dc.GradientFillLinear(wx.Rect(wx.Point(0, 0),
-                                              wx.Size(_bk_size.x / self.setting.mFScale,
-                                                      _bk_size.y / self.setting.mFScale)),
-                                      self.setting.mGradientFrom, self.setting.mGradientTo, wx.SOUTH)
-            else:
-                dc.GradientFillLinear(wx.Rect(wx.Point(0, 0), _bk_size),
-                                      self.setting.mGradientFrom, self.setting.mGradientTo, wx.SOUTH)
-        else:
-            _brush = wx.Brush(self.setting.mBackgroundColor)
-            dc.SetBackground(_brush)
-            dc.Clear()
-        # draw the grid
-        if self.has_style(EnumCanvasStyle.STYLE_SHOW_GRID):
-            _line_dist = self.setting.mGridSize.x * self.setting.mGridLineMult
-            if _line_dist * self.setting.mFScale > 3:
-                _grid_rect = wx.Rect(wx.Point(0, 0), self.GetVirtualSize() + self.setting.mGridSize)
-                _max_x = int(_grid_rect.GetRight() / self.setting.mFScale)
-                _max_y = int(_grid_rect.GetBottom() / self.setting.mFScale)
-                dc.SetPen(wx.Pen(self.setting.mGridColor, 1, self.setting.mGridStyle))
-                for x in range(_grid_rect.GetLeft(), _max_x, _line_dist):
-                    dc.DrawLine(x, 0, x, _max_y)
-                for y in range(_grid_rect.GetTop(), _max_y, _line_dist):
-                    dc.DrawLine(0, y, _max_x, y)
 
     def draw_wire(self, wire, pnt1=None, pnt2=None):
         rect1 = wire.GetRect()
