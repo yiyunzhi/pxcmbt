@@ -13,10 +13,15 @@ class BaseNodeShape:
         self.connectionStyle = EnumShapeConnectionStyle.ANYWHERE
         self.style = EnumShapeStyle.STYLE_DEFAULT
         self.position = wx.DefaultPosition
+        self.relativePosition = wx.DefaultPosition
         self.userData = None
         self.borderPen = None
         self.fillBrush = None
-        self.childShape = dict()
+        self.childShapes = dict()
+        self.borderPen = wx.TRANSPARENT_PEN
+        self.fillBrush = wx.TRANSPARENT_BRUSH
+        self.hoverBorderPen = wx.TRANSPARENT_PEN
+        self.hoverFillBrush = wx.TRANSPARENT_BRUSH
         self.isVisible = True
         self.isSelected = False
         self.isMouseOvered = False
@@ -33,8 +38,15 @@ class BaseNodeShape:
     def add_style(self, style):
         self.style |= style
 
+    def has_children(self):
+        return len(self.childShapes) != 0
+
     def add_child(self, child):
-        pass
+        assert isinstance(child, BaseNodeShape)
+        _id = child.get_id()
+        if _id not in self.childShapes:
+            child.set_position(self.position)
+            self.childShapes.update({_id: child})
 
     def remove_child(self, child):
         if isinstance(child, BaseNodeShape):
@@ -43,16 +55,16 @@ class BaseNodeShape:
             _id = child
         else:
             return
-        if _id in self.childShape:
-            self.childShape.pop(_id)
+        if _id in self.childShapes:
+            self.childShapes.pop(_id)
 
-    def get_children(self):
-        return list(self.childShape.values())
+    def get_children_list(self):
+        return list(self.childShapes.values())
 
     def get_child(self, child_id):
-        return self.childShape.get(child_id)
+        return self.childShapes.get(child_id)
 
-    def get_parent(self, parent):
+    def get_parent(self):
         return self.parent
 
     def set_parent(self, parent):
@@ -92,6 +104,15 @@ class BaseNodeShape:
 
     def get_position(self):
         return self.position
+
+    def set_relative_position(self, pos):
+        self.relativePosition = pos
+
+    def get_relative_position(self):
+        return self.relativePosition
+
+    def contains(self, pt):
+        raise NotImplemented()
 
     def get_bounding_box(self):
         raise NotImplemented()

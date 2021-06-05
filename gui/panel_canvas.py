@@ -7,7 +7,7 @@ from gui.define_gui import *
 from application.define import EnumPanelRole
 from application.shape_wire import WireShape
 from application.shape_node import BaseNodeShape
-from application.shape_state_node import RectNodeShape
+from application.shape_state_node import StateNodeShape
 
 
 # todo: canvas scale, selection, selected
@@ -131,7 +131,7 @@ class StateChartCanvasViewPanel(wx.Panel):
 
     def process_key_down(self, k_code):
         if k_code == wx.WXK_ESCAPE:
-            _tool=self.canvasToolbar.FindToolByIndex(EnumCanvasToolbarMode.POINTER)
+            _tool = self.canvasToolbar.FindToolByIndex(EnumCanvasToolbarMode.POINTER)
             if _tool is not None:
                 self.canvasToolbar.ToggleTool(_tool.GetId(), True)
                 self.on_tool_changed(None, EnumCanvasToolbarMode.POINTER)
@@ -191,7 +191,7 @@ class Canvas(wx.ScrolledWindow):
         return self.canvasToolbarMode
 
     def set_canvas_tool_mode(self, mode: EnumCanvasToolbarMode):
-        print('mode=',mode)
+        print('mode=', mode)
         self.canvasToolbarMode = mode
 
     def set_scale(self, scale):
@@ -218,15 +218,15 @@ class Canvas(wx.ScrolledWindow):
 
         evt.Skip()
 
-    def on_key_down(self, evt:wx.KeyEvent):
-        _k_code=evt.GetKeyCode()
-        _parent=self.GetParent()
+    def on_key_down(self, evt: wx.KeyEvent):
+        _k_code = evt.GetKeyCode()
+        _parent = self.GetParent()
         if _parent:
             _parent.process_key_down(_k_code)
         evt.Skip()
 
     def on_key_up(self, evt):
-        #print('canvas key_up')
+        # print('canvas key_up')
         evt.Skip()
 
     def on_scroll(self, evt):
@@ -251,15 +251,6 @@ class Canvas(wx.ScrolledWindow):
         self.pdc.SetIdBounds(_nid, item.get_bounding_box())
         self.nodes[_nid] = item
 
-    def ___append_node(self, label, pos, ins, outs, colour=None):
-        _node = BaseNodeShape(self, label, colour, rect=wx.Rect(pos.x, pos.y, 150, 100), ins=ins, outs=outs)
-        _n_id = _node.GetId()
-        self.pdc.SetId(_n_id)
-        _node.draw(self.pdc)
-        self.pdc.SetIdBounds(_n_id, _node.GetRect())
-        self.nodes[_n_id] = _node
-        return _node
-
     def on_left_down(self, evt):
         _pt = evt.GetPosition()
         _win_pt = self.convert_coords(_pt)
@@ -277,7 +268,7 @@ class Canvas(wx.ScrolledWindow):
             self.lastPnt = _pt
         else:
             if _mode == EnumCanvasToolbarMode.STATE:
-                self.currentProcessingItem = RectNodeShape(self, size=wx.Size(100, 50), pos=_win_pt)
+                self.currentProcessingItem = StateNodeShape(self, size=wx.Size(100, 50), pos=_win_pt)
             elif _mode == EnumCanvasToolbarMode.SUB_STATE:
                 pass
             elif _mode == EnumCanvasToolbarMode.INIT_STATE:
@@ -289,6 +280,26 @@ class Canvas(wx.ScrolledWindow):
     def on_motion(self, evt):
         _pt = evt.GetPosition()
         _win_pt = self.convert_coords(_pt)
+        _mode = self.canvasToolbarMode
+        if _mode == EnumCanvasToolbarMode.POINTER:
+            # handle hover event
+            _hit_item = self.HitTest(_win_pt)
+            if _hit_item:
+                _id = _hit_item.get_id()
+                if _id in self.nodes and not _hit_item.isMouseOvered:
+                    _hit_item.isMouseOvered = True
+                    _hit_item.draw(self.pdc)
+                    _rect = self.pdc.GetIdBounds(_id)
+                    self.offset_rect(_rect)
+                    self.RefreshRect(_rect, False)
+            else:
+                for k, v in self.nodes.items():
+                    if v.isMouseOvered:
+                        v.isMouseOvered = False
+                        v.draw(self.pdc)
+                        _rect = self.pdc.GetIdBounds(v.get_id())
+                        self.offset_rect(_rect)
+                        self.RefreshRect(_rect, False)
         if not evt.LeftIsDown() or self.srcNode is None:
             return
         if self.srcPort is None:
@@ -346,8 +357,8 @@ class Canvas(wx.ScrolledWindow):
 
     def HitTest(self, pt):
         _idxs = self.pdc.FindObjects(pt[0], pt[1], CANVAS_HIT_RADIUS)
-        hits = [idx for idx in _idxs if idx in self.nodes]
-        return self.nodes[hits[0]] if hits else None
+        _hits = [idx for idx in _idxs if idx in self.nodes]
+        return self.nodes[_hits[0]] if _hits else None
 
     def on_paint(self, event):
         _t1 = time.time()
