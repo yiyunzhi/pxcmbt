@@ -5,9 +5,10 @@ import wx.lib.agw.aui as aui
 import json
 from gui.define_gui import *
 from application.define import EnumPanelRole
-from application.shape_wire import WireShape
+from application.shape_wire import WireNodeShape
 from application.shape_node import BaseNodeShape
 from application.shape_state_node import StateNodeShape
+from .utils_helper import *
 
 
 # todo: canvas scale, selection, selected
@@ -138,21 +139,78 @@ class StateChartCanvasViewPanel(wx.Panel):
                 self.canvasToolbar.Refresh()
 
 
+class CanvasRepositionModifier:
+    def __init__(self, item, org_pos):
+        self._item = item
+        self._orgPos = org_pos
+        self._curPos = org_pos
+        self._modifiedRect = wx.Rect()
+
+    def get_item(self):
+        return self._item
+
+    def get_org_position(self):
+        return self._orgPos
+
+    def get_current_position(self):
+        return self._curPos
+
+    def update_position(self, pos):
+        if self._item is None:
+            return
+        _bb = self._item.get_bounding_box()
+        self._curPos = pos
+        self._modifiedRect = self._modifiedRect.Union(wx.Rect(pos, _bb.GetSize()))
+
+    def get_modified_bounding_box(self):
+        return self._modifiedRect
+
+
+class CanvasPanModifier:
+    def __init__(self, start_at):
+        self.startPos = start_at
+        self.curPos = start_at
+        self.prevCursor = None
+
+    def get_previous_cursor(self):
+        return self.prevCursor
+
+    def set_previous_cursor(self, cursor):
+        self.prevCursor = cursor
+
+    def update_position(self, pos):
+        self.curPos = pos
+
+    def get_diff(self, reverse=False):
+        if not reverse:
+            return self.curPos - self.startPos
+        else:
+            return self.startPos - self.curPos
+
+
+class CanvasConnectionModifier:
+    def __init__(self, src_node):
+        self.srcNode = src_node
+        self.dstNode = None
+        self.srcPort = None
+        self.tmpWire = None
+        self.lastPnt = wx.Point(0, 0)
+
+
 class Canvas(wx.ScrolledWindow):
     def __init__(self, parent, wx_id, size=wx.DefaultSize):
         wx.ScrolledWindow.__init__(self, parent, wx_id, (0, 0), size=size, style=wx.SUNKEN_BORDER)
         self.setting = CanvasSetting()
         self.currentProcessingItem = None
         self.nodes = {}
-        self.srcNode = None
-        self.srcPort = None
-        self.tmpWire = None
-        self.lastPnt = wx.Point(0, 0)
+        self.repositionModifier = None
+        self.panScrollModifier = None
+        self.connectionModifier = None
         # ui initial setting
         self.maxWidth = CANVAS_MAX_W
         self.maxHeight = CANVAS_MAX_H
         self.canvasToolbarMode = EnumCanvasToolbarMode.POINTER
-        # self.SetVirtualSize((self.maxWidth, self.maxHeight))
+        self.SetVirtualSize((self.maxWidth, self.maxHeight))
         self.SetScrollRate(20, 20)
         # better ui
         # self.SetScrollbars(5, 5, 100, 100)
@@ -171,6 +229,8 @@ class Canvas(wx.ScrolledWindow):
         self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_UP, self.on_key_up)
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
+        self.Bind(wx.EVT_MIDDLE_UP, self.on_middle_up)
 
     def get_style(self):
         return self.setting.mStyle
@@ -205,6 +265,21 @@ class Canvas(wx.ScrolledWindow):
     def on_resize(self, evt):
         if self.has_style(EnumCanvasStyle.STYLE_GRADIENT_BACKGROUND):
             self.Refresh(False)
+        evt.Skip()
+
+    def on_middle_down(self, evt: wx.MouseEvent):
+        _pt = evt.GetPosition()
+        _win_pt = self.convert_coords(_pt)
+        if not evt.LeftDown():
+            self.panScrollModifier = CanvasPanModifier(_pt)
+            self.panScrollModifier.set_previous_cursor(self.GetCursor())
+            self.SetCursor(wx.Cursor(wx.CURSOR_HAND))
+        evt.Skip()
+
+    def on_middle_up(self, evt):
+        _previous_cursor = self.panScrollModifier.get_previous_cursor()
+        self.SetCursor(_previous_cursor)
+        self.panScrollModifier = None
         evt.Skip()
 
     def on_mouse_wheel(self, evt: wx.MouseEvent):
@@ -255,17 +330,30 @@ class Canvas(wx.ScrolledWindow):
         _pt = evt.GetPosition()
         _win_pt = self.convert_coords(_pt)
         _mode = self.canvasToolbarMode
+        _hit_item = self.HitTest(_win_pt)
         if _mode == EnumCanvasToolbarMode.POINTER:
-            pass
+            if _hit_item.has_style(EnumShapeStyle.REPOSITION):
+                self.repositionModifier = CanvasRepositionModifier(_hit_item, _win_pt)
+                self.repositionModifier.update_position(_win_pt)
         elif _mode == EnumCanvasToolbarMode.CONNECTION:
-            self.srcNode = self.HitTest(_win_pt)
-            if self.srcNode is not None:
-                self.srcPort = self.srcNode.HitTest(_win_pt.x, _win_pt.y)
-                if self.srcPort is not None:
-                    self.srcPort.Disconnect()
-                    self.tmpWire = WireShape(self.srcNode.GetRect().GetPosition() + self.srcPort.GetPosition(), _pt,
-                                             self.srcPort.GetType())
-            self.lastPnt = _pt
+            if self.connectionModifier is None and _hit_item is not None:
+                if isinstance(_hit_item, StateNodeShape):
+                    self.connectionModifier = CanvasConnectionModifier(_hit_item)
+                    _node_conn_style = self.connectionModifier.srcNode.get_connection_style()
+                    if _node_conn_style == EnumShapeConnectionStyle.ANYWHERE:
+                        self.connectionModifier.lastPnt = _win_pt
+                        self.connectionModifier.tmpWire = WireNodeShape(self, wx.ID_ANY)
+                        self.connectionModifier.tmpWire.borderPen.SetStyle(wx.PENSTYLE_SHORT_DASH)
+                        self.connectionModifier.tmpWire.borderPen.SetWidth(2)
+                    elif _node_conn_style == EnumShapeConnectionStyle.ONLY_ON_PORT:
+                        self.connectionModifier.srcPort = self.srcNode.HitTest(_win_pt.x, _win_pt.y)
+                        if self.connectionModifier.srcPort is not None:
+                            self.connectionModifier.srcPort.Disconnect()
+                            self.connectionModifier.tmpWire = WireShape(
+                                self.srcNode.GetRect().GetPosition() + self.srcPort.GetPosition(), _pt,
+                                self.srcPort.GetType())
+                    elif _node_conn_style == EnumShapeConnectionStyle.NONE:
+                        self.connectionModifier.lastPnt = _pt
         else:
             if _mode == EnumCanvasToolbarMode.STATE:
                 self.currentProcessingItem = StateNodeShape(self, size=wx.Size(100, 50), pos=_win_pt)
@@ -277,56 +365,78 @@ class Canvas(wx.ScrolledWindow):
                 pass
         evt.Skip()
 
-    def on_motion(self, evt):
+    def on_motion(self, evt: wx.MouseEvent):
         _pt = evt.GetPosition()
         _win_pt = self.convert_coords(_pt)
         _mode = self.canvasToolbarMode
+        _hit_item = self.HitTest(_win_pt)
         if _mode == EnumCanvasToolbarMode.POINTER:
             # handle hover event
-            _hit_item = self.HitTest(_win_pt)
-            if _hit_item:
-                _id = _hit_item.get_id()
-                if _id in self.nodes and not _hit_item.isMouseOvered:
-                    _hit_item.isMouseOvered = True
-                    _hit_item.draw(self.pdc)
-                    _rect = self.pdc.GetIdBounds(_id)
-                    self.offset_rect(_rect)
-                    self.RefreshRect(_rect, False)
-            else:
-                for k, v in self.nodes.items():
-                    if v.isMouseOvered:
-                        v.isMouseOvered = False
-                        v.draw(self.pdc)
-                        _rect = self.pdc.GetIdBounds(v.get_id())
+            if not evt.Dragging():
+                if _hit_item:
+                    # handle the hit item hovered
+                    _id = _hit_item.get_id()
+                    if not _hit_item.isMouseOvered:
+                        _hit_item.isMouseOvered = True
+                        _hit_item.draw(self.pdc)
+                        _rect = self.pdc.GetIdBounds(_id)
                         self.offset_rect(_rect)
                         self.RefreshRect(_rect, False)
-        if not evt.LeftIsDown() or self.srcNode is None:
-            return
-        if self.srcPort is None:
-            _d_pt = _pt - self.lastPnt
-            _rect = self.pdc.GetIdBounds(self.srcNode.GetId())
-            self.pdc.TranslateId(self.srcNode.GetId(), _d_pt[0], _d_pt[1])
-            _rect_2 = self.pdc.GetIdBounds(self.srcNode.GetId())
-            _rect = _rect.Union(_rect_2)
-            self.offset_rect(_rect)
-            self.RefreshRect(_rect, False)
-            self.lastPnt = _pt
-            self.srcNode.SetRect(_rect_2)
+                else:
+                    # handle the hovered item unhovered
+                    for k, v in self.nodes.items():
+                        if v.isMouseOvered:
+                            v.isMouseOvered = False
+                            v.draw(self.pdc)
+                            _rect = self.pdc.GetIdBounds(v.get_id())
+                            self.offset_rect(_rect)
+                            self.RefreshRect(_rect, False)
 
-            # Redraw wires
-            for port in self.srcNode.GetPorts():
-                for wire in port.GetWires():
-                    _pt1 = wire.srcNode.GetRect().GetPosition() + wire.srcPort.GetPosition()
-                    _pt2 = wire.dstNode.GetRect().GetPosition() + wire.dstPort.GetPosition()
-                    self.draw_wire(wire, _pt1, _pt2)
+            else:
+                # handle the canvas move while middle dragging
+                if self.panScrollModifier is not None:
+                    self.panScrollModifier.update_position(_pt)
+                    _diff = self.panScrollModifier.get_diff(reverse=True)
+                    _win_diff = self.convert_coords(_diff)
+                    _x_per, _y_per = self.GetScrollPixelsPerUnit()
+                    _x_scroll_pos = math.floor(_win_diff.x / _x_per)
+                    _y_scroll_pos = math.floor(_win_diff.y / _y_per)
+                    if _x_scroll_pos < 0: _x_scroll_pos = 0
+                    if _y_scroll_pos < 0: _y_scroll_pos = 0
+                    self.Scroll(_x_scroll_pos, _y_scroll_pos)
+                # handle the shape move
+                if self.repositionModifier is not None:
+                    _item = self.repositionModifier.get_item()
+                    self._redraw_node_at(_item, _win_pt)
 
-        elif self.tmpWire is not None:
-            self.draw_wire(self.tmpWire, pnt2=_win_pt)
+        elif _mode == EnumCanvasToolbarMode.CONNECTION:
+            if evt.Dragging() and self.connectionModifier is not None:
+                # handle the mouse motion in connection mode
+                _src_node_conn_style = self.connectionModifier.srcNode.get_connection_style()
+                if _src_node_conn_style == EnumShapeConnectionStyle.ANYWHERE:
+                    if not self.connectionModifier.srcNode.contains(_win_pt):
+                        _intersection_pt = self.connectionModifier.srcNode.get_bb_intersection_point_along_center(
+                            _win_pt)
+                        if _intersection_pt:
+                            self.connectionModifier.lastPnt = _intersection_pt
+                            self._redraw_wire_at(self.connectionModifier.tmpWire, _intersection_pt, _win_pt)
+                if _hit_item:
+                    if isinstance(_hit_item, StateNodeShape):
+                        self.connectionModifier.dstNode = _hit_item
+                        _dst_node_conn_style = _hit_item.get_connection_style()
+                        if _dst_node_conn_style == EnumShapeConnectionStyle.ANYWHERE:
+                            if self.connectionModifier.tmpWire and _hit_item.contains(_win_pt):
+                                self.connectionModifier.tmpWire.borderPen.SetStyle(wx.PENSTYLE_SOLID)
+                else:
+                    if self.connectionModifier.tmpWire:
+                        self.connectionModifier.tmpWire.borderPen.SetStyle(wx.PENSTYLE_SHORT_DASH)
+
         evt.Skip()
 
     def on_left_up(self, evt):
         _pt = evt.GetPosition()
         _win_pt = self.convert_coords(_pt)
+        _hit_item = self.HitTest(_win_pt)
         if self.canvasToolbarMode in [EnumCanvasToolbarMode.STATE,
                                       EnumCanvasToolbarMode.SUB_STATE,
                                       EnumCanvasToolbarMode.INIT_STATE,
@@ -336,23 +446,41 @@ class Canvas(wx.ScrolledWindow):
                 self.add_item(self.currentProcessingItem)
                 self.Refresh(False)
         # Attempt to make a connection.
-        if self.srcNode is not None:
-            _dst_node = self.HitTest(_win_pt)
-            if _dst_node is not None:
-                _dst_port = _dst_node.HitTest(_win_pt.x, _win_pt.y)
-                if _dst_port is not None and self.srcPort.GetType() != _dst_port.GetType() and self.srcNode.GetId() != _dst_port.GetId():
-                    self.srcPort.Connect(_dst_port)
+        elif self.canvasToolbarMode == EnumCanvasToolbarMode.CONNECTION:
+            if _hit_item is not None:
+                if self.connectionModifier is not None and isinstance(_hit_item, StateNodeShape):
+                    self.connectionModifier.dstNode = _hit_item
+                    _node_conn_style = self.connectionModifier.dstNode.get_connection_style()
+                    if _node_conn_style == EnumShapeConnectionStyle.ANYWHERE:
+                        _intersection_pt = _hit_item.get_bb_intersection_point_along_center(_win_pt,
+                                                                                            include_extend=True)
+                        print(_intersection_pt, _win_pt)
+                        # if _intersection_pt is None:
+                        #    _intersection_pt=_win_pt
+                        if _intersection_pt is not None:
+                            _wire = WireNodeShape(self, wx.ID_ANY)
+                            _wire.borderPen.SetStyle(wx.PENSTYLE_SOLID)
+                            _wire.borderPen.SetWidth(2)
+                            _wire.srcPoint = self.connectionModifier.lastPnt
+                            _wire.dstPoint = _intersection_pt
+                            self.add_item(_wire)
+                    elif _node_conn_style == EnumShapeConnectionStyle.ONLY_ON_PORT:
+                        _dst_port = _hit_item.HitTest(_win_pt.x, _win_pt.y)
+                        if _dst_port is not None and self.connectionModifier.srcPort.GetType() != _dst_port.GetType() and self.connectionModifier.srcNode.GetId() != _dst_port.GetId():
+                            self.connectionModifier.srcPort.Connect(_dst_port)
 
-        # Erase the temp wire.
-        if self.tmpWire is not None:
-            _rect = self.pdc.GetIdBounds(self.tmpWire.GetId())
-            self.pdc.RemoveId(self.tmpWire.GetId())
-            self.offset_rect(_rect)
-            self.RefreshRect(_rect, False)
+            # Erase the temp wire.
+            if self.connectionModifier is not None:
+                if self.connectionModifier.tmpWire is not None:
+                    _rect = self.pdc.GetIdBounds(self.connectionModifier.tmpWire.get_id())
+                    self.pdc.RemoveId(self.connectionModifier.tmpWire.get_id())
+                    self.offset_rect(_rect)
+                    self.RefreshRect(_rect, False)
+        elif self.canvasToolbarMode == EnumCanvasToolbarMode.POINTER:
+            if self.repositionModifier is not None:
+                self.repositionModifier = None
 
-        self.srcNode = None
-        self.srcPort = None
-        self.tmpWire = None
+        self.connectionModifier = None
         evt.Skip()
 
     def HitTest(self, pt):
@@ -384,7 +512,7 @@ class Canvas(wx.ScrolledWindow):
 
         # Draw to the dc using the calculated clipping rect.
         self.pdc.DrawToDCClipped(_dc, _rect)
-        print('repaint %.2F ms' % ((time.time() - _t1) * 100))
+        print('repaint use %.2F ms' % ((time.time() - _t1) * 100))
 
     def draw_background(self, dc):
         # erase the background
@@ -415,26 +543,38 @@ class Canvas(wx.ScrolledWindow):
                 for y in range(_grid_rect.GetTop(), _max_y, _line_dist):
                     dc.DrawLine(0, y, _max_x, y)
 
-    def draw_wire(self, wire, pnt1=None, pnt2=None):
-        rect1 = wire.GetRect()
-        if pnt1 is not None:
-            wire.pnt1 = pnt1
-        if pnt2 is not None:
-            wire.pnt2 = pnt2
-        rect2 = wire.GetRect()
-        rect = rect1.Union(rect2)
-        self.offset_rect(rect)
+    def _redraw_wire_at(self, wire, pt1=None, pt2=None):
+        _rect1 = wire.get_bounding_box()
+        if pt1 is not None:
+            wire.srcPoint = pt1
+        if pt2 is not None:
+            wire.dstPoint = pt2
+        _rect2 = wire.get_bounding_box()
+        _rect = _rect1.Union(_rect2)
+        self.offset_rect(_rect)
+        self.pdc.ClearId(wire.get_id())
+        wire.draw(self.pdc)
+        self.RefreshRect(_rect, False)
 
-        self.pdc.ClearId(wire.GetId())
-        wire.Draw(self.pdc)
-        self.RefreshRect(rect, False)
+    def _redraw_node_at(self, node, pt=None):
+        _rect1 = node.get_bounding_box()
+        node.set_position(pt)
+        _rect2 = node.get_bounding_box()
+        _rect = _rect1.Union(_rect2)
+        self.offset_rect(_rect)
+        # before redraw the id must be cleared, then call draw
+        self.pdc.ClearId(node.get_id())
+        for x in node.get_children_list():
+            self.pdc.ClearId(x.get_id())
+        node.draw(self.pdc)
+        self.RefreshRect(_rect, False)
 
-    def Load(self, filePath):
+    def load(self, filePath):
         with open(filePath, 'r') as f:
             data = json.load(f)
             for nodeData in data:
                 props = nodeData['properties']
-                node = self.append_node(
+                node = self.add_item(
                     props['name'],
                     wx.Point(props['x'], props['y']),
                     nodeData['ins'].keys(),

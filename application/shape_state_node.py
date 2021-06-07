@@ -1,85 +1,15 @@
 import wx
 from wx.adv import PseudoDC
-from .shape_node import BaseNodeShape
+from .shape_rect_node import RectNodeShape
+from .shape_text_node import TextNodeShape
 from gui.define_gui import EnumShapeConnectionStyle
-
-
-class RectNodeShape(BaseNodeShape):
-    def __init__(self, parent, sh_id=wx.ID_ANY, size=wx.DefaultSize, pos=wx.DefaultPosition):
-        BaseNodeShape.__init__(self, parent, sh_id)
-        self.borderPen = wx.Pen(wx.BLACK, 1)
-        self.fillBrush = wx.Brush(wx.LIGHT_GREY)
-        self.size = size
-        self.position = pos
-        self.cornerRadius = 0
-
-    def set_corner_radius(self, radius):
-        self.cornerRadius = radius
-
-    def get_center(self):
-        _rect = self.get_bounding_box()
-        return wx.Point(_rect.GetLeft() + _rect.GetWidth() / 2, _rect.GetTop() + _rect.GetHeight() / 2)
-
-    def contains(self, pt):
-        _rect = self.get_bounding_box()
-        return _rect.Contains(pt)
-
-    def get_bounding_box(self):
-        return wx.Rect(self.position, self.size)
-
-    def draw(self, pdc: PseudoDC):
-        _x, _y, _w, _h = self.get_bounding_box()
-        pdc.SetId(self._id)
-        pdc.SetPen(self.borderPen)
-        pdc.SetBrush(wx.Brush(self.fillBrush))
-        pdc.DrawRoundedRectangle(_x, _y, _w, _h, self.cornerRadius)
-        pdc.SetIdBounds(self._id, self.get_bounding_box())
-
-
-class TextNodeShape(RectNodeShape):
-    def __init__(self, text, parent, sh_id=wx.ID_ANY, size=wx.DefaultSize, pos=wx.DefaultPosition):
-        RectNodeShape.__init__(self, parent, sh_id, size, pos)
-        self.fillBrush = wx.TRANSPARENT_BRUSH
-        self.borderPen = wx.BLUE_PEN
-        self.text = text
-        self.lineHeight = 12
-        self.fontSize = 12
-        self.textBoldEnabled = True
-        self.font = wx.Font(self.fontSize, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
-        self.textColor = wx.Colour('#333')
-        self.update_size()
-
-    def get_text_size(self):
-        _dc = wx.ScreenDC()
-        _dc.SetFont(self.font)
-        _w, _h = _dc.GetMultiLineTextExtent(self.text)
-        return wx.Size(_w, _h)
-
-    def update_size(self):
-        if self.textBoldEnabled:
-            self.font.SetWeight(wx.BOLD)
-        self.size = self.get_text_size()
-
-    def get_bounding_box(self):
-        return wx.Rect(self.position + self.relativePosition, self.size)
-
-    def draw(self, pdc: PseudoDC):
-        self.update_size()
-        _x, _y, _w, _h = self.get_bounding_box()
-        pdc.SetId(self._id)
-        pdc.SetPen(self.borderPen)
-        pdc.SetBrush(wx.Brush(self.fillBrush))
-        pdc.DrawRoundedRectangle(_x, _y, _w, _h, self.cornerRadius)
-        pdc.SetTextForeground(self.textColor)
-        pdc.SetFont(self.font)
-        pdc.DrawText(self.text, _x, _y)
-        pdc.SetIdBounds(self._id, self.get_bounding_box())
 
 
 class StateNodeShape(RectNodeShape):
     def __init__(self, parent, sh_id=wx.ID_ANY, title='TitleState', size=wx.DefaultSize, pos=wx.DefaultPosition):
         RectNodeShape.__init__(self, parent, sh_id, size, pos)
         # todo: has style auto round corner
+        # todo: in function contains implements, if round corner contains the given point
         self.connectionStyle = EnumShapeConnectionStyle.ANYWHERE
         self.borderPen = wx.Pen(wx.BLACK, 1)
         self.fillBrush = wx.Brush(wx.Colour(170, 217, 233))
@@ -111,7 +41,6 @@ class StateNodeShape(RectNodeShape):
         _x, _y, _w, _h = self.get_bounding_box()
         pdc.SetId(self._id)
         if self.isMouseOvered:
-            print('-->mouse overed')
             _pen = self.hoverBorderPen
             _fillBrush = self.hoverFillBrush
         else:

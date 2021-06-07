@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-import os, sys, platform, uuid, bitstring
+import os, sys, platform,math, uuid, bitstring
 import psutil
 import wx
 from application.define import APP_CONSOLE_TIME_WX_FMT
@@ -157,3 +157,51 @@ def util_chars2uint8s(chars):
 def util_uint82int(uint8s: list):
     _fmt = ','.join(['uint:8'] * len(uint8s))
     return bitstring.pack(_fmt, *uint8s).uint
+
+
+def util_distance(pt1: wx.RealPoint, pt2: wx.RealPoint):
+    _diff_x = pt2.x - pt1.x
+    _diff_y = pt2.y - pt1.y
+    return math.sqrt(pow(_diff_x, 2) + pow(_diff_y, 2))
+
+
+def util_lines_intersection(from1, to1, from2, to2, include_extend=False, use_float=False):
+    """
+    Function to calculate the intersection point between two lines.
+    line1: from1 -> to1, line2: from2-> to2. sometimes the intersection located the line extend
+    this will be calculated if include_extend is true.
+    :param from1: Point
+    :param to1: Point
+    :param from2: Point
+    :param to2: Point
+    :param include_extend: if calculate the intersection on the extend
+    :param use_float: if use float data type
+    :return: Point or RealPoint
+    """
+    # create line 1 info
+    _a1 = to1.y - from1.y
+    _b1 = from1.x - to1.x
+    _c1 = -_a1 * from1.x - _b1 * from1.y
+    # create line 2 info
+    _a2 = to2.y - from2.y
+    _b2 = from2.x - to2.x
+    _c2 = -_a2 * from2.x - _b2 * from2.y
+    # check, whether the lines are parallel...
+    _ka = _a1 / _a2
+    _kb = _b1 / _b2
+    if _ka == _kb: return None
+    # find intersection point
+    _xi = ((_b1 * _c2 - _c1 * _b2) / (_a1 * _b2 - _a2 * _b1))
+    _yi = (-(_a1 * _c2 - _a2 * _c1) / (_a1 * _b2 - _a2 * _b1))
+
+    if not include_extend:
+        if (((from1.x - _xi) * (_xi - to1.x) >= 0) and
+                ((from2.x - _xi) * (_xi - to2.x) >= 0) and
+                ((from1.y - _yi) * (_yi - to1.y) >= 0) and
+                ((from2.y - _yi) * (_yi - to2.y) >= 0)):
+            return wx.Point(_xi, _yi) if not use_float else wx.RealPoint(_xi, _yi)
+        else:
+            return None
+    else:
+        return wx.Point(_xi, _yi) if not use_float else wx.RealPoint(_xi, _yi)
+

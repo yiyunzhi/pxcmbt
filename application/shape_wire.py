@@ -1,46 +1,34 @@
 import wx
-
 from application.define import *
+from .shape_node import BaseNodeShape
 
 
-class WireShape(object):
+class WireNodeShape(BaseNodeShape):
+    def __init__(self, parent, sh_id, src_pt=wx.DefaultPosition, dst_pt=wx.DefaultPosition):
+        BaseNodeShape.__init__(self, parent, sh_id)
+        self.borderPen = wx.Pen(wx.BLACK, 1)
+        self.srcPoint = src_pt
+        self.dstPoint = dst_pt
 
-    def __init__(self, pnt1, pnt2, dir_):
-        self.pnt1 = pnt1
-        self.pnt2 = pnt2
-        self._id = wx.NewId()
-        self.dir = dir_
+    def contains(self, pt):
+        return False
 
-        # HAXXOR
-        self.pen = wx.Pen(WIRE_COLOUR, WIRE_THICKNESS)
+    def get_bounding_box(self):
+        _min_x = min(self.srcPoint[0], self.dstPoint[0])
+        _min_y = min(self.srcPoint[1], self.dstPoint[1])
+        _size = self.dstPoint - self.srcPoint
+        _rect = wx.Rect(_min_x - 10, _min_y, abs(_size[0]) + 20, abs(_size[1]))
+        return _rect.Inflate(self.borderPen.GetWidth(), self.borderPen.GetWidth())
 
-    def GetId(self):
-        return self._id
-
-    def SetId(self, id_):
-        self._id = id_
-
-    def Draw(self, dc):
-        dc.SetId(self._id)
-
-        # HAXXOR for source / destination drawing direction.
-        sign = 1
-        if self.dir == PORT_TYPE_IN:
-            sign = -1
-
-        pnts = []
-        pnts.append(self.pnt1)
-        pnts.append(self.pnt1 + wx.Point(10 * sign, 0))
-        pnts.append(self.pnt2 - wx.Point(10 * sign, 0))
-        pnts.append(self.pnt2)
-        dc.SetPen(self.pen)
-        dc.DrawSpline(pnts)
-
-        dc.SetIdBounds(self._id, self.GetRect())
-
-    def GetRect(self):
-        minX = min(self.pnt1[0], self.pnt2[0])
-        minY = min(self.pnt1[1], self.pnt2[1])
-        size = self.pnt2 - self.pnt1
-        rect = wx.Rect(minX - 10, minY, abs(size[0]) + 20, abs(size[1]))
-        return rect.Inflate(self.pen.GetWidth(), self.pen.GetWidth())
+    def draw(self, pdc):
+        pdc.SetId(self._id)
+        # for source / destination drawing direction.
+        _sign = 1
+        _pts = list()
+        _pts.append(self.srcPoint)
+        _pts.append(self.srcPoint + wx.Point(10 * _sign, 0))
+        _pts.append(self.dstPoint - wx.Point(10 * _sign, 0))
+        _pts.append(self.dstPoint)
+        pdc.SetPen(self.borderPen)
+        pdc.DrawSpline(_pts)
+        pdc.SetIdBounds(self._id, self.get_bounding_box())

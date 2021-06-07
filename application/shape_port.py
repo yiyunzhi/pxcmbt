@@ -1,9 +1,7 @@
 import math
-
 import wx
-
 from application.define import *
-from .shape_wire import WireShape
+#from .shape_wire import WireNodeShape
 
 
 class PortShape( object ):

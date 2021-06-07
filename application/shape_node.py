@@ -1,6 +1,7 @@
 import wx
 from wx.adv import PseudoDC
 from .shape_port import PortShape
+from gui.utils_helper import util_lines_intersection, util_distance
 from application.define import *
 from gui.define_gui import EnumShapeConnectionStyle, EnumShapeStyle
 
@@ -101,6 +102,9 @@ class BaseNodeShape:
 
     def set_position(self, pos):
         self.position = pos
+        if self.has_children():
+            for k, v in self.childShapes.items():
+                v.set_position(pos)
 
     def get_position(self):
         return self.position
@@ -110,6 +114,45 @@ class BaseNodeShape:
 
     def get_relative_position(self):
         return self.relativePosition
+
+    def get_center(self):
+        return self.get_bounding_box().Center()
+
+    def get_bb_intersection_point_along_center(self, pt, include_extend=False, use_float=False):
+        _bb = self.get_bounding_box()
+        assert isinstance(_bb, wx.Rect)
+        _center = self.get_center()
+        _diff = (_center - pt)
+        if _diff.x == 0:
+            return wx.Point(_center.x, _bb.y)
+        elif _diff.y == 0:
+            return wx.Point(_bb.x, _center.y)
+        elif _diff.y == 0 and _diff.x == 0:
+            return _center
+        else:
+            _intersections = list()
+            _intersection = util_lines_intersection(_bb.GetBottomLeft(), _bb.GetTopLeft(), _center, pt, include_extend,
+                                                    use_float)
+            if _intersection is not None:
+                _intersections.append(_intersection)
+            _bb_vecs = [_bb.GetTopLeft(), _bb.GetTopRight(), _bb.GetBottomRight(), _bb.GetBottomLeft()]
+            for idx, vec in enumerate(_bb_vecs):
+                if idx + 1 >= len(_bb_vecs): break
+                _intersection = util_lines_intersection(vec, _bb_vecs[idx + 1], _center, pt, include_extend,
+                                                        use_float)
+                if _intersection is not None:
+                    if include_extend:
+                        print('--->idx', idx, vec)
+                    _intersections.append(_intersection)
+            if include_extend:
+                print('--->', pt, _intersections)
+            # pick up the closest point to pt
+            if _intersections:
+                _dis = [util_distance(pt, x) for x in _intersections]
+                _min_dis = min(_dis)
+                return _intersections[_dis.index(_min_dis)]
+            else:
+                return None
 
     def contains(self, pt):
         raise NotImplemented()

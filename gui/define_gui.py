@@ -139,6 +139,7 @@ class EnumCanvasStyle:
 class EnumShapeConnectionStyle:
     ANYWHERE = 1
     ONLY_ON_PORT = 2
+    NONE = -1
 
 
 class EnumShapeStyle:
