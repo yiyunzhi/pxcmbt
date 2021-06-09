@@ -2,7 +2,8 @@ import wx
 from wx.adv import PseudoDC
 from .shape_rect_node import RectNodeShape
 from .shape_text_node import TextNodeShape
-from gui.define_gui import EnumShapeConnectionStyle
+from .shape_circle_node import CircleNodeShape
+from __gui_v1.define_gui import EnumShapeConnectionStyle
 
 
 class StateNodeShape(RectNodeShape):
@@ -19,11 +20,14 @@ class StateNodeShape(RectNodeShape):
         self.titleShape = TextNodeShape(title, self, wx.ID_ANY)
         self.add_child(self.titleShape)
 
+    def scale(self, x, y, include_children=True):
+        pass
+
     def get_bounding_box(self):
         _rect = wx.Rect(self.position + self.relativePosition, self.size)
         for nid, shape in self.childShapes.items():
             _rect = _rect.Union(shape.get_bounding_box())
-        return _rect.Inflate(8, 0)
+        return _rect.Inflate(self.borderPen.GetWidth(), self.borderPen.GetWidth())
 
     def align_text_to_center(self):
         # todo: better is, use Enum define the align center, left,right to determine the relative position
@@ -39,6 +43,7 @@ class StateNodeShape(RectNodeShape):
         self._recalculate_radius()
         self.align_text_to_center()
         _x, _y, _w, _h = self.get_bounding_box()
+        pdc.ClearId(self._id)
         pdc.SetId(self._id)
         if self.isMouseOvered:
             _pen = self.hoverBorderPen
@@ -52,3 +57,26 @@ class StateNodeShape(RectNodeShape):
         pdc.SetIdBounds(self._id, self.get_bounding_box())
         for nid, child in self.childShapes.items():
             child.draw(pdc)
+
+
+class StateInitNodeShape(CircleNodeShape):
+    def __init__(self, parent, sh_id=wx.ID_ANY, size=wx.DefaultSize, pos=wx.DefaultPosition):
+        CircleNodeShape.__init__(self, parent, sh_id, size, pos)
+        self.fillBrush = wx.BLACK_BRUSH
+
+
+class StateFinalNodeShape(CircleNodeShape):
+    def __init__(self, parent, sh_id=wx.ID_ANY, size=wx.DefaultSize, pos=wx.DefaultPosition):
+        CircleNodeShape.__init__(self, parent, sh_id, size, pos)
+        self.fillBrush = wx.BLACK_BRUSH
+        self.innerRadius = self.radius - 4
+
+    def draw(self, pdc: PseudoDC):
+        _x, _y, _w, _h = self.get_bounding_box()
+        pdc.SetId(self._id)
+        pdc.SetPen(self.borderPen)
+        pdc.SetBrush(wx.TRANSPARENT_BRUSH)
+        pdc.DrawCircle(_x + self.radius, _y + self.radius, self.radius)
+        pdc.SetBrush(wx.Brush(self.fillBrush))
+        pdc.DrawCircle(_x + self.radius, _y + self.radius, self.innerRadius)
+        pdc.SetIdBounds(self._id, self.get_bounding_box())

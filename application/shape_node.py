@@ -1,9 +1,9 @@
 import wx
 from wx.adv import PseudoDC
 from .shape_port import PortShape
-from gui.utils_helper import util_lines_intersection, util_distance
+from __gui_v1.utils_helper import util_lines_intersection, util_distance
 from application.define import *
-from gui.define_gui import EnumShapeConnectionStyle, EnumShapeStyle
+from __gui_v1.define_gui import EnumShapeConnectionStyle, EnumShapeStyle
 
 
 # todo: BaseNodeShape should from Serializable inherited.
@@ -141,11 +141,7 @@ class BaseNodeShape:
                 _intersection = util_lines_intersection(vec, _bb_vecs[idx + 1], _center, pt, include_extend,
                                                         use_float)
                 if _intersection is not None:
-                    if include_extend:
-                        print('--->idx', idx, vec)
                     _intersections.append(_intersection)
-            if include_extend:
-                print('--->', pt, _intersections)
             # pick up the closest point to pt
             if _intersections:
                 _dis = [util_distance(pt, x) for x in _intersections]
@@ -153,6 +149,9 @@ class BaseNodeShape:
                 return _intersections[_dis.index(_min_dis)]
             else:
                 return None
+
+    def scale(self, x, y, include_children=True):
+        raise NotImplemented()
 
     def contains(self, pt):
         raise NotImplemented()

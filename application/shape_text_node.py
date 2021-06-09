@@ -27,6 +27,9 @@ class TextNodeShape(RectNodeShape):
             self.font.SetWeight(wx.BOLD)
         self.size = self.get_text_size()
 
+    def scale(self, x, y, include_children=True):
+        pass
+
     def get_bounding_box(self):
         return wx.Rect(self.position + self.relativePosition, self.size)
 

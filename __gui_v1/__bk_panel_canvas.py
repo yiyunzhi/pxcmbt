@@ -2,7 +2,7 @@ import wx
 import wx.adv
 import wx.lib.agw.aui as aui
 import json
-from gui.define_gui import *
+from __gui_v1.define_gui import *
 from application.define import EnumPanelRole
 from application.wire import Wire
 from application.node import Node

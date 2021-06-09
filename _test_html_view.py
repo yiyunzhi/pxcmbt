@@ -1,9 +1,29 @@
 from distutils.version import LooseVersion
 import wx
+import wx.html2
 import wx.lib.mixins.inspection
-# from application.gui.frame_splash_screen import GuiSplashScreen
 from application.define import APP_NAME, REQ_WX_VERSION_STRING
-from gui.frame_app import FrameMain
+
+
+class WebViewPanel(wx.Panel):
+    def __init__(self, parent, wx_id=wx.ID_ANY):
+        wx.Panel.__init__(self, parent, wx_id)
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.browser = wx.html2.WebView.New(self)
+        self.browser.LoadURL(wx.FileSystem.FileNameToURL('index.html'))
+        self.mainSizer.Add(self.browser, 1, wx.EXPAND)
+        self.SetSizer(self.mainSizer)
+        self.Layout()
+
+
+class AppFrame(wx.Frame):
+    def __init__(self, parent):
+        wx.Frame.__init__(self, parent)
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.webViewPanel=WebViewPanel(self)
+        self.mainSizer.Add(self.webViewPanel,1,wx.EXPAND)
+        self.SetSizer(self.mainSizer)
+        self.Layout()
 
 
 class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
@@ -27,7 +47,7 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # can see the SplashScreen effect.
         # _splash = GuiSplashScreen()
         # _splash.Show()
-        _main_frm = FrameMain(None)
+        _main_frm = AppFrame(None)
         _main_frm.Show()
         return True
 

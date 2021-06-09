@@ -7,6 +7,10 @@ class WireNodeShape(BaseNodeShape):
     def __init__(self, parent, sh_id, src_pt=wx.DefaultPosition, dst_pt=wx.DefaultPosition):
         BaseNodeShape.__init__(self, parent, sh_id)
         self.borderPen = wx.Pen(wx.BLACK, 1)
+        self.srcNodeId = None
+        self.dstNodeId = None
+        self.prevSrcPoint = src_pt
+        self.prevDstPoint = dst_pt
         self.srcPoint = src_pt
         self.dstPoint = dst_pt
 
@@ -23,11 +27,13 @@ class WireNodeShape(BaseNodeShape):
     def draw(self, pdc):
         pdc.SetId(self._id)
         # for source / destination drawing direction.
-        _sign = 1
+        _sign0 = 1
+        #_sign1 = -1
         _pts = list()
         _pts.append(self.srcPoint)
-        _pts.append(self.srcPoint + wx.Point(10 * _sign, 0))
-        _pts.append(self.dstPoint - wx.Point(10 * _sign, 0))
+        # todo: add control point
+        _pts.append(self.srcPoint + wx.Point(2 * _sign0, 0))
+        _pts.append(self.dstPoint - wx.Point(2 * _sign0, 0))
         _pts.append(self.dstPoint)
         pdc.SetPen(self.borderPen)
         pdc.DrawSpline(_pts)
