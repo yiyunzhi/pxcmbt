@@ -328,7 +328,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         evt.Skip()
 
     def on_mouse_left_down_canvas(self, evt: wx.MouseEvent):
-        # todo: while place should call dialog, the name should be given
+        # todo: while place should call dialog, the name to given
         print('mouse left down canvas')
         _pos = evt.GetPosition()
         _world_pos = self.canvas.PixelToWorld(_pos)
@@ -355,6 +355,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         evt.Skip()
 
     def on_mouse_middle_down_canvas(self, evt):
+        # todo: start pan mode to drag the canvas
         print('on_mouse_middle_down_canvas', evt)
         evt.Skip()
 

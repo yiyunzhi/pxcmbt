@@ -29,10 +29,23 @@ class WireShape(Group, StateChartNode):
 
     def set_dst_point(self, dst_pt):
         self.dstPt = dst_pt
-        _prev_pts = self.arrowLine.Points
-        _prev_pts[-1] = dst_pt
-        self.arrowLine.SetPoints(_prev_pts)
+        #_prev_pts = self.arrowLine.Points
+        _ctrl_pts=self._calc_control_point()
+        _pts=list()
+        _pts.append(self.srcPt)
+        _pts.extend(list(_ctrl_pts))
+        _pts.append(self.dstPt)
+        self.arrowLine.SetPoints(_pts)
         self.arrowLine.CalcArrowPoints()
+
+    def _calc_control_point(self):
+        _ctr_offset_y1, _ctr_offset_y2 = self.srcPt[1], self.dstPt[1]
+        _tangent = min(abs(_ctr_offset_y1 - _ctr_offset_y2),10)
+        _ctr_offset_y1 -= _tangent
+        _ctr_offset_y2 += _tangent
+        _ctrl_pt1 = wx.RealPoint(self.srcPt[0], _ctr_offset_y1)
+        _ctrl_pt2 = wx.RealPoint(self.dstPt[0], _ctr_offset_y2)
+        return _ctrl_pt1, _ctrl_pt2
 
     def on_left_down(self):
         print('state left down')
