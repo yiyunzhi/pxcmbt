@@ -1,6 +1,6 @@
 from .draw_object import DrawObject
 from .draw_object_mixin import *
-import util_bbox as BBox
+import wxgraph.util_bbox as BBox
 
 
 class DrawObjectArc(PositionObjectMixin, LineAndFillMixin, DrawObject):

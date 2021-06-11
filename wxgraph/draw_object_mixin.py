@@ -1,6 +1,6 @@
 import numpy as N
 import wx
-from .util_bbox import BBox
+import wxgraph.util_bbox as BBox
 
 
 class ColorOnlyMixin:
@@ -169,8 +169,8 @@ class PointsObjectMixin:
         """
         delta = N.asarray(delta, N.float)
         delta.shape = (2,)
-        self.Points += delta
-        self.BoundingBox += delta
+        self.points += delta
+        self.boundingBox += delta
         if self._canvas:
             self._canvas.boundingBoxDirty = True
 
@@ -178,7 +178,7 @@ class PointsObjectMixin:
         """
         Calculate the bounding box.
         """
-        self.boundingBox = BBox.fromPoints(self.Points)
+        self.boundingBox = BBox.from_points(self.points)
         if self._canvas:
             self._canvas.boundingBoxDirty = True
 

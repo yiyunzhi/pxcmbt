@@ -2,7 +2,7 @@ import wx
 from .draw_object import DrawObject
 from .draw_object_mixin import *
 from .define import GLOBAL_VARS
-import util_bbox as BBox
+import wxgraph.util_bbox as BBox
 
 
 class DrawObjectText(TextObjectMixin, DrawObject):
@@ -281,7 +281,7 @@ class DrawObjectScaledText(TextObjectMixin, DrawObject):
                 ht_dc.DrawRectangle(_xy, _w, _h)
 
 
-class ScaledTextBox(TextObjectMixin, DrawObject):
+class DrawObjectScaledTextBox(TextObjectMixin, DrawObject):
     """
     Draws a text object box
 

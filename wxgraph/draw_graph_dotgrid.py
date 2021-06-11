@@ -27,12 +27,9 @@ class DrawGraphDotGrid:
 
     def calc_points(self, canvas):
         _viewPortBB = canvas.viewPortBB
-
         _spacing = self.spacing
-
         _minx, _miny = N.floor(_viewPortBB[0] / _spacing) * _spacing
         _maxx, _maxy = N.ceil(_viewPortBB[1] / _spacing) * _spacing
-
         # fixme: this could use vstack or something with numpy
         _x = N.arange(_minx, _maxx + _spacing[0], _spacing[0])  # making sure to get the last point
         _y = N.arange(_miny, _maxy + _spacing[1], _spacing[1])  # an extra is OK
@@ -42,7 +39,6 @@ class DrawGraphDotGrid:
         _points[:, :, 0] += _x
         _points[:, :, 1] += _y
         _points.shape = (-1, 2)
-
         return _points
 
     def draw(self, dc, canvas):
@@ -50,8 +46,7 @@ class DrawGraphDotGrid:
         _points = canvas.world_to_pixel(_points)
         dc.SetPen(wx.Pen(self.color, self.crossThickness))
         if self.cross:
-            # Use cross shaped markers
-            # Horizontal lines
+            # Use cross shaped markers Horizontal lines
             _line_points = N.concatenate((_points + (self.size, 0), _points + (-self.size, 0)), 1)
             dc.DrawLineList(_line_points)
             # Vertical Lines

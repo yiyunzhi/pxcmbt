@@ -1,7 +1,7 @@
 import numpy as N
 from .draw_object import DrawObject
 from .draw_object_mixin import *
-import util_bbox as BBox
+import wxgraph.util_bbox as BBox
 
 class RectEllipse(PositionObjectMixin, LineAndFillMixin, DrawObject):
     """A RectEllipse draw object."""

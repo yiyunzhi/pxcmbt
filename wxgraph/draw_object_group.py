@@ -1,7 +1,8 @@
 import six
 from .draw_object import DrawObject
-import util_bbox as BBox
+import wxgraph.util_bbox as BBox
 from .utils import color_generator
+
 
 class DrawObjectGroup(DrawObject):
     """
@@ -77,7 +78,7 @@ class DrawObjectGroup(DrawObject):
         if self.objectList:
             _bb = BBox.BBox(self.objectList[0].boundingBox).copy()
             for obj in self.objectList[1:]:
-                _bb.merge(obj.BoundingBox)
+                _bb.merge(obj.boundingBox)
         else:
             _bb = BBox.null_bbox()
         self.boundingBox = _bb
@@ -206,8 +207,8 @@ class DrawObjectGroup(DrawObject):
                 self.hitColor = next(self._canvas.hitColorGenerator)
         self._change_children_hit_color(self.objectList)
         # put the object in the hit dict, indexed by it's color
-        if not self._canvas.HitDict:
-            self._canvas.MakeHitDict()
+        if not self._canvas.hitDict:
+            self._canvas.make_hit_dict()
         self._canvas.hitDict[event][self.hitColor] = self
 
     def _change_children_hit_color(self, obj_list):

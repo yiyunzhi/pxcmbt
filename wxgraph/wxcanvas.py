@@ -43,8 +43,6 @@ container type control::
 Many samples are available in the `wxPhoenix/samples/floatcanvas` folder.
 
 """
-
-from __future__ import division
 import sys
 
 IS_MAC = sys.platform.startswith("darwin")
@@ -55,11 +53,11 @@ except ImportError:
 import wx
 import six
 import numpy as N
-from .shapes import *
-from .util_bbox import BBox
-from .gui_mode import GUIMode
+from .gui_mode import GUIModeBase
+from .draw_object import DrawObject
 from .events import *
 from .define import GLOBAL_VARS
+import wxgraph.util_bbox as BBox
 
 
 # Custom Exceptions:
@@ -68,7 +66,7 @@ class WxCanvasError(Exception):
     pass
 
 
-class _MouseEvent(wx.PyCommandEvent):
+class _GraphEvent(wx.PyCommandEvent):
     """
     This event class takes a regular wxWindows mouse event as a parameter,
     and wraps it so that there is access to all the original methods. This
@@ -78,7 +76,7 @@ class _MouseEvent(wx.PyCommandEvent):
 
     It adds the method:
 
-    GetCoords() , which returns an (x,y) tuple in world coordinates.
+    get_coords() , which returns an (x,y) tuple in world coordinates.
 
     Another difference is that it is a CommandEvent, which propagates up
     the window hierarchy until it is handled.
@@ -86,13 +84,46 @@ class _MouseEvent(wx.PyCommandEvent):
     """
 
     def __init__(self, event_type, native_event, win_id, coords=None):
-        super(_MouseEvent, self).__init__()
+        super(_GraphEvent, self).__init__()
         self.SetEventType(event_type)
         self._nativeEvent = native_event
         self.coords = coords
 
     def get_coords(self):
-        return self.Coords
+        return self.coords
+
+    def __getattr__(self, name):
+        d = self._getAttrDict()
+        if name in d:
+            return d[name]
+        return getattr(self._nativeEvent, name)
+
+
+class _GraphScaleEvent(wx.PyCommandEvent):
+    """
+    This event class takes a regular wxWindows mouse event as a parameter,
+    and wraps it so that there is access to all the original methods. This
+    is similar to subclassing, but you can't subclass a wxWindows event
+
+    The goal is to be able to it just like a regular PyCommandEvent event.
+
+    It adds the method:
+
+    get_scale() , which returns an scale value of canvas.
+
+    Another difference is that it is a CommandEvent, which propagates up
+    the window hierarchy until it is handled.
+
+    """
+
+    def __init__(self, event_type, native_event, win_id, scale=None):
+        super(_GraphScaleEvent, self).__init__()
+        self.SetEventType(event_type)
+        self._nativeEvent = native_event
+        self.scale = scale
+
+    def get_scale(self):
+        return self.scale
 
     def __getattr__(self, name):
         d = self._getAttrDict()
@@ -161,10 +192,8 @@ class WxCanvas(wx.Panel):
 
         self.set_projection_func(projection_func)
 
-        # making sure the arrribute exists
+        # making sure the attribute exists
         self.GUIMode = None
-        # make the default Mouse Mode.
-        self.set_mode(GUIMode.GUIMouse())
 
         # timer to give a delay when re-sizing so that buffers aren't re-built too many times.
         self.sizeTimer = wx.PyTimer(self.on_size_timer)
@@ -190,7 +219,7 @@ class WxCanvas(wx.Panel):
         self._foreDrawList = []
         self.initialize_panel()
         self.make_new_buffers()
-        self.boundingBox = BBox.NullBBox()
+        self.boundingBox = BBox.null_bbox()
         self.boundingBoxDirty = False
         self.minScale = None
         self.maxScale = None
@@ -217,6 +246,15 @@ class WxCanvas(wx.Panel):
 
     def has_ht_bitmap(self):
         return self._htBitmap is not None
+
+    def get_fore_draw_list(self):
+        return self._foreDrawList
+
+    def get_buffer(self):
+        return self._buffer
+
+    def get_foreground_buffer(self):
+        return self._foregroundBuffer
 
     @staticmethod
     def compute_font_scale():
@@ -280,10 +318,10 @@ class WxCanvas(wx.Panel):
         """
         # Set mode
         if self.GUIMode is not None:
-            self.GUIMode.UnSet()  # this lets the old mode clean up.
+            self.GUIMode.unset()  # this lets the old mode clean up.
         mode.canvas = self  # make sure the mode is linked to this canvas
         self.GUIMode = mode
-        self.SetCursor(self.GUIMode.Cursor)
+        self.SetCursor(self.GUIMode.cursor)
 
     def make_hit_dict(self):
         """
@@ -303,12 +341,12 @@ class WxCanvas(wx.Panel):
                         EVT_FC_LEAVE_OBJECT: {},
                         }
 
-    def raise_mouse_event(self, event, event_type):
+    def raise_graph_event(self, event, event_type):
         """
         This is called in various other places to raise a Mouse Event.
         """
         _pt = self.pixel_to_world(event.GetPosition())
-        _evt = _MouseEvent(event_type, event, self.GetId(), _pt)
+        _evt = _GraphEvent(event_type, event, self.GetId(), _pt)
         self.GetEventHandler().ProcessEvent(_evt)
 
     if wx.__version__ >= "2.8":
@@ -411,8 +449,8 @@ class WxCanvas(wx.Panel):
                     # set the new object under mouse
                 self.objectUnderMouse = _object
             elif _color in self.hitDict[EVT_FC_LEAVE_OBJECT]:
-                Object = self.hitDict[EVT_FC_LEAVE_OBJECT][_color]
-                self.objectUnderMouse = Object
+                _object = self.hitDict[EVT_FC_LEAVE_OBJECT][_color]
+                self.objectUnderMouse = _object
             else:
                 # no objects under mouse bound to mouse-over events
                 self.objectUnderMouse = None
@@ -426,10 +464,10 @@ class WxCanvas(wx.Panel):
             return _object_callback_called
         return False
 
-    ## fixme: There is a lot of repeated code here
-    ##        Is there a better way?
-    ##    probably -- shouldn't there always be a GUIMode?
-    ##    there could be a null GUI Mode, and use that instead of None
+    # fixme: There is a lot of repeated code here
+    #    Is there a better way?
+    #    probably -- shouldn't there always be a GUIMode?
+    #    there could be a null GUI Mode, and use that instead of None
     def on_left_double_click(self, event):
         """
         Left double click event.
@@ -670,7 +708,6 @@ class WxCanvas(wx.Panel):
         _screen_dc = wx.ClientDC(self)
         _viewport_world = N.array((self.pixel_to_world((0, 0)), self.pixel_to_world(self.panelSize)))
         self.viewPortBB = N.array((N.minimum.reduce(_viewport_world), N.maximum.reduce(_viewport_world)))
-
         _mdc = wx.MemoryDC()
         _mdc.SelectObject(self._buffer)
         if self.enableGC:
@@ -724,7 +761,7 @@ class WxCanvas(wx.Panel):
         _screen_dc.Blit(0, 0, self.panelSize[0], self.panelSize[1], _mdc, 0, 0)
         # If the canvas is in the middle of a zoom or move,
         # the Rubber Band box needs to be re-drawn
-        ##fixme: maybe GUIModes should never be None, and rather have a Do-nothing GUI-Mode.
+        # fixme: maybe GUIModes should never be None, and rather have a Do-nothing GUI-Mode.
         if self.GUIMode is not None:
             self.GUIMode.update_screen()
 
@@ -746,7 +783,7 @@ class WxCanvas(wx.Panel):
         _bb = viewport_bb
         _redraw_list = []
         for obj in draw_list:
-            if obj.boundingBox.Overlaps(_bb):
+            if obj.boundingBox.overlaps(_bb):
                 _redraw_list.append(obj)
         return _redraw_list
 
@@ -756,7 +793,7 @@ class WxCanvas(wx.Panel):
 
         :param shift: tuple ` is an (x, y) tuple defining amount to shift in
          each direction
-        :param CoordType: defines what coordinates to use, valid entries
+        :param coord_type: defines what coordinates to use, valid entries
         :param redraw: bool, if canvas should be redrawed
 
          ============== ======================================================
@@ -889,6 +926,8 @@ class WxCanvas(wx.Panel):
         self._backgroundDirty = True
         if draw_flag:
             self.draw()
+        _evt = _GraphScaleEvent(EVT_FC_SCALE_CHANGED, EVT_SCALE_CHANGED, self.GetId(), self.scale)
+        self.GetEventHandler().ProcessEvent(_evt)
 
     def remove_objects(self, objects):
         """"
@@ -948,7 +987,7 @@ class WxCanvas(wx.Panel):
                 if not obj.BoundingBox.IsNull():
                     _bb_list.append(obj.BoundingBox)
             if _bb_list:  # if there are only NullBBoxes in DrawLists
-                self.boundingBox = BBox.fromBBArray(_bb_list)
+                self.boundingBox = BBox.from_bb_array(_bb_list)
             else:
                 _set_to_null = True
             if self.boundingBox.Width == 0 or self.boundingBox.Height == 0:
@@ -956,7 +995,7 @@ class WxCanvas(wx.Panel):
         else:
             _set_to_null = True
         if _set_to_null:
-            self.boundingBox = BBox.NullBBox()
+            self.boundingBox = BBox.null_bbox()
             self.viewPortCenter = N.array((0, 0), N.float)
             self.transformVector = N.array((1, -1), N.float)
             self.mapProjectionVector = N.array((1, 1), N.float)
@@ -1017,7 +1056,7 @@ class WxCanvas(wx.Panel):
         """
         # put in a reference to the Canvas, so remove and other stuff can work
         obj.set_canvas(self)
-        if obj.inForeground:
+        if obj.isInForeground:
             self._foreDrawList.append(obj)
             self.useForeground = True
         else:
@@ -1051,7 +1090,7 @@ class WxCanvas(wx.Panel):
         _func_blit = screen_dc.Blit  # for speed
         _num_between_blits = self.numBetweenBlits  # for speed
         for i, obj in enumerate(self._should_redraw(draw_list, viewport_bb)):
-            if obj.visible:
+            if obj.isVisible:
                 obj.draw(dc, _func_world_to_pixel, _func_scale_world_to_pixel, ht_dc)
                 if (i + 1) % _num_between_blits == 0:
                     _func_blit(0, 0, _panel_w, _panel_h, dc, 0, 0)
