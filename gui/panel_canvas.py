@@ -42,6 +42,40 @@ class CanvasSetting:
         # self.mIPrintVAlign: int = EnumVAlign.valignMIDDLE
         # self.mIPrintMode: int = EnumPrintMode.prnFIT_TO_MARGINS
 
+class DemoCanvas(wx.Panel):
+    def __init__(self, parent, wx_id=-1):
+        super(DemoCanvas, self).__init__(parent, -1)
+
+class StateChartCanvasViewPanel2(wx.Panel):
+    def __init__(self, parent, wx_id):
+        super(StateChartCanvasViewPanel2, self).__init__(parent, -1)
+        self.uuid = None
+        self.role = EnumPanelRole.STATE_CHART_CANVAS
+        self.canvasSetting = CanvasSetting()
+        self._canvasGrid = DrawGraphDotGrid(self.canvasSetting.mGridSize, size=1)
+        self.canvas = DemoCanvas(self)
+        # self.canvas.maxScale = self.canvasSetting.mFMaxScale
+        # self.canvas.minScale = self.canvasSetting.mFMinScale
+        # self.canvas.gridUnder = self._canvasGrid
+        # self.canvas.set_mode(GUIModeMouse(self.canvas))
+        # member variable
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.toolbarIconSize = wx.Size(16, 16)
+        # self.canvasToolbar = self._create_toolbar()
+        # self.canvasStatusbar = self._create_statusbar()
+        # self.mainSizer.Add(self.canvasToolbar, 0, wx.EXPAND)
+        self.mainSizer.Add(self.canvas, 1, wx.EXPAND)
+        # self.mainSizer.Add(self.canvasStatusbar, 0, wx.EXPAND)
+        self._bind_event()
+        self.SetSizer(self.mainSizer)
+        self.Layout()
+
+    def _bind_event(self):
+        self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+
+    def on_key_down(self, evt):
+        print('on_key_down', evt)
+
 
 class StateChartCanvasViewPanel(wx.Panel):
     def __init__(self, parent, wx_id):
@@ -58,7 +92,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         etc.
             self.canvas.AddCircle...
         """
-        self._canvasGrid = DrawGraphDotGrid(self.canvasSetting.mGridSize,size=1)
+        self._canvasGrid = DrawGraphDotGrid(self.canvasSetting.mGridSize, size=1)
         self.canvas = WxCanvas(self, wx.ID_ANY, debug=self.canvasSetting.mDebug)
         self.canvas.maxScale = self.canvasSetting.mFMaxScale
         self.canvas.minScale = self.canvasSetting.mFMinScale
@@ -81,9 +115,6 @@ class StateChartCanvasViewPanel(wx.Panel):
         _sb.SetSize(-1, 18)
         _sb.SetTransparent(0.8)
         _sb.SetFieldsCount(3, [72, -1, -1])
-        # _sb_font = wx.Font(wx.SYS_DEFAULT_GUI_FONT)
-        # _sb_font.SetPointSize(10)
-        # _sb.SetFont(_sb_font)
         _sb.SetStatusText('scale:%.2F' % self.canvasSetting.mFScale, 0)
         return _sb
 
@@ -159,7 +190,6 @@ class StateChartCanvasViewPanel(wx.Panel):
         return _tb
 
     def _bind_event(self):
-        self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(WxGEvent.EVT_MOTION, self.on_motion_view)
         self.Bind(WxGEvent.EVT_MOUSEWHEEL, self.on_mouse_wheel_view)
         self.Bind(WxGEvent.EVT_LEFT_DOWN, self.on_mouse_left_down_view)
@@ -169,6 +199,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.Bind(WxGEvent.EVT_LEFT_DCLICK, self.on_item_double_click)
         self.Bind(WxGEvent.EVT_SCALE_CHANGED, self.on_canvas_scale_changed)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down_view)
+        self.Bind(wx.EVT_KEY_UP, self.on_key_up_view)
 
     def _unbind_all_mouse_events(self):
         self.Unbind(WxGEvent.EVT_MOTION)
@@ -205,6 +236,9 @@ class StateChartCanvasViewPanel(wx.Panel):
         _k_code = evt.GetKeyCode()
         self.process_key_down(_k_code)
         evt.Skip()
+
+    def on_key_up_view(self, evt):
+        print('on_key_up_view')
 
     def process_key_down(self, k_code):
         if k_code == wx.WXK_ESCAPE:
@@ -265,25 +299,8 @@ class StateChartCanvasViewPanel(wx.Panel):
         #     self.canvas.draw(True)
         evt.Skip()
 
-    # def on_scale_timer(self):
-    #     self.update_scale_info_test()
-    #     self.canvas.Zoom(self.canvasSetting.mFScale)
-
     def on_mouse_wheel_view(self, evt: wx.MouseEvent):
         print('on_mouse_wheel_canvas', evt)
-        # _rot = evt.GetWheelRotation()
-        # _rot = _rot / abs(_rot) * 0.1
-        # _scale = self.canvasSetting.mFScale
-        # _scale += evt.GetWheelRotation() / (evt.GetWheelDelta() * 10)
-        # if evt.ControlDown():  # move left-right
-        #     if _scale < self.canvasSetting.mFMinScale: _scale = self.canvasSetting.mFMinScale
-        #     if _scale > self.canvasSetting.mFMaxScale: _scale = self.canvasSetting.mFMaxScale
-        #     # self.canvas.MoveImage((_rot, 0), 'Panel')
-        #     self.update_scale_info_test()
-        #     self.canvas.Zoom(_scale/self.canvasSetting.mFScale)
-        #     self.canvasSetting.mFScale = _scale
-        # else:  # move up-down
-        #    self.canvas.MoveImage((0, _rot), 'Panel')
         evt.Skip()
 
     def on_mouse_left_down_view(self, evt: wx.MouseEvent):
@@ -291,22 +308,11 @@ class StateChartCanvasViewPanel(wx.Panel):
         print('mouse left down view')
         _pos = evt.GetPosition()
         _world_pos = self.canvas.pixel_to_world(_pos)
-        # if self.canvasSetting.mMode != EnumCanvasToolbarMode.POINTER:
-        #     self.nodePlaceModifier = NodePlaceModifier(self.canvasSetting.mMode)
-        # else:
-        #     pass
         evt.Skip()
 
     def on_mouse_left_up_view(self, evt):
         _pos = evt.GetPosition()
         _world_pos = wx.RealPoint(self.canvas.pixel_to_world(_pos))
-        # if self.nodePlaceModifier is not None:
-        #     _item = self.nodePlaceModifier.place(_world_pos)
-        #     if _item is not None:
-        #         self.add_item(_item)
-        #     self.nodePlaceModifier = None
-        # if self.nodeRepositionModifier is not None:
-        #     self.nodeRepositionModifier = None
         # if self.nodeConnectionModifier is not None:
         #     self.remove_item(self.nodeConnectionModifier.wire)
         #     self.nodeConnectionModifier = None
@@ -340,6 +346,3 @@ class StateChartCanvasViewPanel(wx.Panel):
         self._unbind_all_mouse_events()
         self.canvas.init_all()
         self.canvas.draw()
-
-    def on_paint(self, evt: wx.PaintEvent):
-        pass

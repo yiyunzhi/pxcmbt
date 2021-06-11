@@ -44,7 +44,6 @@ Many samples are available in the `wxPhoenix/samples/floatcanvas` folder.
 
 """
 import sys
-
 IS_MAC = sys.platform.startswith("darwin")
 try:
     from time import process_time as clock
@@ -53,7 +52,6 @@ except ImportError:
 import wx
 import six
 import numpy as N
-from .gui_mode import GUIModeBase
 from .draw_object import DrawObject
 from .events import *
 from .define import GLOBAL_VARS
@@ -116,7 +114,7 @@ class _GraphScaleEvent(wx.PyCommandEvent):
 
     """
 
-    def __init__(self, event_type, native_event, win_id, scale=None):
+    def __init__(self, event_type, native_event, win_id, scale=1.0):
         super(_GraphScaleEvent, self).__init__()
         self.SetEventType(event_type)
         self._nativeEvent = native_event
@@ -135,7 +133,7 @@ class _GraphScaleEvent(wx.PyCommandEvent):
 # ---------------------------------------------------------------------------
 class WxCanvas(wx.Panel):
     """
-    The main class of the wxcanvas package :class:`~wxcanvas.WxCanvas`.
+    The main class of the wxcanvas package :class:`~wxgraph.WxCanvas`.
 
     """
 
@@ -152,7 +150,7 @@ class WxCanvas(wx.Panel):
          world to pixel coordinates. We can point to :meth:`~lib.floatcanvas.FloatCanvas.FloatCanvas.flat_earth_projection`
          for an example -- though that should really be a class method, or even
          better, simply a function in the module. There is a tiny bit on info
-         in the error message in FloatCanvas.Setprojection_func()
+         in the error message in wxCanvas.set_projection_func()
 
          (Note: this really should get re-factored to allow more generic
          projections...)
