@@ -198,8 +198,9 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.Bind(WxGEvent.EVT_MIDDLE_UP, self.on_mouse_middle_up_view)
         self.Bind(WxGEvent.EVT_LEFT_DCLICK, self.on_item_double_click)
         self.Bind(WxGEvent.EVT_SCALE_CHANGED, self.on_canvas_scale_changed)
-        self.Bind(wx.EVT_KEY_DOWN, self.on_key_down_view)
-        self.Bind(wx.EVT_KEY_UP, self.on_key_up_view)
+        # self.Bind(wx.EVT_KEY_DOWN, self.on_key_down_view)
+        # use EVT_CHAR_HOOK replace EVT_KEY_DOWN, if use panel in a panel
+        self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down_view)
 
     def _unbind_all_mouse_events(self):
         self.Unbind(WxGEvent.EVT_MOTION)
@@ -232,7 +233,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.update_scale_info_test()
 
     def on_key_down_view(self, evt: wx.KeyEvent):
-        print('on_key_down_view')
+        print('on_key_down_view',evt.GetKeyCode())
         _k_code = evt.GetKeyCode()
         self.process_key_down(_k_code)
         evt.Skip()
