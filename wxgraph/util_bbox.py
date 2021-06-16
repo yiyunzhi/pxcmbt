@@ -62,12 +62,12 @@ class BBox(N.ndarray):
         fromPoints
 
         """
-        arr = N.array(data, N.float)
-        arr.shape = (2, 2)
-        if arr[0, 0] > arr[1, 0] or arr[0, 1] > arr[1, 1]:
+        _arr = N.array(data, N.float)
+        _arr.shape = (2, 2)
+        if _arr[0, 0] > _arr[1, 0] or _arr[0, 1] > _arr[1, 1]:
             # note: zero sized BB OK.
             raise ValueError("BBox values not aligned: \n minimum values must be less that maximum values")
-        return N.ndarray.__new__(subtype, shape=arr.shape, dtype=arr.dtype, buffer=arr)
+        return N.ndarray.__new__(subtype, shape=_arr.shape, dtype=_arr.dtype, buffer=_arr)
 
     def overlaps(self, bb):
         """
@@ -186,20 +186,20 @@ class BBox(N.ndarray):
     # ~ return N.array((upperleft, lowerright), N.float)
     # ~ _getboundingbox = staticmethod(_getboundingbox)
 
-    ## Save the ndarray __eq__ for internal use.
+    # Save the ndarray __eq__ for internal use.
     Array__eq__ = N.ndarray.__eq__
 
-    def __eq__(self, BB):
+    def __eq__(self, bb):
         """
         __eq__(BB) The equality operator
 
         A == B if and only if all the entries are the same
 
         """
-        if self.is_null() and N.isnan(BB).all():  ## BB may be a regular array, so I can't use IsNull
+        if self.is_null() and N.isnan(bb).all():  ## BB may be a regular array, so I can't use IsNull
             return True
         else:
-            return self.Array__eq__(BB).all()
+            return self.Array__eq__(bb).all()
 
 
 def as_bbox(data):
@@ -229,7 +229,7 @@ def from_points(points):
     """
     from_points (points).
 
-    reruns the bounding box of the set of points in Points. Points can
+    return the bounding box of the set of points in Points. Points can
     be any python object that can be turned into a numpy NX2 array of Floats.
 
     If a single point is passed in, a zero-size Bounding Box is returned.
@@ -284,3 +284,7 @@ def inf_bbox():
 
     arr = N.array(((-N.inf, -N.inf), (N.inf, N.inf)), N.float)
     return N.ndarray.__new__(BBox, shape=arr.shape, dtype=arr.dtype, buffer=arr)
+
+
+def inflated_bbox(bb, inflate):
+    return from_points([bb[0] - inflate, bb[1] + inflate])

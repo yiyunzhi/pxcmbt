@@ -19,7 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-import os, sys, platform,math, uuid, bitstring
+import os, sys, platform, math, uuid, bitstring
 import psutil
 import wx
 from application.define import APP_CONSOLE_TIME_WX_FMT
@@ -205,3 +205,14 @@ def util_lines_intersection(from1, to1, from2, to2, include_extend=False, use_fl
     else:
         return wx.Point(_xi, _yi) if not use_float else wx.RealPoint(_xi, _yi)
 
+
+def util_section_middle_split(length, min_dist):
+    if length <= min_dist:
+        return 1
+    else:
+        _half = length / 2
+        _section_num = 1
+        while _half > min_dist:
+            _section_num += 1
+            _half /= 2
+        return _section_num

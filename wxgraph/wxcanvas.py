@@ -44,6 +44,7 @@ Many samples are available in the `wxPhoenix/samples/floatcanvas` folder.
 
 """
 import sys
+
 IS_MAC = sys.platform.startswith("darwin")
 try:
     from time import process_time as clock
@@ -389,6 +390,15 @@ class WxCanvas(wx.Panel):
         Removes all bindings to Objects.
         """
         self.hitDict = None
+
+    def object_at(self, pos):
+        for x in self._drawList:
+            if x.isVisible and x.boundingBox.point_inside(pos):
+                return x
+        return None
+
+    def has_object(self, obj):
+        return obj in self._drawList
 
     def _call_hit_callback(self, object, pos, hit_event):
         """
@@ -947,7 +957,7 @@ class WxCanvas(wx.Panel):
 
         """
         # fixme: Using the list.remove method is kind of slow
-        if obj.inForeground:
+        if obj.isInForeground:
             self._foreDrawList.remove(obj)
             if not self._foreDrawList:
                 self._foregroundBuffer = None

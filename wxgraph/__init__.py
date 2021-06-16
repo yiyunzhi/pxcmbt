@@ -1,13 +1,18 @@
 from .draw_object import DrawObject
 from .draw_object_group import DrawObjectGroup
 from .draw_object_polygon import DrawObjectPolygon
-from .draw_object_text import DrawObjectScaledText,DrawObjectScaledTextBox
+from .draw_object_text import DrawObjectScaledText, DrawObjectScaledTextBox
 from .draw_object_circle import DrawObjectCircle
 from .draw_object_rectellipse import DrawObjectEllipse, DrawObjectRectangle
 from .draw_object_arc import DrawObjectArc
 from .draw_object_circle import DrawObjectCircle
-from .draw_object_circle import DrawObjectCircle
-from .draw_object_circle import DrawObjectCircle
+from .draw_object_line import DrawObjectLine
+from .draw_object_arrow import DrawObjectArrow
+from .draw_object_arrow_line import DrawObjectArrowLine
+from .draw_object_point import DrawObjectPoint
+from .draw_object_pointset import DrawObjectPointSet
+from .draw_object_spline import DrawObjectSpline
+from .draw_object_squarpoint import DrawObjectSquarePoint
 from .wxcanvas import WxCanvas
 import wxgraph.events as WxGEvent
 

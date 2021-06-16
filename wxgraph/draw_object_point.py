@@ -1,8 +1,8 @@
 from .draw_object import DrawObject
-from draw_object_mixin import *
+from .draw_object_mixin import *
 
 
-class Point(PositionObjectMixin, ColorOnlyMixin, DrawObject):
+class DrawObjectPoint(PositionObjectMixin, ColorOnlyMixin, DrawObject):
     """
     A point DrawObject
 

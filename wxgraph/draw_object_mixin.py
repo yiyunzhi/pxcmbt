@@ -139,7 +139,7 @@ class PositionObjectMixin:
     def calc_bounding_box(self):
         """Calculate the bounding box."""
         # This may get overwritten in some subclasses
-        self.boundingBox = BBox.asBBox((self.position, self.position))
+        self.boundingBox = BBox.as_bbox((self.position, self.position))
 
     def set_position(self, pos):
         pos = N.array(pos, N.float)

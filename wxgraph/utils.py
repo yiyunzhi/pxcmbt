@@ -1,4 +1,5 @@
 import wx
+import numpy as np
 from .define import IS_MAC
 
 __testBitmap = None
@@ -45,9 +46,36 @@ def _cycle_indexes(index_count, max_value, step):
                 yield color
 
 
-def color_generator():
+def util_color_generator():
     """
     Generates a series of unique colors used to do hit-tests with the Hit
     Test bitmap
     """
     return _cycle_indexes(index_count=3, max_value=256, step=1)
+
+
+def util_vector_angle(v1, v2):
+    """
+    Function calculate the angle between two vectors
+    :param v1: tuple, etc. (0,1) y-axis
+    :param v2: tuple, etc. (0,1) y-axis
+    :return: radians value
+    """
+    v1_u = v1 / np.linalg.norm(v1)
+    v2_u = v2 / np.linalg.norm(v2)
+    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+
+
+def util_is_close(a, b, rel_tol=1e-04, abs_tol=0.0):
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
+def util_find_closest_pt_idx(pts, pos):
+    _d = pts - pos
+    return np.argmin(np.hypot(_d[:, 0], _d[:, 1]))
+
+
+def util_angle_between_degree(p1, p2):
+    ang1 = np.arctan2(*p1[::-1])
+    ang2 = np.arctan2(*p2[::-1])
+    return np.rad2deg((ang1 - ang2) % (2 * np.pi))

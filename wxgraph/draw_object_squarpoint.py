@@ -2,7 +2,7 @@ from .draw_object import DrawObject
 from .draw_object_mixin import *
 
 
-class SquarePoint(PositionObjectMixin, ColorOnlyMixin, DrawObject):
+class DrawObjectSquarePoint(PositionObjectMixin, ColorOnlyMixin, DrawObject):
     """
     Draws a square point
 
@@ -13,11 +13,11 @@ class SquarePoint(PositionObjectMixin, ColorOnlyMixin, DrawObject):
 
     """
 
-    def __init__(self, point, color="Black", size=4, in_foreground=False):
+    def __init__(self, pos, color="Black", size=4, in_foreground=False):
         """
         Default class constructor.
 
-        :param point: takes a 2-tuple, or a (2,)
+        :param pos: takes a 2-tuple, or a (2,)
          `NumPy <http://www.numpy.org/>`_ array of point coordinates
         :param color: see :meth:`~lib.floatcanvas.FloatCanvas.DrawObject.SetColor`
         :param integer size: the size of the square point
@@ -26,8 +26,8 @@ class SquarePoint(PositionObjectMixin, ColorOnlyMixin, DrawObject):
         """
         DrawObject.__init__(self, in_foreground)
 
-        self.XY = N.array(point, N.float)
-        self.XY.shape = (2,)  # Make sure it is a length 2 vector
+        self.position = N.array(pos, N.float)
+        self.position.shape = (2,)  # Make sure it is a length 2 vector
         self.calc_bounding_box()
         self.set_color(color)
         self.size = size

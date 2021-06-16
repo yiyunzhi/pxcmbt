@@ -20,6 +20,7 @@
 #
 # ------------------------------------------------------------------------------
 import wx
+from pubsub import pub
 from .ctrl_tree import GenericTreeCtrl
 from application.define import StandardItemData, EnumItemRole, EnumAppSignals
 from .define_gui import PATH_GUI_IMAGES
@@ -216,7 +217,7 @@ class GuiFeaturePanel(wx.Panel):
         _item = event.GetItem()
         self._current_activated_item = _item
         _data = self.tree.GetItemData(_item)
-        # EnumRackPanelSignals.sigV2MRackItemSelectChanged.send(self, item_data=_data)
+        # pub.sendMessage(EnumAppSignals.sigV2MRackItemSelectChanged,sender=self,data=_data)
         event.Skip()
 
     def on_item_activate(self, event):
@@ -224,7 +225,7 @@ class GuiFeaturePanel(wx.Panel):
         _item = event.GetItem()
         _data = self.tree.GetItemData(_item)
         if hasattr(_data, 'uuid'):
-            EnumAppSignals.sigV2VModelTreeItemDoubleClicked.send(self, uuid=_data.uuid)
+            pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked,sender=self,uuid=_data.uuid)
 
     def update_item_tool_tip(self, uuid, tooltip_string):
         _item = self._itemMap.get(uuid)

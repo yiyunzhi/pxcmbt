@@ -1,22 +1,17 @@
-import os
+import os, copy
 import wx
+from pubsub import pub
 from wx.lib.agw import aui
 from wxgraph import WxGEvent, DrawObject
 from application.define import *
 from .define_gui import *
-from .shape_wire import WireShape
+from .shape_transition import TransitionWireShape
+from .shape_state_node import StateChartNode
+from .utils_helper import util_get_uuid_string
+from wxgraph import DrawObjectSquarePoint
 from wxgraph.wxcanvas import WxCanvas
 from wxgraph.draw_graph_dotgrid import DrawGraphDotGrid
 from .gui_mode import GUIModeMouse, GUIModeConnection, GUIModePlace
-
-
-class CanvasConnectionModifier:
-    def __init__(self, src_node):
-        self.srcNode = src_node
-        self.dstNode = None
-        self.srcPort = None
-        self.dstPort = None
-        self.wire = None
 
 
 class CanvasSetting:
@@ -42,40 +37,6 @@ class CanvasSetting:
         # self.mIPrintVAlign: int = EnumVAlign.valignMIDDLE
         # self.mIPrintMode: int = EnumPrintMode.prnFIT_TO_MARGINS
 
-class DemoCanvas(wx.Panel):
-    def __init__(self, parent, wx_id=-1):
-        super(DemoCanvas, self).__init__(parent, -1)
-
-class StateChartCanvasViewPanel2(wx.Panel):
-    def __init__(self, parent, wx_id):
-        super(StateChartCanvasViewPanel2, self).__init__(parent, -1)
-        self.uuid = None
-        self.role = EnumPanelRole.STATE_CHART_CANVAS
-        self.canvasSetting = CanvasSetting()
-        self._canvasGrid = DrawGraphDotGrid(self.canvasSetting.mGridSize, size=1)
-        self.canvas = DemoCanvas(self)
-        # self.canvas.maxScale = self.canvasSetting.mFMaxScale
-        # self.canvas.minScale = self.canvasSetting.mFMinScale
-        # self.canvas.gridUnder = self._canvasGrid
-        # self.canvas.set_mode(GUIModeMouse(self.canvas))
-        # member variable
-        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-        self.toolbarIconSize = wx.Size(16, 16)
-        # self.canvasToolbar = self._create_toolbar()
-        # self.canvasStatusbar = self._create_statusbar()
-        # self.mainSizer.Add(self.canvasToolbar, 0, wx.EXPAND)
-        self.mainSizer.Add(self.canvas, 1, wx.EXPAND)
-        # self.mainSizer.Add(self.canvasStatusbar, 0, wx.EXPAND)
-        self._bind_event()
-        self.SetSizer(self.mainSizer)
-        self.Layout()
-
-    def _bind_event(self):
-        self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
-
-    def on_key_down(self, evt):
-        print('on_key_down', evt)
-
 
 class StateChartCanvasViewPanel(wx.Panel):
     def __init__(self, parent, wx_id):
@@ -94,10 +55,14 @@ class StateChartCanvasViewPanel(wx.Panel):
         """
         self._canvasGrid = DrawGraphDotGrid(self.canvasSetting.mGridSize, size=1)
         self.canvas = WxCanvas(self, wx.ID_ANY, debug=self.canvasSetting.mDebug)
+        self.canvas.init_all()
         self.canvas.maxScale = self.canvasSetting.mFMaxScale
         self.canvas.minScale = self.canvasSetting.mFMinScale
         self.canvas.gridUnder = self._canvasGrid
         self.canvas.set_mode(GUIModeMouse(self.canvas))
+        self._drawObjectCurrentConnPt = None
+        self._lstCtrlPtDrawObjects = list()
+        self._wires = dict()
         # member variable
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.toolbarIconSize = wx.Size(16, 16)
@@ -198,8 +163,8 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.Bind(WxGEvent.EVT_MIDDLE_UP, self.on_mouse_middle_up_view)
         self.Bind(WxGEvent.EVT_LEFT_DCLICK, self.on_item_double_click)
         self.Bind(WxGEvent.EVT_SCALE_CHANGED, self.on_canvas_scale_changed)
-        # self.Bind(wx.EVT_KEY_DOWN, self.on_key_down_view)
-        # use EVT_CHAR_HOOK replace EVT_KEY_DOWN, if use panel in a panel
+        # self.Bind(wx.EVT_KEY_DOWN, self.on_key_down_view) not works
+        # use EVT_CHAR_HOOK replace EVT_KEY_DOWN better, if use a panel in another panel
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down_view)
 
     def _unbind_all_mouse_events(self):
@@ -214,6 +179,37 @@ class StateChartCanvasViewPanel(wx.Panel):
     def update_scale_info_test(self):
         self.canvasStatusbar.SetStatusText('scale:%.2F' % self.canvasSetting.mFScale, 0)
 
+    def add_connection_pair(self, src_node, dst_node, src_pt, dst_pt):
+        _wire = TransitionWireShape()
+        _wire.uuid = util_get_uuid_string()
+        _wire.srcNode = src_node
+        _wire.dstNode = dst_node
+        _wire.set_src_point(src_pt)
+        _wire.set_dst_point(dst_pt)
+        _wire.set_connection_valid_style()
+        self.add_item(_wire)
+        self._wires.update({_wire.uuid: _wire})
+        _wire.srcNode.add_out_wire(_wire)
+        _wire.dstNode.add_in_wire(_wire)
+        self.canvas.draw()
+
+    def update_connection_pair(self, wire_item, org_src_node, org_dst_node):
+        if org_src_node is not wire_item.srcNode:
+            org_src_node.remove_out_wire(wire_item)
+            wire_item.srcNode.add_out_wire(wire_item)
+        if org_dst_node is not wire_item.dstNode:
+            org_dst_node.remove_in_wire(wire_item)
+            wire_item.dstNode.add_in_wire(wire_item)
+
+    def remove_connection_pair(self, wire, org_src_node, org_dst_node):
+        _uuid = wire.uuid
+        if _uuid in self._wires:
+            self._wires.pop(_uuid)
+        self.remove_item(wire)
+        org_src_node.remove_out_wire(wire)
+        org_dst_node.remove_in_wire(wire)
+        self.canvas.draw(True)
+
     def on_tool_changed(self, evt, flag):
         self.canvasSetting.mMode = flag
         if flag in [EnumCanvasToolbarMode.STATE,
@@ -227,77 +223,100 @@ class StateChartCanvasViewPanel(wx.Panel):
         elif flag == EnumCanvasToolbarMode.POINTER:
             if self.canvas.GUIMode is None or not isinstance(self.canvas.GUIMode, GUIModeMouse):
                 self.canvas.set_mode(GUIModeMouse())
+        elif flag == EnumCanvasToolbarMode.CONNECTION:
+            if self.canvas.GUIMode is None or not isinstance(self.canvas.GUIMode, GUIModeConnection):
+                # if self._drawObjectConnPts not in self.canvas.get_fore_draw_list():
+                #     self.canvas.add_object(self._drawObjectConnPts)
+                self.canvas.set_mode(GUIModeConnection())
+        pub.sendMessage(EnumAppSignals.sigV2VCanvasToolbarModeChanged, mode=flag)
 
     def on_canvas_scale_changed(self, event):
         self.canvasSetting.mFScale = event.get_scale()
         self.update_scale_info_test()
 
     def on_key_down_view(self, evt: wx.KeyEvent):
-        print('on_key_down_view',evt.GetKeyCode())
         _k_code = evt.GetKeyCode()
-        self.process_key_down(_k_code)
+        if _k_code == wx.WXK_ESCAPE:
+            self.reset_toolbar_mode()
         evt.Skip()
 
-    def on_key_up_view(self, evt):
-        print('on_key_up_view')
-
-    def process_key_down(self, k_code):
-        if k_code == wx.WXK_ESCAPE:
-            _tool = self.canvasToolbar.FindToolByIndex(EnumCanvasToolbarMode.POINTER)
-            if _tool is not None:
-                self.canvasToolbar.ToggleTool(_tool.GetId(), True)
-                self.on_tool_changed(None, EnumCanvasToolbarMode.POINTER)
-                self.canvasToolbar.Refresh()
+    def reset_toolbar_mode(self):
+        _tool = self.canvasToolbar.FindToolByIndex(EnumCanvasToolbarMode.POINTER)
+        if _tool is not None:
+            self.canvasToolbar.ToggleTool(_tool.GetId(), True)
+            self.on_tool_changed(None, EnumCanvasToolbarMode.POINTER)
+            self.canvasToolbar.Refresh()
 
     def add_item(self, item):
+        # todo: base on the item style determinne, if bind the event, set the mode...
         if item is None:
             return
         _obj = self.canvas.add_object(item)
-        _obj.Bind(WxGEvent.EVT_FC_LEFT_DOWN, self.on_left_down_item)
-        _obj.Bind(WxGEvent.EVT_FC_LEFT_UP, self.on_left_up_item)
-        _obj.Bind(WxGEvent.EVT_FC_ENTER_OBJECT, self.on_enter_item)
-        _obj.Bind(WxGEvent.EVT_FC_LEAVE_OBJECT, self.on_leave_item)
+        _obj.bind(WxGEvent.EVT_FC_LEFT_DOWN, self.on_left_down_item)
+        _obj.bind(WxGEvent.EVT_FC_LEFT_UP, self.on_left_up_item)
+        _obj.bind(WxGEvent.EVT_FC_ENTER_OBJECT, self.on_enter_item)
+        _obj.bind(WxGEvent.EVT_FC_LEAVE_OBJECT, self.on_leave_item)
         self.canvas.draw()
+        return _obj
 
     def remove_item(self, item):
         if isinstance(item, DrawObject):
             self.canvas.remove_object(item)
             # item.UnBindAll()
 
+    def show_item_connect_points(self, item, state=True):
+        if self._drawObjectCurrentConnPt is not None:
+            if self.canvas.has_object(self._drawObjectCurrentConnPt):
+                self.canvas.remove_object(self._drawObjectCurrentConnPt)
+        self._drawObjectCurrentConnPt = item.get_connection_points_shape()
+        if state:
+            self.canvas.add_object(self._drawObjectCurrentConnPt)
+        else:
+            self.canvas.remove_object(self._drawObjectCurrentConnPt)
+
     def on_item_double_click(self, *args):
         print('on_item_double_click', *args)
 
     def on_left_down_item(self, item):
         print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)
-        #     elif _mode == EnumCanvasToolbarMode.CONNECTION:
-        #         _conn_style = item.get_connection_style()
-        #         if _conn_style == EnumShapeConnectionStyle.ANYWHERE:
-        #             self.nodeConnectionModifier = CanvasConnectionModifier(item)
-        #             self.nodeConnectionModifier.wire = WireShape(item.HitCoords, item.HitCoords)
-        #             self.nodeConnectionModifier.wire.set_line_style('ShortDash')
-        #             self.add_item(self.nodeConnectionModifier.wire)
 
     def on_left_up_item(self, item):
         print('on_item_left_up', item, item.hitCoordsPixel, item.hitCoords)
-        # if self.nodeConnectionModifier is not None:
-        #     self.remove_item(self.nodeConnectionModifier.wire)
-        #     self.nodeConnectionModifier = None
-        #     self.canvas.draw(True)
 
     def on_enter_item(self, item):
         print('on_enter_item', item, item.hitCoordsPixel, item.hitCoords)
         item.on_enter()
+        _gui_mode = self.canvas.GUIMode
+        if isinstance(_gui_mode, GUIModeConnection):
+            if isinstance(item, StateChartNode):
+                self.show_item_connect_points(item)
+
+        elif isinstance(_gui_mode, GUIModeMouse):
+            if isinstance(item, TransitionWireShape):
+                _ctrls_pts = item.get_control_points()
+                for pt in _ctrls_pts:
+                    _draw_obj = DrawObjectSquarePoint(pt, size=TransitionWireShape.CTRL_PT_SIZE)
+                    self._lstCtrlPtDrawObjects.append(self.canvas.add_object(_draw_obj))
+            if _gui_mode.useMouseRewire and isinstance(item, StateChartNode):
+                self.show_item_connect_points(item)
+        self.canvas.draw(True)
 
     def on_leave_item(self, item):
         print('on_leave_item', item, item.hitCoordsPixel, item.hitCoords)
         item.on_leave()
+        try:
+            self.show_item_connect_points(item, False)
+            self._drawObjectCurrentConnPt = None
+        except:
+            pass
+        if self._lstCtrlPtDrawObjects:
+            self.canvas.remove_objects(self._lstCtrlPtDrawObjects)
+            self._lstCtrlPtDrawObjects.clear()
+        self.canvas.draw(True)
 
     def on_motion_view(self, evt):
         _pos = evt.GetPosition()
         _world_pos = self.canvas.pixel_to_world(_pos)
-        # if self.nodeConnectionModifier is not None:
-        #     self.nodeConnectionModifier.wire.set_dst_point(_world_pos)
-        #     self.canvas.draw(True)
         evt.Skip()
 
     def on_mouse_wheel_view(self, evt: wx.MouseEvent):
@@ -314,10 +333,6 @@ class StateChartCanvasViewPanel(wx.Panel):
     def on_mouse_left_up_view(self, evt):
         _pos = evt.GetPosition()
         _world_pos = wx.RealPoint(self.canvas.pixel_to_world(_pos))
-        # if self.nodeConnectionModifier is not None:
-        #     self.remove_item(self.nodeConnectionModifier.wire)
-        #     self.nodeConnectionModifier = None
-        #     self.canvas.draw(True)
         evt.Skip()
 
     def on_mouse_middle_down_view(self, evt):

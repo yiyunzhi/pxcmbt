@@ -2,7 +2,7 @@ from .draw_object import DrawObject
 from .draw_object_mixin import *
 
 
-class Arrow(PositionObjectMixin, LineOnlyMixin, DrawObject):
+class DrawObjectArrow(PositionObjectMixin, LineOnlyMixin, DrawObject):
     """
     Draws an arrow
 

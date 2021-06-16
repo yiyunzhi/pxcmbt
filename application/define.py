@@ -1,5 +1,4 @@
 import enum
-from blinker import signal
 
 APP_NAME = 'PxCE MBT Editor'
 REQ_WX_VERSION_STRING = '4.1.1'
@@ -33,4 +32,6 @@ class EnumPanelRole(enum.IntEnum):
 
 
 class EnumAppSignals:
-    sigV2VModelTreeItemDoubleClicked = signal('sigV2VModelTreeItemDoubleClicked')
+    sigV2VModelTreeItemDoubleClicked = 'sigV2VModelTreeItemDoubleClicked'
+    sigV2VCanvasToolbarModeChanged = 'sigV2VCanvasToolbarModeChanged'
+    sigV2VGuiModeDelItemRequested = 'sigV2VGuiModeDelItemRequested'

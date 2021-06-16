@@ -1,6 +1,7 @@
 import wx
 import six
-from .utils import color_generator
+from .utils import util_color_generator
+
 
 class DrawObject:
     """
@@ -89,10 +90,13 @@ class DrawObject:
         self.hitBrush = wx.TRANSPARENT_BRUSH
         self.hitPen = wx.TRANSPARENT_PEN
         self.isVisible = is_visible
-        self.boundingBox=None
+        self.boundingBox = None
 
     def set_canvas(self, canvas):
         self._canvas = canvas
+
+    def get_canvas(self):
+        return self._canvas
 
     def bind(self, event, callback_func):
         """
@@ -126,7 +130,7 @@ class DrawObject:
         if not self.hitColor:
             if not self._canvas.hitColorGenerator:
                 # first call to prevent the background color from being used.
-                self._canvas.hitColorGenerator = color_generator()
+                self._canvas.hitColorGenerator = util_color_generator()
                 if six.PY3:
                     next(self._canvas.hitColorGenerator)
                 else:
@@ -153,7 +157,7 @@ class DrawObject:
         # fixme: this only removes one from each list, there could be more.
         # + patch by Tim Ansel
         if self._canvas.hitDict:
-            for event in self._canvas.hitDict.itervalues():
+            for _,event in self._canvas.hitDict.items():
                 try:
                     del event[self.hitColor]
                 except KeyError:

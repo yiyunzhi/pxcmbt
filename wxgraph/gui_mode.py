@@ -83,8 +83,11 @@ class GUIModeBase(object):
         self.canvas = canvas
         self.cursors = GraphCursors()
         self.cursor = wx.NullCursor
+        self.blockGraphEvent = False
 
     def _fire_graph_event(self, event, event_type):
+        if self.blockGraphEvent:
+            return
         if not self.canvas.HitTest(event, event_type):
             self.canvas.raise_graph_event(event, event_type)
 
@@ -136,6 +139,8 @@ class GUIModeBase(object):
         self._fire_graph_event(event, _event_type)
 
     def on_motion(self, event):
+        if self.blockGraphEvent:
+            return
         # The Move event always gets raised, even if there is a hit-test
         _event_type = EVT_FC_MOTION
         # process the object hit test for EVT_MOTION bindings

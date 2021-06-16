@@ -1,9 +1,10 @@
 import numpy as N
 from .draw_object import DrawObject
 from .draw_object_mixin import *
+from .utils import util_find_closest_pt_idx
 
 
-class PointSet(PointsObjectMixin, ColorOnlyMixin, DrawObject):
+class DrawObjectPointSet(PointsObjectMixin, ColorOnlyMixin, DrawObject):
     """
     Draws a set of points
 
@@ -68,8 +69,7 @@ class PointSet(PointsObjectMixin, ColorOnlyMixin, DrawObject):
          2-tuple or (2,) numpy array in World coordinates
 
         """
-        _d = self.points - pos
-        return N.argmin(N.hypot(_d[:, 0], _d[:, 1]))
+        return util_find_closest_pt_idx(self.points, pos)
 
     def draw_d2(self, dc, points):
         # A Little optimization for a diameter2 - point
@@ -88,7 +88,7 @@ class PointSet(PointsObjectMixin, ColorOnlyMixin, DrawObject):
             self.draw_d2(dc, _points)
         else:
             dc.SetBrush(self.brush)
-            #fixme: I really should add a DrawCircleList to wxPython
+            # fixme: I really should add a DrawCircleList to wxPython
             if len(_points) > 100:
                 _xy = _points
                 _xywh = N.concatenate((_xy - _radius, N.ones(_xy.shape) * self.diameter), 1)

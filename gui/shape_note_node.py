@@ -4,10 +4,9 @@ from .define_gui import *
 from .base_state_chart_node import StateChartNode
 
 
-class NoteNodeShape(DrawObjectGroup, StateChartNode):
+class NoteNodeShape(StateChartNode):
     def __init__(self, pos, text='Notes...', in_foreground=False, visible=True):
-        DrawObjectGroup.__init__(self, in_foreground=in_foreground, is_visible=visible)
-        StateChartNode.__init__(self)
+        StateChartNode.__init__(self, in_foreground=in_foreground, is_visible=visible)
         self.connectionStyle = EnumShapeConnectionStyle.NONE
         self.text = text
         self.textBoxBgColor = '#abc'

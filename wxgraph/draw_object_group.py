@@ -1,7 +1,7 @@
 import six
 from .draw_object import DrawObject
 import wxgraph.util_bbox as BBox
-from .utils import color_generator
+from .utils import util_color_generator
 
 
 class DrawObjectGroup(DrawObject):
@@ -35,19 +35,12 @@ class DrawObjectGroup(DrawObject):
         self.calc_bounding_box()
 
     # re-define _Canvas property so that the sub-objects get set up right
-    @property
-    def canvas(self):
-        """
-        getter for the _Canvas property
-        """
-        return self._actualCanvas
 
-    @canvas.setter
-    def canvas(self, canvas):
+    def set_canvas(self, canvas):
         """
         setter for Canvas property
         """
-        self._actualCanvas = canvas
+        self._canvas = canvas
         for obj in self.objectList:
             obj.set_canvas(canvas)
 
@@ -194,7 +187,7 @@ class DrawObjectGroup(DrawObject):
             self._canvas.make_new_ht_bitmap()
         if not self.hitColor:
             if not self._canvas.hitColorGenerator:
-                self._canvas.hitColorGenerator = color_generator()
+                self._canvas.hitColorGenerator = util_color_generator()
                 # first call to prevent the background color from being used.
                 if six.PY2:
                     self._canvas.hitColorGenerator.next()

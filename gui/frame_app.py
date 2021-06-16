@@ -22,6 +22,7 @@
 import sys, os, traceback, threading
 import wx
 import wx.lib.agw.aui as aui
+from pubsub import pub
 from .assets_images import *
 from .panel_canvas import StateChartCanvasViewPanel
 from .panel_feature import GuiFeaturePanel
@@ -32,7 +33,7 @@ from application.log_logger import get_logger
 from application.define import EnumAppSignals, EnumPanelRole
 
 
-#todo: integration with tcs.
+# todo: integration with tcs.
 
 class WxLog:
     def WriteText(self, text):
@@ -224,7 +225,7 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.on_about, id=wx.ID_ABOUT)
         # bind event update UI, multi allowed
-        EnumAppSignals.sigV2VModelTreeItemDoubleClicked.connect(self.on_ext_sig_model_item_double_clicked)
+        pub.subscribe(self.on_ext_sig_model_item_double_clicked,EnumAppSignals.sigV2VModelTreeItemDoubleClicked)
 
     def on_child_focused(self, evt):
         _win = evt.GetWindow()
