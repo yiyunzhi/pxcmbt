@@ -221,3 +221,26 @@ class GuiFeatureLibItemContextMenu(GuiContextMenu):
         # will be called before PopupMenu returns.
         self.parent.PopupMenu(_menu)
         _menu.Destroy()
+
+
+class GuiStateItemContextMenu(GuiContextMenu):
+    def __init__(self, parent):
+        super(GuiStateItemContextMenu, self).__init__(name='cmNodeItemLib', parent=parent)
+        self.popupDeleteID = wx.NewIdRef()
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_delete_item, id=self.popupDeleteID)
+
+    def show(self):
+        # make a menu
+        _menu = wx.Menu()
+        # Show how to put an icon in the menu
+        # _item = wx.MenuItem(_menu, self.popupPropID, "Property")
+        # bmp = images.Smiles.GetBitmap()
+        # item.SetBitmap(bmp)
+        # _menu.Append(_item)
+        # add some other items
+        _menu.AppendSeparator()
+        _menu.Append(self.popupDeleteID, "Delete")
+        # make a submenu
+        # will be called before PopupMenu returns.
+        self.parent.PopupMenu(_menu)
+        _menu.Destroy()

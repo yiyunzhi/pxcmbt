@@ -21,10 +21,13 @@ class EnumItemRole(enum.IntEnum):
     ROOT = 0
     DEV_FEATURE = 1
     DEV_FEATURE_STATE = 2
-    USER_STATE_FEATURE = 3
-    USER_STATE_FEATURE_STATE = 4
+    DEV_FEATURE_EVENT = 3
+    USER_STATE_FEATURE = 4
+    USER_STATE_FEATURE_STATE = 5
     FEATURE_LIB = 50
     FEATURE_LIB_ITEM = 51
+    ITEM_STATE = 100
+    ITEM_TRANSITION = 110
 
 
 class EnumPanelRole(enum.IntEnum):

@@ -50,6 +50,9 @@ class FeaturePanelIconRepo:
         self.stateIcon = self._image_list.Add(
             wx.Image(PATH_GUI_IMAGES + '\\icon_state.png', wx.BITMAP_TYPE_PNG).Scale(
                 *self._icon_size).ConvertToBitmap())
+        self.eventIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_bell.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
         self.modelIcon = self._image_list.Add(
             wx.Image(PATH_GUI_IMAGES + '\\icon_model.png', wx.BITMAP_TYPE_PNG).Scale(
                 *self._icon_size).ConvertToBitmap())
@@ -131,6 +134,15 @@ class GuiFeaturePanel(wx.Panel):
         self.tree.SetItemData(self._deviceStateItem, self.deviceStateItemData)
         self.tree.SetItemImage(self._deviceStateItem, self._iconRepo.stateIcon, wx.TreeItemIcon_Normal)
         self._itemMap.update({self.deviceStateItemData.uuid: self._deviceStateItem})
+
+        self._deviceEvtItem = self.tree.AppendItem(self._deviceFeatureItem, "Events")
+        self._deviceEvtItemData = StandardItemData()
+        self._deviceEvtItemData.role = EnumItemRole.DEV_FEATURE_EVENT
+        self._deviceEvtItemData.uuid = util_get_uuid_string()
+        self._deviceEvtItemData.labelReadonly = True
+        self.tree.SetItemData(self._deviceEvtItem, self._deviceEvtItemData)
+        self.tree.SetItemImage(self._deviceEvtItem, self._iconRepo.eventIcon, wx.TreeItemIcon_Normal)
+        self._itemMap.update({self._deviceEvtItemData.uuid: self._deviceEvtItem})
 
         self._featureLibItem = self.tree.AppendItem(self.root, "Feature Libraries")
         self.featureLibItemData = StandardItemData()
@@ -225,7 +237,7 @@ class GuiFeaturePanel(wx.Panel):
         _item = event.GetItem()
         _data = self.tree.GetItemData(_item)
         if hasattr(_data, 'uuid'):
-            pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked,sender=self,uuid=_data.uuid)
+            pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked, uuid=_data.uuid)
 
     def update_item_tool_tip(self, uuid, tooltip_string):
         _item = self._itemMap.get(uuid)
@@ -337,6 +349,16 @@ class GuiFeaturePanel(wx.Panel):
     def on_show_lib_item_detail(self, evt):
         pass
 
+    def get_item_role_by_uuid(self, uuid):
+        _item = self._itemMap.get(uuid)
+        if _item is not None:
+            _ud = self.tree.GetItemData(_item)
+            if hasattr(_ud, 'role'):
+                return _ud.role
+            return None
+        else:
+            return None
+
     def get_item_name_by_uuid(self, uuid):
         _item = self._itemMap.get(uuid)
         if _item is not None:
@@ -347,9 +369,9 @@ class GuiFeaturePanel(wx.Panel):
     def get_item_path_by_uuid(self, uuid):
         _item = self._itemMap.get(uuid)
         if _item is not None:
-            _path=list()
+            _path = list()
             _path.append(self.tree.GetItemText(_item))
-            _parent=self.tree.GetItemParent(_item)
+            _parent = self.tree.GetItemParent(_item)
             while _parent:
                 _path.append(self.tree.GetItemText(_parent))
                 _parent = self.tree.GetItemParent(_parent)
@@ -362,119 +384,119 @@ class GuiFeaturePanel(wx.Panel):
         if _item is not None:
             self.tree.SelectItem(_item, True)
 
-    def set_session_item_in_state_run(self, uuid):
-        _session_item = self._itemMap.get(uuid)
-        if _session_item is None:
-            return
-        _item_data = self.tree.GetItemData(_session_item)
-        _item_data.tooltip = 'IS STARTET'
-        _img = getattr(self._iconRepo, 'session%sIconActive' % _item_data.flag)
-        self.tree.SetItemImage(_session_item, _img, wx.TreeItemIcon_Normal)
-
-    def set_session_item_in_state_stop(self, uuid):
-        _session_item = self._itemMap.get(uuid)
-        if _session_item is None:
-            return
-        _item_data = self.tree.GetItemData(_session_item)
-        _item_data.tooltip = 'IS STOPPED'
-        _img = getattr(self._iconRepo, 'session%sIconDefault' % _item_data.flag)
-        self.tree.SetItemImage(_session_item, _img, wx.TreeItemIcon_Normal)
-
-    def remove_session_item_nodes(self, uuid):
-        _session_item = self._itemMap.get(uuid)
-        _del_slot = []
-        _del_ep = []
-        for x in helper.util_wx_tree_walk_branches(self.tree, _session_item):
-            _data = self.tree.GetItemData(x)
-            if hasattr(_data, 'role'):
-                if _data.role == EnumItemRole.SLOT:
-                    _del_slot.append(x)
-                    self._itemMap.pop(_data.uuid)
-                    for y in helper.util_wx_tree_walk_branches(self.tree, x):
-                        _data2 = self.tree.GetItemData(y)
-                        if _data2.role == EnumItemRole.ENDPOINT:
-                            _del_ep.append(_data2.uuid)
-                            self._itemMap.pop(_data2.uuid)
-        for x in _del_slot:
-            self.tree.Delete(x)
-        return _del_ep
-
-    def _update_slot_ep_node(self, parent_node, parent_uuid, slot_path, label, flag):
-        _ep_data = StandardItemData()
-        _ep_data.uuid = helper.util_get_uuid_string()
-        _ep_data.role = EnumItemRole.ENDPOINT
-        _ep_data.flag = flag
-        _ep_data.labelReadonly = True
-        _ep_data.parentUUID = parent_uuid
-        _ep_data.slotPath = slot_path
-        _ep_icon = getattr(self._iconRepo, 'slot%sIcon' % _ep_data.flag)
-        _ep_item = self.tree.AppendItem(parent_node, label)
-        self.tree.SetItemImage(_ep_item, _ep_icon, wx.TreeItemIcon_Normal)
-        self.tree.SetItemData(_ep_item, _ep_data)
-        self._itemMap.update({_ep_data.uuid: _ep_item})
-        return _ep_data
-
-    def update_session_item_nodes(self, uuid, nodes, endpoints):
-        _item = self._itemMap.get(uuid)
-        _ep_items_data = dict()
-        if _item is None:
-            return _ep_items_data
-        for slot_path, slot_inst in nodes.items():
-            _name = slot_inst.p_name
-            _slot_path = slot_inst.p_slot_path
-            _slot_item = self.tree.AppendItem(_item, '#%s %s' % (slot_inst.p_slot_nr, _name))
-            _slot_item_data = StandardItemData()
-            _slot_item_data.role = EnumItemRole.SLOT
-            _slot_item_data.uuid = helper.util_get_uuid_string()
-            _slot_item_data.flag = _slot_path
-            _slot_item_data.labelReadonly = False
-            self._itemMap.update({_slot_item_data.uuid: _slot_item})
-            self.tree.SetItemData(_slot_item, _slot_item_data)
-            _bus_family = slot_inst.p_bus_family
-            _prod_family = slot_inst.p_family
-            _is_safety = any([x in _prod_family for x in ['PS', 'SBT', 'SBTV3']])
-            if _is_safety:
-                _slot_icon = getattr(self._iconRepo, 'slot%sFSIcon' % _bus_family)
-            else:
-                _slot_icon = getattr(self._iconRepo, 'slot%sIcon' % _bus_family)
-            self.tree.SetItemImage(_slot_item, _slot_icon, wx.TreeItemIcon_Normal)
-            # guess endpoints
-            _ep_io_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_IO)
-            _ep_info_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_INFO)
-            _ep_fcom_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_FCOM)
-            _ep_diag_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_DIAG)
-            _ep_param_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_PARAM)
-            _ep_io = endpoints.get(_ep_io_key)
-            _ep_info = endpoints.get(_ep_info_key)
-            _ep_fcom = endpoints.get(_ep_fcom_key)
-            _ep_diag = endpoints.get(_ep_diag_key)
-            _ep_param = endpoints.get(_ep_param_key)
-            if _ep_io:
-                _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
-                                                     '%s' % EPTypeEnum.EP_IO, EPTypeEnum.EP_IO)
-                _ep_items_data.update({_ep_data.uuid: _ep_data})
-            if _ep_info:
-                _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
-                                                     '%s' % EPTypeEnum.EP_INFO, EPTypeEnum.EP_INFO)
-                _ep_items_data.update({_ep_data.uuid: _ep_data})
-            if _ep_fcom:
-                _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
-                                                     '%s' % EPTypeEnum.EP_FCOM, EPTypeEnum.EP_FCOM)
-                _ep_items_data.update({_ep_data.uuid: _ep_data})
-            if _ep_diag:
-                _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
-                                                     '%s' % EPTypeEnum.EP_DIAG, EPTypeEnum.EP_DIAG)
-                _ep_items_data.update({_ep_data.uuid: _ep_data})
-            if _ep_param:
-                _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
-                                                     '%s' % EPTypeEnum.EP_PARAM, EPTypeEnum.EP_PARAM)
-                _ep_items_data.update({_ep_data.uuid: _ep_data})
-        return _ep_items_data
-
-    def set_session_item_in_state_error(self, uuid, err_str):
-        _session_item = self._itemMap.get(uuid)
-        if _session_item is None:
-            return
-        _item_data = self.tree.GetItemData(_session_item)
-        _item_data.tooltip = 'Error: %s' % err_str
-        self.tree.SetItemImage(_session_item, self._iconRepo.exclamationIcon, wx.TreeItemIcon_Normal)
+    # def set_session_item_in_state_run(self, uuid):
+    #     _session_item = self._itemMap.get(uuid)
+    #     if _session_item is None:
+    #         return
+    #     _item_data = self.tree.GetItemData(_session_item)
+    #     _item_data.tooltip = 'IS STARTET'
+    #     _img = getattr(self._iconRepo, 'session%sIconActive' % _item_data.flag)
+    #     self.tree.SetItemImage(_session_item, _img, wx.TreeItemIcon_Normal)
+    #
+    # def set_session_item_in_state_stop(self, uuid):
+    #     _session_item = self._itemMap.get(uuid)
+    #     if _session_item is None:
+    #         return
+    #     _item_data = self.tree.GetItemData(_session_item)
+    #     _item_data.tooltip = 'IS STOPPED'
+    #     _img = getattr(self._iconRepo, 'session%sIconDefault' % _item_data.flag)
+    #     self.tree.SetItemImage(_session_item, _img, wx.TreeItemIcon_Normal)
+    #
+    # def remove_session_item_nodes(self, uuid):
+    #     _session_item = self._itemMap.get(uuid)
+    #     _del_slot = []
+    #     _del_ep = []
+    #     for x in helper.util_wx_tree_walk_branches(self.tree, _session_item):
+    #         _data = self.tree.GetItemData(x)
+    #         if hasattr(_data, 'role'):
+    #             if _data.role == EnumItemRole.SLOT:
+    #                 _del_slot.append(x)
+    #                 self._itemMap.pop(_data.uuid)
+    #                 for y in helper.util_wx_tree_walk_branches(self.tree, x):
+    #                     _data2 = self.tree.GetItemData(y)
+    #                     if _data2.role == EnumItemRole.ENDPOINT:
+    #                         _del_ep.append(_data2.uuid)
+    #                         self._itemMap.pop(_data2.uuid)
+    #     for x in _del_slot:
+    #         self.tree.Delete(x)
+    #     return _del_ep
+    #
+    # def _update_slot_ep_node(self, parent_node, parent_uuid, slot_path, label, flag):
+    #     _ep_data = StandardItemData()
+    #     _ep_data.uuid = helper.util_get_uuid_string()
+    #     _ep_data.role = EnumItemRole.ENDPOINT
+    #     _ep_data.flag = flag
+    #     _ep_data.labelReadonly = True
+    #     _ep_data.parentUUID = parent_uuid
+    #     _ep_data.slotPath = slot_path
+    #     _ep_icon = getattr(self._iconRepo, 'slot%sIcon' % _ep_data.flag)
+    #     _ep_item = self.tree.AppendItem(parent_node, label)
+    #     self.tree.SetItemImage(_ep_item, _ep_icon, wx.TreeItemIcon_Normal)
+    #     self.tree.SetItemData(_ep_item, _ep_data)
+    #     self._itemMap.update({_ep_data.uuid: _ep_item})
+    #     return _ep_data
+    #
+    # def update_session_item_nodes(self, uuid, nodes, endpoints):
+    #     _item = self._itemMap.get(uuid)
+    #     _ep_items_data = dict()
+    #     if _item is None:
+    #         return _ep_items_data
+    #     for slot_path, slot_inst in nodes.items():
+    #         _name = slot_inst.p_name
+    #         _slot_path = slot_inst.p_slot_path
+    #         _slot_item = self.tree.AppendItem(_item, '#%s %s' % (slot_inst.p_slot_nr, _name))
+    #         _slot_item_data = StandardItemData()
+    #         _slot_item_data.role = EnumItemRole.SLOT
+    #         _slot_item_data.uuid = helper.util_get_uuid_string()
+    #         _slot_item_data.flag = _slot_path
+    #         _slot_item_data.labelReadonly = False
+    #         self._itemMap.update({_slot_item_data.uuid: _slot_item})
+    #         self.tree.SetItemData(_slot_item, _slot_item_data)
+    #         _bus_family = slot_inst.p_bus_family
+    #         _prod_family = slot_inst.p_family
+    #         _is_safety = any([x in _prod_family for x in ['PS', 'SBT', 'SBTV3']])
+    #         if _is_safety:
+    #             _slot_icon = getattr(self._iconRepo, 'slot%sFSIcon' % _bus_family)
+    #         else:
+    #             _slot_icon = getattr(self._iconRepo, 'slot%sIcon' % _bus_family)
+    #         self.tree.SetItemImage(_slot_item, _slot_icon, wx.TreeItemIcon_Normal)
+    #         # guess endpoints
+    #         _ep_io_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_IO)
+    #         _ep_info_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_INFO)
+    #         _ep_fcom_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_FCOM)
+    #         _ep_diag_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_DIAG)
+    #         _ep_param_key = '%s-%s' % (_slot_path, EPTypeEnum.EP_PARAM)
+    #         _ep_io = endpoints.get(_ep_io_key)
+    #         _ep_info = endpoints.get(_ep_info_key)
+    #         _ep_fcom = endpoints.get(_ep_fcom_key)
+    #         _ep_diag = endpoints.get(_ep_diag_key)
+    #         _ep_param = endpoints.get(_ep_param_key)
+    #         if _ep_io:
+    #             _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
+    #                                                  '%s' % EPTypeEnum.EP_IO, EPTypeEnum.EP_IO)
+    #             _ep_items_data.update({_ep_data.uuid: _ep_data})
+    #         if _ep_info:
+    #             _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
+    #                                                  '%s' % EPTypeEnum.EP_INFO, EPTypeEnum.EP_INFO)
+    #             _ep_items_data.update({_ep_data.uuid: _ep_data})
+    #         if _ep_fcom:
+    #             _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
+    #                                                  '%s' % EPTypeEnum.EP_FCOM, EPTypeEnum.EP_FCOM)
+    #             _ep_items_data.update({_ep_data.uuid: _ep_data})
+    #         if _ep_diag:
+    #             _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
+    #                                                  '%s' % EPTypeEnum.EP_DIAG, EPTypeEnum.EP_DIAG)
+    #             _ep_items_data.update({_ep_data.uuid: _ep_data})
+    #         if _ep_param:
+    #             _ep_data = self._update_slot_ep_node(_slot_item, uuid, slot_path,
+    #                                                  '%s' % EPTypeEnum.EP_PARAM, EPTypeEnum.EP_PARAM)
+    #             _ep_items_data.update({_ep_data.uuid: _ep_data})
+    #     return _ep_items_data
+    #
+    # def set_session_item_in_state_error(self, uuid, err_str):
+    #     _session_item = self._itemMap.get(uuid)
+    #     if _session_item is None:
+    #         return
+    #     _item_data = self.tree.GetItemData(_session_item)
+    #     _item_data.tooltip = 'Error: %s' % err_str
+    #     self.tree.SetItemImage(_session_item, self._iconRepo.exclamationIcon, wx.TreeItemIcon_Normal)

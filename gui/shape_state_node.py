@@ -1,4 +1,5 @@
 import wx
+import wx.propgrid as wxpg
 import numpy as np
 from wxgraph import (DrawObjectRectangle,
                      DrawObjectCircle,
@@ -14,6 +15,7 @@ from .utils_helper import util_section_middle_split
 class StateNodeShape(StateChartNode):
     def __init__(self, pos, name='untitled State', evt_desc='Enter:\nExit:\n', in_foreground=False, visible=True):
         StateChartNode.__init__(self, in_foreground=in_foreground, is_visible=visible)
+        self.position = pos
         self.nameText = name
         self.evtDescText = evt_desc
         self.bgColor = '#C7D3D4'
@@ -33,6 +35,24 @@ class StateNodeShape(StateChartNode):
         self.add_object(self.evtDescTextBox)
         self.set_name(name)
         self.set_event_desc_text(evt_desc)
+
+    def get_properties(self):
+        _props = list()
+        _props.append(
+            {'label': 'uuid', 'name': 'uuid', 'value': self.uuid, 'type': 'string', 'visible': True, 'readonly': True})
+        _props.append(
+            {'label': 'role', 'name': 'role', 'value': self.role, 'type': 'integer', 'visible': True,
+             'readonly': True})
+        _props.append(
+            {'label': 'position', 'name': 'position', 'value': self.position, 'type': 'float', 'visible': True,
+             'readonly': True})
+        _props.append(
+            {'label': 'name', 'name': 'name', 'value': self.nameText, 'type': 'string', 'visible': True,
+             'readonly': False})
+        _props.append(
+            {'label': 'events', 'name': 'events', 'value': self.evtDescText, 'type': 'string', 'visible': True,
+             'readonly': False})
+        return _props
 
     def set_name(self, text):
         self.nameTextBox.set_text(text)

@@ -177,7 +177,7 @@ class DrawObjectGroup(DrawObject):
         """
         # slight variation on DrawObject Bind Method:
         # fixme: There is a lot of repeated code from the DrawObject method, but
-        ## it all needs a lot of cleaning up anyway.
+        #   it all needs a lot of cleaning up anyway.
         self.callBackFuncs[event] = callback_func
         self.isHitable = True
         self._canvas.useHitTest = True

@@ -3,15 +3,37 @@ import numpy as np
 from .define_gui import *
 from wxgraph import DrawObjectPointSet
 from wxgraph import util_bbox, DrawObjectGroup, utils
+from application.define import EnumItemRole
 
 
-class StateChartNode(DrawObjectGroup):
+class Serializable:
+    def __init__(self):
+        pass
+
+    def get_properties(self):
+        pass
+
+    def set_property(self, prop_name, prop_val):
+        pass
+
+    def get_property(self, prop_name):
+        pass
+
+    def serialize(self):
+        pass
+
+    def deserialize(self, data):
+        pass
+
+
+class StateChartNode(Serializable, DrawObjectGroup):
     CONN_PT_SHAPE_DIAMETER = 4
 
     def __init__(self, in_foreground=False, is_visible=True):
         DrawObjectGroup.__init__(self, in_foreground=in_foreground, is_visible=is_visible)
+        Serializable.__init__(self)
         self.uuid = None
-        self.role = ''
+        self.role = EnumItemRole.ITEM_STATE
         self.shapeStyle = EnumShapeStyle.STYLE_DEFAULT
         self.connectionStyle = EnumShapeConnectionStyle.ANYWHERE
         self._connectionPtShape = DrawObjectPointSet([(0, 0)], diameter=self.CONN_PT_SHAPE_DIAMETER,
@@ -23,18 +45,25 @@ class StateChartNode(DrawObjectGroup):
         self.inWires = list()
         self.outWires = list()
 
+    def get_properties(self):
+        pass
+
     def add_in_wire(self, wire):
         self.inWires.append(wire)
 
     def add_out_wire(self, wire):
         self.outWires.append(wire)
 
-    def remove_in_wire(self, wire):
-        if wire in self.inWires:
+    def remove_in_wire(self, wire=None):
+        if wire is None:
+            self.inWires.clear()
+        elif wire in self.inWires:
             self.inWires.remove(wire)
 
-    def remove_out_wire(self, wire):
-        if wire in self.outWires:
+    def remove_out_wire(self, wire=None):
+        if wire is None:
+            self.outWires.clear()
+        elif wire in self.outWires:
             self.outWires.remove(wire)
 
     def has_style(self, style):
@@ -75,11 +104,12 @@ class StateChartNode(DrawObjectGroup):
             return None, (0, 0)
 
 
-class StateChartTransition(DrawObjectGroup):
+class StateChartTransition(Serializable, DrawObjectGroup):
     def __init__(self, in_foreground=False, is_visible=True):
         DrawObjectGroup.__init__(self, in_foreground=in_foreground, is_visible=is_visible)
+        Serializable.__init__(self)
         self.uuid = None
-        self.role = ''
+        self.role = EnumItemRole.ITEM_TRANSITION
         self.shapeStyle = EnumShapeStyle.STYLE_DEFAULT
         self.isSelected = False
 

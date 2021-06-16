@@ -34,13 +34,7 @@ class GUIModePlace(GUIModeBase):
         _canvas_parent = self.canvas.GetParent()
         if item is None:
             return
-        _obj = self.canvas.add_object(item)
-        if _canvas_parent is not None:
-            _obj.bind(EVT_FC_LEFT_DOWN, _canvas_parent.on_left_down_item)
-            _obj.bind(EVT_FC_LEFT_UP, _canvas_parent.on_left_up_item)
-            _obj.bind(EVT_FC_ENTER_OBJECT, _canvas_parent.on_enter_item)
-            _obj.bind(EVT_FC_LEAVE_OBJECT, _canvas_parent.on_leave_item)
-        self.canvas.draw()
+        _canvas_parent.add_item(item)
 
     def set_shape_type(self, shape_type):
         self._shapeType = shape_type
@@ -144,7 +138,8 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
     # todo: multi item select with ctrl_key and rubberband
     def __init__(self, canvas=None):
         GUIModeBase.__init__(self, canvas)
-        self.selectedItems = list()
+        self.selectedNodeItems = list()
+        self.selectedWireItem = None
         self.orgPos = None
         self.curPos = None
         # variable for wire and rewire
@@ -179,19 +174,20 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
             return self.orgPos - self.curPos
         return self.curPos - self.orgPos
 
-    def _on_select_item(self, item):
-        _ctrl_key_state = wx.GetKeyState(wx.WXK_CONTROL)
-        #if item in self.selectedItems and item.isSelected:
-        item.set_selected(not item.isSelected)
-        if not item.isSelected and item in self.selectedItems:
-            self.selectedItems.remove(item)
-        elif item.isSelected and item not in self.selectedItems:
-            self.selectedItems.append(item)
-        if not _ctrl_key_state and item.isSelected:
-            self._reset_selected_items_style(item)
+    def _on_select_node_item(self, item):
 
-    def _reset_selected_items_style(self, exclusive=None):
-        for x in self.selectedItems:
+        _ctrl_key_state = wx.GetKeyState(wx.WXK_CONTROL)
+        # if item in self.selectedItems and item.isSelected:
+        item.set_selected(not item.isSelected)
+        if not item.isSelected and item in self.selectedNodeItems:
+            self.selectedNodeItems.remove(item)
+        elif item.isSelected and item not in self.selectedNodeItems:
+            self.selectedNodeItems.append(item)
+        if not _ctrl_key_state and item.isSelected:
+            self._reset_selected_node_items_style(item)
+
+    def _reset_selected_node_items_style(self, exclusive=None):
+        for x in self.selectedNodeItems:
             if exclusive is not None:
                 if x is exclusive:
                     continue
@@ -251,7 +247,7 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
         # self.canvas.raise_graph_event(event, EVT_FC_MOTION)
 
     def on_canvas_mode_changed(self, mode):
-        self._reset_selected_items_style()
+        self._reset_selected_node_items_style()
 
     def on_pan_move_timer(self):
         self.canvas.draw()
@@ -263,9 +259,10 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
         _hit_object = self.canvas.objectUnderMouse
         _ctrl_key_state = wx.GetKeyState(wx.WXK_CONTROL)
         if _hit_object is not None:
-            if _hit_object not in self.selectedItems:
-                self._on_select_item(_hit_object)
             if isinstance(_hit_object, TransitionWireShape):
+                self.selectedWireItem = _hit_object
+                self._reset_selected_node_items_style()
+                self.selectedNodeItems.clear()
                 _hit_object.guess_control_point(_world_pos)
                 _len = _hit_object.get_control_points_length()
                 self.wireOrgSrcNode = _hit_object.srcNode
@@ -278,14 +275,21 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
                     self.orgPos = _world_pos
                     self.curPos = _world_pos
             elif isinstance(_hit_object, StateChartNode):
+                if _ctrl_key_state or not self.selectedNodeItems:
+                    self._on_select_node_item(_hit_object)
+                elif len(self.selectedNodeItems) == 1:
+                    if self.selectedNodeItems[0] is not _hit_object:
+                        self._reset_selected_node_items_style()
+                        self.selectedNodeItems.clear()
+                        self._on_select_node_item(_hit_object)
                 self.orgPos = _world_pos
                 self.curPos = _world_pos
         else:
             self.rbStartPos = _pos
             self.rbDrawRect = True
             self.blockGraphEvent = True
-            self._reset_selected_items_style()
-            self.selectedItems.clear()
+            self._reset_selected_node_items_style()
+            self.selectedNodeItems.clear()
         super(GUIModeMouse, self).on_left_down(event)
 
     def on_left_up(self, event):
@@ -295,22 +299,26 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
         if _ctrl_key_state:
             pass
         else:
-            if self.selectedItems:
-                for item in self.selectedItems:
-                    if isinstance(item, TransitionWireShape):
-                        self.useMouseRewire = False
-                        if item.srcNode is None or item.dstNode is None:
-                            if _canvas_parent:
-                                _canvas_parent.remove_connection_pair(item, self.wireOrgSrcNode, self.wireOrgDstNode)
-                        else:
-                            if _canvas_parent:
-                                _canvas_parent.update_connection_pair(item, self.wireOrgSrcNode, self.wireOrgDstNode)
-                            item.restore_hit()
-                            item.currentSelectedCtrlPtIdx = -1
+            if self.selectedWireItem is not None:
+                self.useMouseRewire = False
+                if self.selectedWireItem.srcNode is None or self.selectedWireItem.dstNode is None:
+                    if _canvas_parent:
+                        _canvas_parent.remove_connection_pair(self.selectedWireItem, self.wireOrgSrcNode,
+                                                              self.wireOrgDstNode)
+                else:
+                    if _canvas_parent:
+                        _canvas_parent.update_connection_pair(self.selectedWireItem, self.wireOrgSrcNode,
+                                                              self.wireOrgDstNode)
+                    self.selectedWireItem.restore_hit()
+                    self.selectedWireItem.currentSelectedCtrlPtIdx = -1
+            if self.selectedNodeItems:
+                for item in self.selectedNodeItems:
+                    pass
                 if _hit_object is None:
-                    self.selectedItems.clear()
+                    self.selectedNodeItems.clear()
             self.curPos = None
             self.orgPos = None
+            self.selectedWireItem = None
             self.wireOrgSrcNode = None
             self.wireOrgDstNode = None
         if self.rbDrawRect:
@@ -346,23 +354,20 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
         _hit_object = self.canvas.objectUnderMouse
         if event.Dragging():
             if event.LeftIsDown():
-                if self.selectedItems:
-                    for item in self.selectedItems:
-                        self._update_position(_world_pos)
-                        _pos_diff = self._get_position_diff()
-                        if isinstance(item, StateChartNode):
-                            item.move(_pos_diff)
-                            for in_wire in item.inWires:
-                                in_wire.set_dst_point(in_wire.dstPt + _pos_diff)
-                            for out_wire in item.outWires:
-                                out_wire.set_src_point(out_wire.srcPt + _pos_diff)
-                        elif isinstance(item, TransitionWireShape):
-                            _object_at = self.canvas.object_at(_world_pos)
-                            self._on_rewire(item, _pos_diff, _object_at, _world_pos)
-                    self.canvas.draw(True)
-                else:
-                    if self.rbDrawRect:
-                        self._on_draw_rubber_band(event)
+                self._update_position(_world_pos)
+                _pos_diff = self._get_position_diff()
+                if self.selectedNodeItems:
+                    for item in self.selectedNodeItems:
+                        item.move(_pos_diff)
+                        for in_wire in item.inWires:
+                            in_wire.set_dst_point(in_wire.dstPt + _pos_diff)
+                        for out_wire in item.outWires:
+                            out_wire.set_src_point(out_wire.srcPt + _pos_diff)
+                if self.selectedWireItem:
+                    _object_at = self.canvas.object_at(_world_pos)
+                    self._on_rewire(self.selectedWireItem, _pos_diff, _object_at, _world_pos)
+                if self.rbDrawRect:
+                    self._on_draw_rubber_band(event)
             elif event.MiddleIsDown() and self.panStartMove is not None:
                 self.panEndMove = N.array(_pos)
                 _diff_move = self.panMidMove - self.panEndMove
@@ -370,13 +375,14 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
                 self.canvas.move_image(_diff_move, 'Pixel', redraw=False)
                 self.panMidMove = self.panEndMove
                 self.panMoveTimer.Start(self.panRedrawDelayMs, oneShot=True)
+            self.canvas.draw(True)
         super(GUIModeMouse, self).on_motion(event)
 
     def on_key_down(self, event: wx.KeyEvent):
         _k_code = event.GetKeyCode()
         if _k_code == wx.WXK_DELETE or _k_code == wx.WXK_NUMPAD_DELETE:
-            if self.selectedItems:
-                _lst = [x for x in self.selectedItems]
+            if self.selectedNodeItems:
+                _lst = [x for x in self.selectedNodeItems]
                 pub.sendMessage(EnumAppSignals.sigV2VGuiModeDelItemRequested, items=_lst)
 
     def update_screen(self):

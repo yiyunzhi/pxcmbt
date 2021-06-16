@@ -28,9 +28,10 @@ from .panel_canvas import StateChartCanvasViewPanel
 from .panel_feature import GuiFeaturePanel
 from .panel_props_container import PropContainerPanel
 from .panel_console import ConsolePanel
+from .panel_event_editor import EventEditorPanel
 from .define_gui import _, PATH_GUI_IMAGES, EnumCanvasToolbarMode
 from application.log_logger import get_logger
-from application.define import EnumAppSignals, EnumPanelRole
+from application.define import EnumAppSignals, EnumPanelRole, EnumItemRole
 
 
 # todo: integration with tcs.
@@ -225,7 +226,7 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.on_about, id=wx.ID_ABOUT)
         # bind event update UI, multi allowed
-        pub.subscribe(self.on_ext_sig_model_item_double_clicked,EnumAppSignals.sigV2VModelTreeItemDoubleClicked)
+        pub.subscribe(self.on_ext_sig_model_item_double_clicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked)
 
     def on_child_focused(self, evt):
         _win = evt.GetWindow()
@@ -251,12 +252,18 @@ class FrameMain(wx.Frame):
         self._childWinCount += 1
         # self._auiMgr.Update()
 
-    def on_ext_sig_model_item_double_clicked(self, sender, uuid):
+    def on_ext_sig_model_item_double_clicked(self, uuid):
         _exist = self._auiMgr.GetPaneByName(uuid)
         if not _exist.IsOk():
             _path = self._panelFeature.get_item_path_by_uuid(uuid)
+            _role = self._panelFeature.get_item_role_by_uuid(uuid)
             _caption = '%s' % _path
-            _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
+            if _role == EnumItemRole.DEV_FEATURE_STATE:
+                _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
+            elif _role == EnumItemRole.DEV_FEATURE_EVENT:
+                _panel = EventEditorPanel(self)
+            else:
+                return
             _panel.uuid = uuid
             _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
                 DestroyOnClose(False).Center().Snappable().Dockable(). \

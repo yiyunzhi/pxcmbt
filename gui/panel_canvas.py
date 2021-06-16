@@ -12,6 +12,8 @@ from wxgraph import DrawObjectSquarePoint
 from wxgraph.wxcanvas import WxCanvas
 from wxgraph.draw_graph_dotgrid import DrawGraphDotGrid
 from .gui_mode import GUIModeMouse, GUIModeConnection, GUIModePlace
+from .menu_context_menu import GuiStateItemContextMenu
+from .dialog_node_editor import NodeEditorDialog
 
 
 class CanvasSetting:
@@ -159,13 +161,16 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.Bind(WxGEvent.EVT_MOUSEWHEEL, self.on_mouse_wheel_view)
         self.Bind(WxGEvent.EVT_LEFT_DOWN, self.on_mouse_left_down_view)
         self.Bind(WxGEvent.EVT_LEFT_UP, self.on_mouse_left_up_view)
+        self.Bind(WxGEvent.EVT_RIGHT_DOWN, self.on_mouse_right_down_view)
+        self.Bind(WxGEvent.EVT_RIGHT_UP, self.on_mouse_right_up_view)
         self.Bind(WxGEvent.EVT_MIDDLE_DOWN, self.on_mouse_middle_down_view)
         self.Bind(WxGEvent.EVT_MIDDLE_UP, self.on_mouse_middle_up_view)
-        self.Bind(WxGEvent.EVT_LEFT_DCLICK, self.on_item_double_click)
+        self.Bind(WxGEvent.EVT_LEFT_DCLICK, self.on_double_click_view)
         self.Bind(WxGEvent.EVT_SCALE_CHANGED, self.on_canvas_scale_changed)
         # self.Bind(wx.EVT_KEY_DOWN, self.on_key_down_view) not works
         # use EVT_CHAR_HOOK replace EVT_KEY_DOWN better, if use a panel in another panel
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down_view)
+        pub.subscribe(self.on_node_item_delete_requested, EnumAppSignals.sigV2VGuiModeDelItemRequested)
 
     def _unbind_all_mouse_events(self):
         self.Unbind(WxGEvent.EVT_MOTION)
@@ -202,12 +207,27 @@ class StateChartCanvasViewPanel(wx.Panel):
             wire_item.dstNode.add_in_wire(wire_item)
 
     def remove_connection_pair(self, wire, org_src_node, org_dst_node):
+        self.remove_wire(wire)
+        org_src_node.remove_out_wire(wire)
+        org_dst_node.remove_in_wire(wire)
+        self.canvas.draw(True)
+
+    def remove_wire(self, wire):
         _uuid = wire.uuid
         if _uuid in self._wires:
             self._wires.pop(_uuid)
         self.remove_item(wire)
-        org_src_node.remove_out_wire(wire)
-        org_dst_node.remove_in_wire(wire)
+
+    def on_node_item_delete_requested(self, items):
+        for x in items:
+            # first remove the wires
+            for wire in x.inWires:
+                self.remove_wire(wire)
+            for wire in x.outWires:
+                self.remove_wire(wire)
+            x.remove_in_wire()
+            x.remove_out_wire()
+            self.remove_item(x)
         self.canvas.draw(True)
 
     def on_tool_changed(self, evt, flag):
@@ -251,17 +271,23 @@ class StateChartCanvasViewPanel(wx.Panel):
         # todo: base on the item style determinne, if bind the event, set the mode...
         if item is None:
             return
+        if item.uuid is None:
+            item.uuid = util_get_uuid_string()
         _obj = self.canvas.add_object(item)
         _obj.bind(WxGEvent.EVT_FC_LEFT_DOWN, self.on_left_down_item)
         _obj.bind(WxGEvent.EVT_FC_LEFT_UP, self.on_left_up_item)
+        _obj.bind(WxGEvent.EVT_FC_RIGHT_DOWN, self.on_right_down_item)
+        _obj.bind(WxGEvent.EVT_FC_RIGHT_UP, self.on_right_up_item)
         _obj.bind(WxGEvent.EVT_FC_ENTER_OBJECT, self.on_enter_item)
         _obj.bind(WxGEvent.EVT_FC_LEAVE_OBJECT, self.on_leave_item)
+        _obj.bind(WxGEvent.EVT_FC_LEFT_DCLICK, self.on_double_click_item)
         self.canvas.draw()
         return _obj
 
     def remove_item(self, item):
         if isinstance(item, DrawObject):
-            self.canvas.remove_object(item)
+            if self.canvas.has_object(item):
+                self.canvas.remove_object(item)
             # item.UnBindAll()
 
     def show_item_connect_points(self, item, state=True):
@@ -274,14 +300,33 @@ class StateChartCanvasViewPanel(wx.Panel):
         else:
             self.canvas.remove_object(self._drawObjectCurrentConnPt)
 
-    def on_item_double_click(self, *args):
-        print('on_item_double_click', *args)
+    def on_double_click_item(self, item):
+        print('on_double_click_item', item, item.hitCoordsPixel, item.hitCoords)
+        if isinstance(item, StateChartNode):
+            _dlg = NodeEditorDialog(item,self)
+            _dlg.ShowModal()
+        elif isinstance(item, TransitionWireShape):
+            pass
+        else:
+            pass
 
     def on_left_down_item(self, item):
         print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)
+        print(item.get_properties())
 
     def on_left_up_item(self, item):
         print('on_item_left_up', item, item.hitCoordsPixel, item.hitCoords)
+
+    def on_right_down_item(self, item):
+        print('on_right_down_item', item, item.hitCoordsPixel, item.hitCoords)
+
+    def on_right_up_item(self, item):
+        print('on_item_right_up', item, item.hitCoordsPixel, item.hitCoords)
+        _cm = GuiStateItemContextMenu(self)
+        _cm.show()
+
+    def on_cm_delete_item(self, event):
+        print('delete item')
 
     def on_enter_item(self, item):
         print('on_enter_item', item, item.hitCoordsPixel, item.hitCoords)
@@ -323,6 +368,9 @@ class StateChartCanvasViewPanel(wx.Panel):
         print('on_mouse_wheel_canvas', evt)
         evt.Skip()
 
+    def on_double_click_view(self, *args):
+        print('on_double_click_view', *args)
+
     def on_mouse_left_down_view(self, evt: wx.MouseEvent):
         # todo: while place should show a dialog the name give to
         print('mouse left down view')
@@ -335,8 +383,13 @@ class StateChartCanvasViewPanel(wx.Panel):
         _world_pos = wx.RealPoint(self.canvas.pixel_to_world(_pos))
         evt.Skip()
 
+    def on_mouse_right_up_view(self, evt):
+        pass
+
+    def on_mouse_right_down_view(self, evt):
+        pass
+
     def on_mouse_middle_down_view(self, evt):
-        # todo: start pan mode to drag the canvas
         print('on_mouse_middle_down_view', evt)
         evt.Skip()
 
