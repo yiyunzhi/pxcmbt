@@ -1,0 +1,76 @@
+---
+HEADER:
+  version: '1.0.1'
+  date: '2020-12-22 16:30:24'
+  author: 'EHTCRA'
+  type: 'MBT_EVT'
+BODY:
+  - name: DEV_PAR_PARAMETRIZE
+    readonly: true
+    visible: true
+    type: outgoing
+    description: 'This is a description for this event.
+     this is a new line'
+    data:
+      - name: A
+        dataType: integer
+        default: 0x0820
+        minValue: 0x0820
+        maxValue: 0x0820
+      - name: B
+        dataType: string
+        default: 0x0820
+        minValue: 0x0820
+        maxValue: 0x0820
+  - name: DEV_PWR_DOWN
+    readonly: false
+    visible: true
+    type: outgoing
+    description: 'This is a description for this event.\n this is a new line'
+    data:
+      - name: A
+        dataType: integer
+        default: 0x0820
+        minValue: 0x0820
+        maxValue: 0x0820
+      - name: B
+        dataType: string
+        default: 0x0820
+        minValue: 0x0820
+        maxValue: 0x0820
+  - name: DEV_PWR_UP
+    readonly: false
+    visible: true
+    type: outgoing
+    description: 'This is a description for this event.\n this is a new line'
+    data:
+      - name: A
+        dataType: integer
+        default: 0x0821
+        minValue: 0x0821
+        maxValue: 0x0821
+      - name: B
+        dataType: string
+        format: '%s'
+        default: 0x0822
+        minValue: 0x0822
+        maxValue: 0x0822
+  - name: DEV_PWR_UP_NO_VISIBLE
+    readonly: false
+    visible: false
+    type: outgoing
+    description: 'This is a description for this event.\n this is a new line'
+    data:
+      - name: A
+        dataType: integer
+        default: 0x0820
+        minValue: 0x0820
+        maxValue: 0x0820
+      - name: B
+        dataType: string
+        default: 0x0820
+        minValue: 0x0820
+        maxValue: 0x0820
+
+
+...

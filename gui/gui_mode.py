@@ -98,9 +98,10 @@ class GUIModeConnection(GUIModeBase):
         _canvas_parent = self.canvas.GetParent()
         if _canvas_parent is not None:
             if _hit_object is not None and self.srcNode is not None and isinstance(_hit_object, StateChartNode):
-                self.dstNode = _hit_object
-                _closest_pt, _uv = _hit_object.get_connection_point_at(_world_pos)
-                _canvas_parent.add_connection_pair(self.srcNode, self.dstNode, self.wire.srcPt, _closest_pt)
+                if _hit_object.get_connection_style()!=EnumShapeConnectionStyle.NONE:
+                    self.dstNode = _hit_object
+                    _closest_pt, _uv = _hit_object.get_connection_point_at(_world_pos)
+                    _canvas_parent.add_connection_pair(self.srcNode, self.dstNode, self.wire.srcPt, _closest_pt)
         if self.wire is not None:
             self.canvas.remove_object(self.wire)
             self.srcNode = None
@@ -115,11 +116,12 @@ class GUIModeConnection(GUIModeBase):
         _hit_object = self.canvas.objectUnderMouse
         if self.wire is not None:
             if _hit_object is not None:
-                self.wire.set_connection_valid_style()
+                if _hit_object.get_connection_style() != EnumShapeConnectionStyle.NONE:
+                    self.wire.set_connection_valid_style()
+                    self.wire.dstNode = _hit_object
             else:
                 self.wire.set_connection_invalid_style()
             if self.srcNode is not None:
-                self.wire.dstNode = _hit_object
                 self.wire.set_dst_point(N.array(_world_pos, N.float))
             self.canvas.draw(True)
 

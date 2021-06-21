@@ -1,12 +1,13 @@
 import wx
 
+
 class PropContainerPanel(wx.Panel):
 
     def __init__(self, **kwargs):
         wx.Panel.__init__(self, **kwargs)
         self._vSizer = wx.BoxSizer(wx.VERTICAL)
         self._propsContentPanels = list()
-        #EnumRackPanelSignals.sigV2MSessionNameChanged.connect(self.on_session_name_changed)
+        # EnumRackPanelSignals.sigV2MSessionNameChanged.connect(self.on_session_name_changed)
         self.SetSizer(self._vSizer)
         self.Layout()
         self.Fit()
@@ -35,18 +36,19 @@ class PropContainerPanel(wx.Panel):
                 x.Show(True)
 
     def set_content(self, prop_content_inst):
-        if prop_content_inst in self._propsContentPanels:
-            self.hide_panels([prop_content_inst])
-        else:
-            self.Freeze()
-            self.hide_panels()
-            prop_content_inst.Reparent(self)
-            self._vSizer.Add(prop_content_inst, 1, wx.EXPAND)
-            self._propsContentPanels.append(prop_content_inst)
-            self._vSizer.Layout()
-            self.Refresh()
-            self.Update()
-            self.Thaw()
+        if isinstance(prop_content_inst, wx.Panel):
+            if prop_content_inst in self._propsContentPanels:
+                self.hide_panels([prop_content_inst])
+            else:
+                self.Freeze()
+                self.hide_panels()
+                prop_content_inst.Reparent(self)
+                self._vSizer.Add(prop_content_inst, 1, wx.EXPAND)
+                self._propsContentPanels.append(prop_content_inst)
+                self._vSizer.Layout()
+                self.Refresh()
+                self.Update()
+                self.Thaw()
 
 
 class PropsContentPanel(wx.Panel):

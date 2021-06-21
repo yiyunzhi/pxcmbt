@@ -20,18 +20,25 @@
 #
 # ------------------------------------------------------------------------------
 import sys, os, traceback, threading
+from collections import OrderedDict
 import wx
 import wx.lib.agw.aui as aui
 from pubsub import pub
+from application.log_logger import get_logger
+from application.define import EnumAppSignals, EnumPanelRole, EnumItemRole
+from application.class_app_setting import APP_SETTING
+from application.class_project import Project
 from .assets_images import *
 from .panel_canvas import StateChartCanvasViewPanel
-from .panel_feature import GuiFeaturePanel
+from .panel_project_mgr import GuiProjectManagerPanel, GuiProjectManagerContainerPanel
 from .panel_props_container import PropContainerPanel
 from .panel_console import ConsolePanel
 from .panel_event_editor import EventEditorPanel
+from .panel_prop_content import CanvasNodePropContentPanel
 from .define_gui import _, PATH_GUI_IMAGES, EnumCanvasToolbarMode
-from application.log_logger import get_logger
-from application.define import EnumAppSignals, EnumPanelRole, EnumItemRole
+from .dialog_node_editor import NodeEditorDialog, NodeNoteEditorDialog
+from .dialog_file import NewProjectDialog
+from .utils_helper import *
 
 
 # todo: integration with tcs.
@@ -70,8 +77,10 @@ class FrameMain(wx.Frame):
             DestroyOnClose(False).Center().Snappable().Dockable(). \
             MinimizeButton(True).MaximizeButton(True)
         # Attributes
-        self._currentCanvasPane = None
-        self._canvasPanelCache = dict()
+        # fixme: here use a dummy project
+        self._currentProject = Project('default')
+        self._currentPane = None
+        self._panelCache = dict()
         self._toolbar = None
         self._propsPaneCaptionFmt = "%s Properties"
         self._currentPropPane = None
@@ -100,17 +109,13 @@ class FrameMain(wx.Frame):
         self.CreateStatusBar()
         self.GetStatusBar().SetStatusText("Ready")
         self.create_menu_bar()
-        # self.create_tool_bar()
-        self._show_toolbar(False)
+        self.create_tool_bar()
         self.build_panes()
         self.bind_events()
         self.Fit()
         self.Center()
         wx.CallAfter(self.SendSizeEvent)
         self._consolePane.write_info_content('---App Initial finished---')
-
-    def _show_toolbar(self, state=True):
-        pass
 
     def _set_canvas_toolbar_mode(self, mode: EnumCanvasToolbarMode):
         _tool = self._toolbar.FindToolByIndex(mode)
@@ -136,9 +141,9 @@ class FrameMain(wx.Frame):
         _dlg.Destroy()
 
     def build_panes(self):
-        self._panelFeature = GuiFeaturePanel(self)
+        self._panelProjectMgr = GuiProjectManagerContainerPanel(self)
         self._propContainerPane = PropContainerPanel(parent=self)
-        self._auiMgr.AddPane(self._panelFeature, aui.AuiPaneInfo().Name("featurePanel").Caption("Model").
+        self._auiMgr.AddPane(self._panelProjectMgr, aui.AuiPaneInfo().Name("projectMgrPanel").Caption("Project").
                              Left().Layer(1).Position(0).BestSize((240, -1)).MinSize((160, 360)).
                              CloseButton(True).MaximizeButton(True).
                              MinimizeButton(True))
@@ -172,32 +177,37 @@ class FrameMain(wx.Frame):
         _tb = aui.AuiToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
                              agwStyle=aui.AUI_TB_DEFAULT_STYLE | aui.AUI_TB_OVERFLOW)
         _tb.SetToolBitmapSize(_tb_icon_size)
-        # _pointer_shape_icon = wx.Image(PATH_GUI_IMAGES + '\\icon_shape_pointer_bk.png', wx.BITMAP_TYPE_PNG).Scale(
-        #     *_tb_icon_size).ConvertToBitmap()
-        # _tb_pointer = wx.NewIdRef()
-        # _tb.AddRadioTool(_tb_pointer, "Pointer", _pointer_shape_icon,
-        #                   disabled_bitmap=wx.NullBitmap, short_help_string='Pointer',
-        #                   client_data=EnumCanvasToolbarMode.POINTER)
+        _new_bmp = wx.ArtProvider.GetBitmap(wx.ART_NEW, wx.ART_TOOLBAR, _tb_icon_size)
+        _open_bmp = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN, wx.ART_TOOLBAR, _tb_icon_size)
+        _save_bmp = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, _tb_icon_size)
+        _copy_bmp = wx.ArtProvider.GetBitmap(wx.ART_COPY, wx.ART_TOOLBAR, _tb_icon_size)
+        _paste_bmp = wx.ArtProvider.GetBitmap(wx.ART_PASTE, wx.ART_TOOLBAR, _tb_icon_size)
+        _pane_save_id = wx.NewIdRef()
+        _tb.AddSimpleTool(_pane_save_id, 'Save', _save_bmp, 'Save')
         _tb.AddSeparator()
         _tb.Realize()
-        # self.Bind(wx.EVT_TOOL, lambda evt: self.on_canvas_tool_changed(evt, EnumCanvasToolbarMode.POINTER),
-        #          _tb_pointer)
+        self.Bind(wx.EVT_TOOL, self.on_tb_pane_save, _pane_save_id)
         self._toolbar = _tb
         self._auiMgr.AddPane(_tb, aui.AuiPaneInfo().Name("CanvasTool").Caption("General Tools").
-                             ToolbarPane().Left().Layer(1).Position(0).BestSize((-1, 24)))
+                             ToolbarPane().Top().Layer(1).Position(0).BestSize((-1, 24)))
 
     def create_menu_bar(self):
         # create menu
         _mb = wx.MenuBar()
-
+        _file_new_project_id = wx.NewIdRef()
+        _file_new_file_id = wx.NewIdRef()
         _file_menu = wx.Menu()
-        _file_menu.Append(wx.ID_NEW, _('New'))
+        _file_new_sub_menu = wx.Menu()
+        _new_project_id = _file_new_sub_menu.Append(_file_new_project_id, _('NewProject'))
+        _new_file_id = _file_new_sub_menu.Append(_file_new_file_id, _('NewFile'))
+        _file_menu.Append(wx.ID_ANY, 'New', _file_new_sub_menu)
         _file_menu.Append(wx.ID_OPEN, _('Open'))
         _file_menu.Append(wx.ID_SAVE, _('Save'))
         _file_menu.Append(wx.ID_SAVEAS, _('Save As'))
         _file_menu.AppendSeparator()
         _file_menu.Append(wx.ID_EXIT, _('Exit'))
-
+        self.Bind(wx.EVT_MENU, self.on_menu_new_project_clicked, _new_project_id)
+        self.Bind(wx.EVT_MENU, self.on_menu_new_file_clicked, _new_file_id)
         _view_menu = wx.Menu()
         # view_menu.Append(ID_CreateText, "Create Text Control")
         _view_menu.AppendSeparator()
@@ -222,46 +232,126 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_CHILD_FOCUS, self.on_child_focused)
         self.Bind(aui.EVT_AUI_PANE_ACTIVATED, self.on_aui_pane_activated)
         # bind menu event
-        self.Bind(wx.EVT_MENU, self.on_menu_new_clicked, id=wx.ID_NEW)
+
+        self.Bind(wx.EVT_MENU, self.on_menu_save_clicked, id=wx.ID_SAVE)
+        self.Bind(wx.EVT_MENU, self.on_menu_open_clicked, id=wx.ID_OPEN)
+        self.Bind(wx.EVT_MENU, self.on_menu_save_as_clicked, id=wx.ID_SAVEAS)
         self.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.on_about, id=wx.ID_ABOUT)
         # bind event update UI, multi allowed
         pub.subscribe(self.on_ext_sig_model_item_double_clicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked)
+        pub.subscribe(self.on_ext_sig_canvas_node_dclicked, EnumAppSignals.sigV2VCanvasNodeDClicked)
+        pub.subscribe(self.on_ext_sig_canvas_node_note_dclicked, EnumAppSignals.sigV2VCanvasNodeNoteDClicked)
+        pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps)
+
+    def on_ext_sig_canvas_node_show_props(self, item):
+        if hasattr(item, 'get_properties'):
+            _uuid = item.uuid
+            _prop_panel = self._propContainerPane.get_panel_by_uuid(_uuid)
+            if _prop_panel:
+                self._propContainerPane.toggle_panel_by_uuid(_uuid)
+            else:
+                _node_prop_inst = CanvasNodePropContentPanel(item, parent=self._propContainerPane, id=wx.ID_ANY)
+                self._propContainerPane.set_content(_node_prop_inst)
+
+    def on_ext_sig_canvas_node_note_dclicked(self, uuid, role, item):
+        _dlg = NodeNoteEditorDialog(item, self)
+        _ret = _dlg.ShowModal()
+
+    def on_ext_sig_canvas_node_dclicked(self, uuid, role, item):
+        _evt_data = self._currentProject.get_event_data(role, uuid)
+        _dlg = NodeEditorDialog(_evt_data, item, self)
+        _ret = _dlg.ShowModal()
 
     def on_child_focused(self, evt):
         _win = evt.GetWindow()
         evt.Skip()
 
+    def on_tb_pane_save(self, evt):
+        if self._currentPane is not None:
+            print('save the pane')
+        evt.Skip()
+
     def on_aui_pane_activated(self, evt):
         _pane = evt.GetPane()
         if hasattr(_pane, 'uuid'):
-            if _pane.uuid in self._canvasPanelCache:
-                self._panelFeature.highlight_item_by_uuid(_pane.uuid)
+            if _pane.uuid in self._panelCache:
+                self._panelProjectMgr.contentPanel.highlight_item_by_uuid(_pane.uuid)
             if _pane.role == EnumPanelRole.STATE_CHART_CANVAS:
-                self._currentCanvasPane = _pane
+                self._currentPane = _pane
                 self._auiMgr.ShowPane(self._toolbar, True)
         evt.Skip()
 
     def on_window_closed(self, evt):
         evt.Skip()
 
-    def on_menu_new_clicked(self, evt):
-        _win = wx.MDIChildFrame(self, -1, "Child Window: %d" % self._childWinCount, style=wx.DEFAULT_FRAME_STYLE)
-        _win.Show(True)
-        # self._auiMgr.AddPane(_win, aui.AuiPaneInfo().Name("Child%s" % self._childWinCount).CenterPane())
-        self._childWinCount += 1
-        # self._auiMgr.Update()
+    def on_menu_save_clicked(self, evt):
+        if self._currentProject:
+            # save all cached pane
+            for n_uuid, panel in self._panelCache.items():
+                if isinstance(panel, StateChartCanvasViewPanel):
+                    self._currentProject.save_canvas(panel)
+            pass
+        else:
+            pass
+
+    def on_menu_save_as_clicked(self, evt):
+        if self._currentProject:
+            pass
+        else:
+            pass
+
+    def on_menu_open_clicked(self, evt):
+        if self._currentProject:
+            pass
+        else:
+            pass
+
+    def on_menu_new_project_clicked(self, evt):
+        if self._currentProject:
+            if not self._currentProject.savedState:
+                # todo: prompt msgbox to save the project
+                pass
+        self._create_new_project()
+        if self._currentProject is not None:
+            _proj_mgr_content_panel = GuiProjectManagerPanel(self._panelProjectMgr)
+            _proj_mgr_content_panel.init_project(self._currentProject)
+            self._panelProjectMgr.set_content(_proj_mgr_content_panel)
+
+    def _create_new_project(self):
+        self._currentProject = None
+        _dlg = NewProjectDialog(APP_SETTING.projectPath, self)
+        _ret = _dlg.ShowModal()
+        if _ret == wx.ID_OK:
+            if _dlg.projNameTextEdit.IsEmpty():
+                _msg = wx.MessageBox(' fail to create project, since project name is empty', 'Fail')
+                return
+            _project_name = _dlg.projNameTextEdit.GetValue()
+            _project_path = _dlg.projectPath
+            _project_full_path = os.path.join(_project_path, _project_name)
+            _exist = util_is_dir_exist(_project_full_path)
+            if _exist:
+                _msg = wx.MessageBox(' fail to create project, since project already exist', 'Fail')
+                return
+            self._currentProject = Project(_project_name)
+            self._currentProject.set_project_workspace_path(_project_path)
+            self._currentProject.create_new_project()
+        # todo: propmt new dialog get project name
+
+    def on_menu_new_file_clicked(self, evt):
+        pass
 
     def on_ext_sig_model_item_double_clicked(self, uuid):
         _exist = self._auiMgr.GetPaneByName(uuid)
         if not _exist.IsOk():
-            _path = self._panelFeature.get_item_path_by_uuid(uuid)
-            _role = self._panelFeature.get_item_role_by_uuid(uuid)
+            _path = self._panelProjectMgr.contentPanel.get_item_path_by_uuid(uuid)
+            _role = self._panelProjectMgr.contentPanel.get_item_role_by_uuid(uuid)
             _caption = '%s' % _path
             if _role == EnumItemRole.DEV_FEATURE_STATE:
                 _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
             elif _role == EnumItemRole.DEV_FEATURE_EVENT:
-                _panel = EventEditorPanel(self)
+                _evt_data = self._currentProject.get_event_data(_role, uuid)
+                _panel = EventEditorPanel(self, _evt_data)
             else:
                 return
             _panel.uuid = uuid
@@ -270,9 +360,9 @@ class FrameMain(wx.Frame):
                 MinimizeButton(True).MaximizeButton(True)
             self._auiMgr.AddPane(_panel, _centerDefaultAuiInfo, target=self._centerTargetAuiInfo)
             self._auiMgr.Update()
-            self._canvasPanelCache.update({uuid: _panel})
+            self._panelCache.update({uuid: _panel})
         else:
-            _panel = self._canvasPanelCache.get(uuid)
+            _panel = self._panelCache.get(uuid)
             if _panel.IsShown():
                 self._auiMgr.RequestUserAttention(_panel)
             else:

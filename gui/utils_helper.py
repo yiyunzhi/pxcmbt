@@ -138,6 +138,10 @@ def util_wx_tree_walk_branches(tree, root):
         item, cookie = tree.GetNextChild(root, cookie)
 
 
+def util_is_dir_exist(path):
+    return os.path.exists(path)
+
+
 def util_int2byte(x: int, endian='big') -> bytes:
     return x.to_bytes((x.bit_length() + 7) // 8, endian)
 

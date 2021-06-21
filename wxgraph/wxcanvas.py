@@ -249,6 +249,9 @@ class WxCanvas(wx.Panel):
     def get_fore_draw_list(self):
         return self._foreDrawList
 
+    def get_all_objects(self):
+        return self._drawList
+
     def get_buffer(self):
         return self._buffer
 

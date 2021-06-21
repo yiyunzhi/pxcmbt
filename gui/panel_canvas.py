@@ -6,14 +6,14 @@ from wxgraph import WxGEvent, DrawObject
 from application.define import *
 from .define_gui import *
 from .shape_transition import TransitionWireShape
-from .shape_state_node import StateChartNode
+from .shape_state_node import StateChartNode, StateNodeShape
+from .shape_note_node import NoteNodeShape
 from .utils_helper import util_get_uuid_string
 from wxgraph import DrawObjectSquarePoint
 from wxgraph.wxcanvas import WxCanvas
 from wxgraph.draw_graph_dotgrid import DrawGraphDotGrid
 from .gui_mode import GUIModeMouse, GUIModeConnection, GUIModePlace
 from .menu_context_menu import GuiStateItemContextMenu
-from .dialog_node_editor import NodeEditorDialog
 
 
 class CanvasSetting:
@@ -181,6 +181,23 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.Unbind(WxGEvent.EVT_MIDDLE_UP)
         self.Unbind(WxGEvent.EVT_SCALE_CHANGED)
 
+    def serialize(self):
+        _d = dict()
+        _d.update({'canvas': {'scale': self.canvasSetting.mFScale,
+                              'size': self.GetSize()},
+                   'nodes': list(),
+                   'wires': list()})
+        _objects = self.canvas.get_all_objects()
+        for obj in _objects:
+            if isinstance(obj, StateChartNode):
+                _d['nodes'].append(obj.serialize())
+            elif isinstance(obj, TransitionWireShape):
+                _d['wires'].append(obj.serialize())
+        return _d
+
+    def deserialize(self, data):
+        pass
+
     def update_scale_info_test(self):
         self.canvasStatusbar.SetStatusText('scale:%.2F' % self.canvasSetting.mFScale, 0)
 
@@ -295,6 +312,8 @@ class StateChartCanvasViewPanel(wx.Panel):
             if self.canvas.has_object(self._drawObjectCurrentConnPt):
                 self.canvas.remove_object(self._drawObjectCurrentConnPt)
         self._drawObjectCurrentConnPt = item.get_connection_points_shape()
+        if self._drawObjectCurrentConnPt is None:
+            return
         if state:
             self.canvas.add_object(self._drawObjectCurrentConnPt)
         else:
@@ -302,17 +321,17 @@ class StateChartCanvasViewPanel(wx.Panel):
 
     def on_double_click_item(self, item):
         print('on_double_click_item', item, item.hitCoordsPixel, item.hitCoords)
-        if isinstance(item, StateChartNode):
-            _dlg = NodeEditorDialog(item,self)
-            _dlg.ShowModal()
+        if isinstance(item, StateNodeShape):
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeDClicked, uuid=self.uuid, role=self.role, item=item)
         elif isinstance(item, TransitionWireShape):
             pass
-        else:
-            pass
+        elif isinstance(item, NoteNodeShape):
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeNoteDClicked, uuid=self.uuid, role=self.role, item=item)
 
     def on_left_down_item(self, item):
         print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)
-        print(item.get_properties())
+        # todo: use has_style('hasProperties')
+        pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeShowProps, item=item)
 
     def on_left_up_item(self, item):
         print('on_item_left_up', item, item.hitCoordsPixel, item.hitCoords)

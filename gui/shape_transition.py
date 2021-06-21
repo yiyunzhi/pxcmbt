@@ -43,6 +43,22 @@ class TransitionWireShape(StateChartTransition):
         self._update_transition_text_position()
         self._calc_way_point()
 
+    def serialize(self):
+        _d = dict()
+        _d.update({'class': self.__class__.__name__})
+        _d.update({'uuid': self.uuid})
+        _d.update({'role': self.role})
+        _d.update({'text': self.text})
+        _d.update({'isVisible': self.isVisible})
+        _d.update({'srcPosition': self.srcPt})
+        _d.update({'dstPosition': self.dstPt})
+        _d.update({'wayPoint': self.wayPoints})
+        _d.update({'srcNodeUUID': self.srcNode.uuid if self.srcNode else None})
+        _d.update({'dstNodeUUID': self.dstNode.uuid if self.dstNode else None})
+        _d.update({'arrowAngle': self.arrow.arrowHeadAngle})
+        _d.update({'arrowDirection': self.arrow.direction})
+        return _d
+
     def set_connection_invalid_style(self):
         self.baseLine.set_line_style(self.WIRE_BASE_LINE_NOK_STYLE)
         self.baseLine.set_line_color(self.WIRE_BASE_LINE_NOK_COLOR)

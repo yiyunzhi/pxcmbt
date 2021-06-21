@@ -1,4 +1,5 @@
 import math
+from collections import OrderedDict
 import numpy as np
 from .define_gui import *
 from wxgraph import DrawObjectPointSet
@@ -26,6 +27,20 @@ class Serializable:
         pass
 
 
+class NodeEvtModel:
+    def __init__(self):
+        self.events = list()
+
+    def get_event_names(self):
+        return [x[0] for x in self.events]
+
+    def clear(self):
+        self.events.clear()
+
+    def update(self, event_name, event_data):
+        self.events.append((event_name, event_data))
+
+
 class StateChartNode(Serializable, DrawObjectGroup):
     CONN_PT_SHAPE_DIAMETER = 4
 
@@ -34,6 +49,11 @@ class StateChartNode(Serializable, DrawObjectGroup):
         Serializable.__init__(self)
         self.uuid = None
         self.role = EnumItemRole.ITEM_STATE
+        self.enterEventModel = NodeEvtModel()
+        self.exitEventModel = NodeEvtModel()
+        self.highLightBorderLineColor = '#00FF00'
+        self.selectedBorderLineColor = '#FF8000'
+        self.defaultBorderLineColor = '#9CC3D5'
         self.shapeStyle = EnumShapeStyle.STYLE_DEFAULT
         self.connectionStyle = EnumShapeConnectionStyle.ANYWHERE
         self._connectionPtShape = DrawObjectPointSet([(0, 0)], diameter=self.CONN_PT_SHAPE_DIAMETER,
@@ -45,7 +65,7 @@ class StateChartNode(Serializable, DrawObjectGroup):
         self.inWires = list()
         self.outWires = list()
 
-    def get_properties(self):
+    def get_properties(self, *args):
         pass
 
     def add_in_wire(self, wire):
@@ -86,6 +106,8 @@ class StateChartNode(Serializable, DrawObjectGroup):
 
     def get_connection_points_shape(self):
         _conn_pts = self.get_connection_points()
+        if _conn_pts is None:
+            return None
         _lst_conn_pts = [x[1] for x in _conn_pts]
         self._connectionPtShape.set_points(_lst_conn_pts)
         return self._connectionPtShape

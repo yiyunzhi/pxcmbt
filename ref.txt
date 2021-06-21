@@ -13,3 +13,7 @@ http://staff.washington.edu/jon/pymodel/www/
 http://mit.bme.hu/~micskeiz/pages/modelbased_testing.html
 -----MBT altwalker-----------
 https://gitlab.com/altom/altwalker/altwalker/-/blob/develop/altwalker/generate.py
+
+
+----MBT EVENT GUI----------
+https://support.cranksoftware.com/hc/en-us/articles/360056943392-Connecting-Events-to-Actions

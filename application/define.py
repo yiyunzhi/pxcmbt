@@ -19,15 +19,20 @@ class ConsoleItemFlagEnum:
 
 class EnumItemRole(enum.IntEnum):
     ROOT = 0
-    DEV_FEATURE = 1
-    DEV_FEATURE_STATE = 2
-    DEV_FEATURE_EVENT = 3
-    USER_STATE_FEATURE = 4
-    USER_STATE_FEATURE_STATE = 5
+    MODEL = 1
+    DEV_FEATURE = 2
+    DEV_FEATURE_STATE = 3
+    DEV_FEATURE_EVENT = 4
+    USER_STATE_FEATURE = 5
+    USER_STATE_FEATURE_STATE = 6
+    SESSIONS = 20
+    SCRIPTS = 21
+    SESSION = 22
     FEATURE_LIB = 50
     FEATURE_LIB_ITEM = 51
     ITEM_STATE = 100
     ITEM_TRANSITION = 110
+    ITEM_NODE_NOTE = 120
 
 
 class EnumPanelRole(enum.IntEnum):
@@ -38,3 +43,13 @@ class EnumAppSignals:
     sigV2VModelTreeItemDoubleClicked = 'sigV2VModelTreeItemDoubleClicked'
     sigV2VCanvasToolbarModeChanged = 'sigV2VCanvasToolbarModeChanged'
     sigV2VGuiModeDelItemRequested = 'sigV2VGuiModeDelItemRequested'
+    sigV2VCanvasNodeDClicked = 'sigV2VCanvasNodeDClicked'
+    sigV2VCanvasTransitionDClicked = 'sigV2VCanvasTransitionDClicked'
+    sigV2VCanvasNodeShowProps = 'sigV2VCanvasNodeShowProps'
+    sigV2VCanvasNodeNoteDClicked = 'sigV2VCanvasNodeNoteDClicked'
+
+
+class EnumMBTEventType:
+    OUTGOING = 'outgoing'
+    INCOMING = 'incoming'
+    ALL_VALUES = [OUTGOING, INCOMING]

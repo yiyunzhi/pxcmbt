@@ -1,203 +1,224 @@
 import wx
-import wx.grid as gridlib
+import wx.dataview as dv
 from .define_gui import *
+from application.define import EnumMBTEventType
+from application.class_mbt_event import MBTEventManager, MBTEvent
 
 
-class EventDataTable(gridlib.GridTableBase):
+class ComboboxRenderer(dv.DataViewCustomRenderer):
+    def __init__(self, *args, **kw):
+        dv.DataViewCustomRenderer.__init__(self, *args, **kw)
+        self.value = None
+        self.EnableEllipsize(wx.ELLIPSIZE_END)
 
-    def __init__(self):
-        gridlib.GridTableBase.__init__(self)
-        self.colLabels = ['Name', 'Description']
-        self.dataTypes = [gridlib.GRID_VALUE_STRING,
-                          gridlib.GRID_VALUE_STRING
-                          ]
-        self.data = []
+    def SetValue(self, value):
+        # self.log.write('SetValue: %s' % value)
+        self.value = value
+        return True
 
-    def append_a_row(self, data=None):
-        if data is not None:
-            _data = data + [data[4]]
-            self.data.append(_data)
-        else:
-            # add a new row
-            self.data.append([''] * self.GetNumberCols())
-        # tell the grid we've added a row
-        msg = gridlib.GridTableMessage(self,  # The table
-                                       gridlib.GRIDTABLE_NOTIFY_ROWS_APPENDED,  # what we did to it
-                                       1  # how many
-                                       )
+    def GetValue(self):
+        return self.value
 
-        self.GetView().ProcessTableMessage(msg)
+    def GetSize(self):
+        # Return the size needed to display the value.  The renderer
+        # has a helper function we can use for measuring text that is
+        # aware of any custom attributes that may have been set for
+        # this item.
+        value = self.value if self.value else ""
+        size = self.GetTextExtent(value)
+        size += (2, 2)
+        # self.log.write('GetSize("{}"): {}'.format(value, size))
+        return size
 
-    def remove_a_row(self, idx):
-        if idx <= len(self.data) - 1:
-            self.data.pop(idx)
-            # tell the grid we've delete a row
-            msg = gridlib.GridTableMessage(self,  # The table
-                                           gridlib.GRIDTABLE_NOTIFY_ROWS_DELETED,  # what we did to it
-                                           idx,  # from
-                                           1  # how many
-                                           )
+    # def GetEditorCtrl(self):
+    #    return wx.ComboBox(self, wx.ID_ANY, value='A', values=['A', 'B', 'C'])
 
-            self.GetView().ProcessTableMessage(msg)
+    def Render(self, rect, dc, state):
+        # if state != 0:
+        #    self.log.write('Render: %s, %d' % (rect, state))
 
-    # ----------------------------------------------------------
-    # required methods for the wxPyGridTableBase interface
-    # ----------------------------------------------------------
+        if not state & dv.DATAVIEW_CELL_SELECTED:
+            # we'll draw a shaded background to see if the rect correctly
+            # fills the cell
+            dc.SetBrush(wx.Brush('#ffd0d0'))
+            dc.SetPen(wx.TRANSPARENT_PEN)
+            rect.Deflate(1, 1)
+            dc.DrawRoundedRectangle(rect, 2)
 
-    def GetNumberRows(self):
-        return len(self.data)
+        # And then finish up with this helper function that draws the
+        # text for us, dealing with alignment, font and color
+        # attributes, etc.
+        value = self.value if self.value else ""
+        self.RenderText(value,
+                        0,  # x-offset
+                        rect,
+                        dc,
+                        state  # wxDataViewCellRenderState flags
+                        )
+        return True
 
-    def GetNumberCols(self):
-        return len(self.colLabels)
+    def ActivateCell(self, rect, model, item, col, mouse_event):
+        return True
 
-    def IsEmptyCell(self, row, col):
-        try:
-            return not self.data[row][col]
-        except IndexError:
-            return True
+    # The HasEditorCtrl, CreateEditorCtrl and GetValueFromEditorCtrl
+    # methods need to be implemented if this renderer is going to
+    # support in-place editing of the cell value, otherwise they can
+    # be omitted.
 
-    def GetValue(self, row, col):
-        # Get/Set values in the table.  The Python version of these
-        # methods can handle any data-type, (as long as the Editor and
-        # Renderer understands the type too,) not just strings as in the
-        # C++ version.
-        try:
-            _data = self.data[row][col]
-            return _data
-        except IndexError:
-            return ''
+    def HasEditorCtrl(self):
+        return True
 
-    def SetValue(self, row, col, value):
-        try:
-            self.data[row][col] = value
-        except IndexError:
-            pass
+    def CreateEditorCtrl(self, parent, label_rect, value):
+        _ctrl = wx.ComboBox(self, wx.ID_ANY, value='A', values=['A', 'B', 'C'])
+        return _ctrl
+        # _ctrl = wx.TextCtrl(parent,
+        #                     value=value,
+        #                     pos=label_rect.Position,
+        #                     size=label_rect.Size)
+        #
+        # # select the text and put the caret at the end
+        # _ctrl.SetInsertionPointEnd()
+        # _ctrl.SelectAll()
+        # return _ctrl
 
-    # --------------------------------------------------
-    # Some optional methods
-    # --------------------------------------------------
+    def GetValueFromEditorCtrl(self, editor):
+        value = editor.GetValue()
+        return value
 
-    def GetColLabelValue(self, col):
-        """
-        # Called when the grid needs to display labels
-        :param col:
-        :return:
-        """
-        return self.colLabels[col]
+    # The LeftClick and Activate methods serve as notifications
+    # letting you know that the user has either clicked or
+    # double-clicked on an item.  Implementing them in your renderer
+    # is optional.
 
-    def GetTypeName(self, row, col):
-        """
-        # Called to determine the kind of editor/renderer to use by
-    # default, doesn't necessarily have to be the same type used
-    # natively by the editor/renderer if they know how to convert.
-        :param row:
-        :param col:
-        :return:
-        """
-        return self.dataTypes[col]
+    def LeftClick(self, pos, cell_rect, model, item, col):
+        return True
 
-    def CanGetValueAs(self, row, col, type_name):
-        """
-        # Called to determine how the data can be fetched and stored by the
-    # editor and renderer.  This allows you to enforce some type-safety
-    # in the grid.
-        :param row:
-        :param col:
-        :param type_name:
-        :return:
-        """
-        # print('type name col=%s'%col,type_name)
-        _col_type = self.dataTypes[col].split(':')[0]
-        if type_name == _col_type:
-            return True
-        else:
-            return False
-
-    def CanSetValueAs(self, row, col, type_name):
-        return self.CanGetValueAs(row, col, type_name)
+    def Activate(self, cell_rect, model, item, col):
+        return True
 
 
-class EventDataTableGrid(gridlib.Grid):
-    def __init__(self, uuid, parent):
-        gridlib.Grid.__init__(self, parent, wx.ID_ANY)
-        self.SetColLabelSize(WX_GUI_GRID_COL_LABEL_HEIGHT)
-        self.uuid = uuid
-        self._table = EventDataTable()
-        # The second parameter of SetTable means that the grid is to take ownership of the
-        # table and will destroy it when done.  Otherwise you would need to keep
-        # a reference to it and call it's Destroy method later.
-        self.SetTable(self._table, True)
-        self.SetMargins(0, 0)
-        self.AutoSizeColumns(True)
-        # self.HideCol(self.ACTUAL_VAL_COL)
-        # self.init_table_view(allocation_list)
-        self.Bind(gridlib.EVT_GRID_LABEL_RIGHT_CLICK, self.on_label_right_clicked)
-        self.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
-        self.Bind(wx.EVT_SIZE, self.on_resized)
-        # EnumRackPanelSignals.sigM2VEPPDInUpdated.connect(self.on_pd_in_updated)
-        # EnumRackPanelSignals.sigV2MEPPDOutUpdated.connect(self.on_pd_out_updated)
-        self.Update()
-
-    def on_resized(self, evt):
-        _cnt_cols = self._table.GetNumberCols()
-        _w = 0
-        for i in range(_cnt_cols - 1):
-            _w += self.GetColSize(i)
-        _w += self.GetRowLabelSize()
-        _new_size = evt.GetSize().x
-        _col_size = _new_size - _w - wx.SYS_VSCROLL_X
-        if _col_size > 0:
-            self.SetColSize(_cnt_cols - 1, _col_size)
-        evt.Skip()
-
-    def on_label_right_clicked(self, evt):
-        _selected_rows = self.GetSelectedRows()
-        _menu = wx.Menu()
-        _add_in_ref_id = wx.NewIdRef()
-        _add_out_ref_id = wx.NewIdRef()
-        _del_ref_id = wx.NewIdRef()
-        # if self._inCnt > 0:
-        #     _menu.Append(_add_in_ref_id, "Add new Input")
-        #     self.Bind(wx.EVT_MENU, self.on_ctx_menu_add_new_in_clicked, id=_add_in_ref_id)
-        # if self._outCnt > 0:
-        #     _menu.Append(_add_out_ref_id, "Add new Output")
-        #     self.Bind(wx.EVT_MENU, self.on_ctx_menu_add_new_out_clicked, id=_add_out_ref_id)
-        _menu.Append(_del_ref_id, "Delete selected")
-        self.Bind(wx.EVT_MENU, lambda evt, rows=_selected_rows: self.on_ctx_menu_del_sel_clicked(evt, rows),
-                  id=_del_ref_id)
-        self.PopupMenu(_menu)
-        _menu.Destroy()
-
-    def append_a_row(self, row):
-        if len(row) != len(self._table.colLabels):
-            return
-        self._table.append_a_row(row)
-
-    def on_ctx_menu_add_new_event_clicked(self, evt):
-        _untitled = ['New Event', 'New Event Description']
-        self.append_a_row(_untitled)
-
-    def on_ctx_menu_del_sel_clicked(self, evt, rows):
-        self.BeginBatch()
-        for row in rows:
-            self._table.remove_a_row(row)
-        self.EndBatch()
-        self.AdjustScrollbars()
-        self.ForceRefresh()
-
-    def on_cell_changed(self, evt):
-        _row, _col = evt.GetRow(), evt.GetCol()
-
-
-class EventEditorPanel(wx.Panel):
-    def __init__(self, parent, events=None):
+class EventDetailPanel(wx.Panel):
+    def __init__(self, parent):
         wx.Panel.__init__(self, parent, wx.ID_ANY)
-        self.uuid = None
-        self.role = 'EnumPaneRole.PANE_EVENT'
-        self.events = events
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-        self.evtTable = EventDataTableGrid(self.uuid, self)
-        self.mainSizer.Add(self.evtTable, 1, wx.EXPAND)
+        self._formSizer = wx.GridBagSizer(5, 5)
+        self._detailTitle = wx.StaticText(self, wx.ID_ANY, 'EventDetail')
+        self._detailTitle.SetFont(wx.Font(10, wx.FONTFAMILY_SCRIPT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD))
+        self._dataLvLabel = wx.StaticText(self, wx.ID_ANY, 'EventData:')
+        self.ctrlEvtNameLabel = wx.StaticText(self, wx.ID_ANY, 'Name:')
+        self.ctrlEvtNameEdit = wx.TextCtrl(self, wx.ID_ANY)
+        self.ctrlEvtTypLabel = wx.StaticText(self, wx.ID_ANY, 'Type:')
+        self.ctrlEvtTypEdit = wx.ComboBox(self, wx.ID_ANY, value=EnumMBTEventType.INCOMING,
+                                          choices=EnumMBTEventType.ALL_VALUES)
+        self.ctrlEvtPermissionLabel = wx.StaticText(self, wx.ID_ANY, 'Permission:')
+        self.ctrlEvtPermissionEdit = wx.StaticText(self, wx.ID_ANY, 'R')
+        self.ctrlEvtDescLabel = wx.StaticText(self, wx.ID_ANY, 'Description:')
+        self.ctrlEvtDescEdit = wx.TextCtrl(self, wx.ID_ANY, style=wx.TE_MULTILINE)
+        self._formSizer.Add(self.ctrlEvtNameLabel, (0, 0), flag=wx.TOP, border=4)
+        self._formSizer.Add(self.ctrlEvtNameEdit, (0, 1), span=(1, 10), flag=wx.EXPAND)
+        self._formSizer.Add(self.ctrlEvtTypLabel, (1, 0), flag=wx.TOP, border=4)
+        self._formSizer.Add(self.ctrlEvtTypEdit, (1, 1), span=(1, 5))
+        self._formSizer.Add(self.ctrlEvtPermissionLabel, (2, 0), flag=wx.TOP, border=4)
+        self._formSizer.Add(self.ctrlEvtPermissionEdit, (2, 1), span=(1, 5),flag=wx.TOP, border=4)
+        self._formSizer.Add(self.ctrlEvtDescLabel, (3, 0), flag=wx.TOP, border=4)
+        self._formSizer.Add(self.ctrlEvtDescEdit, (3, 1), span=(5, 10), flag=wx.EXPAND|wx.TOP, border=4)
+
+        # init data table
+        self.dvlc = dv.DataViewListCtrl(self, style=dv.DV_ROW_LINES)
+        self.dvlc.AppendTextColumn('Name', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
+        _col_type_render = dv.DataViewChoiceRenderer(['integer', 'string', 'float'])
+        _col_type = dv.DataViewColumn('Type', _col_type_render, 1, width=80)
+        self.dvlc.AppendColumn(_col_type)
+        self.dvlc.AppendTextColumn('Min', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
+        self.dvlc.AppendTextColumn('Max', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
+        self.dvlc.AppendTextColumn('Default', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
+        # self.dvlc.Bind(dv.EVT_DATAVIEW_ITEM_CONTEXT_MENU, self.on_dvlc_cm)
+        # layout
+        self.mainSizer.Add(self._detailTitle, 0, wx.ALL, 5)
+        self.mainSizer.AddSpacer(15)
+        self._formSizer.AddGrowableCol(1)
+        # self._formSizer.AddGrowableRow(2)
+        self.mainSizer.Add(self._formSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.mainSizer.Add(self._dataLvLabel, 0, wx.EXPAND | wx.ALL, 5)
+        self.mainSizer.Add(self.dvlc, 1, wx.EXPAND | wx.ALL, 5)
         self.SetSizer(self.mainSizer)
         self.Layout()
         self.Fit()
+
+    def on_dvlc_cm(self, evt: dv.DataViewEvent):
+        _item = evt.GetItem()
+        _row = self.dvlc.GetSelectedRow()
+        # self.dvlc.EditItem(_item, self.dvlc.GetColumn(evt.GetColumn()))
+        print('cm on dvlc', evt.GetColumn(), _item, _row)
+        evt.Skip()
+
+    def set_data(self, data: MBTEvent):
+        self.dvlc.DeleteAllItems()
+        if data.readonly:
+            self.Enable(False)
+        else:
+            self.Enable(True)
+        self.ctrlEvtNameEdit.SetValue(data.name)
+        self.ctrlEvtDescEdit.SetValue(data.description)
+        self.ctrlEvtTypEdit.SetValue(data.type)
+        self.ctrlEvtPermissionEdit.SetLabelText('R' if data.readonly else 'RW')
+        _data = data.data
+        for k, v in _data.items():
+            self.dvlc.AppendItem((v.name, v.dataType, str(v.minVal), str(v.maxVal), str(v.defaultVal)))
+
+
+class EventEditorPanel(wx.Panel):
+    def __init__(self, parent, event_data=None):
+        wx.Panel.__init__(self, parent, wx.ID_ANY)
+        self.uuid = None
+        self.role = 'EnumPaneRole.PANE_EVENT'
+        self.shouldSave = False
+        self.eventMgr = MBTEventManager()
+        self.eventMgr.deserialize(event_data)
+        self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.evtLstSizer = wx.BoxSizer(wx.VERTICAL)
+        self.evtDetailSizer = wx.BoxSizer(wx.VERTICAL)
+        self.evtLstToolsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        # evt list tools
+        self.ctrlSearch = wx.SearchCtrl(self, size=(160, -1), style=wx.TE_PROCESS_ENTER)
+        self.ctrlSearch.ShowCancelButton(True)
+        _srch_w, _srch_h = self.ctrlSearch.GetSize()
+        self.evtAddBtn = wx.Button(self, wx.ID_ANY, '+', size=(_srch_h, _srch_h))
+        self.evtRemoveBtn = wx.Button(self, wx.ID_ANY, '-', size=(_srch_h, _srch_h))
+        # self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
+        # self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.OnCancel, self.search)
+        # self.Bind(wx.EVT_TEXT_ENTER, self.OnDoSearch, self.search)
+        # create detail panel
+        self.detailPanel = EventDetailPanel(self)
+        # Create a dataview control
+        self.dvlc = dv.DataViewListCtrl(self, style=wx.LC_REPORT | dv.DV_NO_HEADER | dv.DV_ROW_LINES)
+        self.dvlc.SetRowHeight(16)
+        self.dvlc.SetFont(wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
+        self.dvlc.AppendBitmapColumn('Direction', 0, width=18)
+        self.dvlc.AppendTextColumn('Name', width=120)
+        _incoming_icon = wx.ArtProvider.GetBitmap(wx.ART_GO_BACK, wx.ART_TOOLBAR, (10, 10))
+        _outgoing_icon = wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR, (10, 10))
+        for name, evt in self.eventMgr.get_all_events().items():
+            if evt.visible:
+                _icon = _incoming_icon if evt.type == EnumMBTEventType.INCOMING else _outgoing_icon
+                self.dvlc.AppendItem((_icon, name))
+        self.dvlc.Bind(dv.EVT_DATAVIEW_ITEM_ACTIVATED, self.on_dv_item_activated)
+        # layout
+        self.evtLstToolsSizer.Add(self.ctrlSearch, 0)
+        self.evtLstToolsSizer.AddStretchSpacer(1)
+        self.evtLstToolsSizer.Add(self.evtAddBtn, 0)
+        self.evtLstToolsSizer.Add(self.evtRemoveBtn, 0)
+        self.evtLstSizer.Add(self.evtLstToolsSizer, 0, wx.EXPAND)
+        self.evtLstSizer.AddSpacer(10)
+        self.evtLstSizer.Add(self.dvlc, 1, wx.EXPAND)
+        self.evtDetailSizer.Add(self.detailPanel, 1, wx.EXPAND)
+        self.mainSizer.Add(self.evtLstSizer, 0, wx.EXPAND | wx.ALL, 5)
+        self.mainSizer.Add(self.evtDetailSizer, 1, wx.EXPAND)
+        self.SetSizer(self.mainSizer)
+        self.Layout()
+        self.Fit()
+
+    def on_dv_item_activated(self, evt: dv.DataViewEvent):
+        _selected_row = self.dvlc.GetSelectedRow()
+        _selected_evt_name = self.dvlc.GetTextValue(_selected_row, 1)
+        self.detailPanel.set_data(self.eventMgr.get_event(_selected_evt_name))
