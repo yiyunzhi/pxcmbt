@@ -1,15 +1,10 @@
-import wx
 import wx.propgrid as wxpg
-import numpy as np
 from wxgraph import (DrawObjectRectangle,
                      DrawObjectCircle,
-                     DrawObjectPointSet,
-                     DrawObjectScaledTextBox,
-                     utils,
-                     util_bbox)
+                     DrawObjectScaledTextBox)
 from .define_gui import *
 from .base_state_chart_node import StateChartNode
-from .utils_helper import util_section_middle_split
+from application.utils_helper import util_section_middle_split
 from application.define import EnumItemRole
 
 
@@ -64,6 +59,8 @@ class StateNodeShape(StateChartNode):
         _d.update({'isVisible': self.isVisible})
         _d.update({'position': self.position})
         _d.update({'connectionStyle': self.connectionStyle})
+        _d.update({'exitEventModel': self.exitEventModel})
+        _d.update({'enterEventModel': self.enterEventModel})
         return _d
 
     def _update_name(self):

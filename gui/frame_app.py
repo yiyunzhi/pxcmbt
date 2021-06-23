@@ -19,9 +19,7 @@
 #
 #
 # ------------------------------------------------------------------------------
-import sys, os, traceback, threading
-from collections import OrderedDict
-import wx
+import traceback
 import wx.lib.agw.aui as aui
 from pubsub import pub
 from application.log_logger import get_logger
@@ -35,13 +33,15 @@ from .panel_props_container import PropContainerPanel
 from .panel_console import ConsolePanel
 from .panel_event_editor import EventEditorPanel
 from .panel_prop_content import CanvasNodePropContentPanel
-from .define_gui import _, PATH_GUI_IMAGES, EnumCanvasToolbarMode
+from .define_gui import _, EnumCanvasToolbarMode
 from .dialog_node_editor import NodeEditorDialog, NodeNoteEditorDialog
-from .dialog_file import NewProjectDialog
-from .utils_helper import *
+from .dialog_new_project import NewProjectDialog
+from .dialog_select_user_feature import SelectUserFeatureDialog
+from application.utils_helper import *
+from application.class_yaml_tag import *
 
 
-# todo: integration with tcs.
+# todo: in built in feature implement a preview of the state
 
 class WxLog:
     def WriteText(self, text):
@@ -239,10 +239,23 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.on_about, id=wx.ID_ABOUT)
         # bind event update UI, multi allowed
-        pub.subscribe(self.on_ext_sig_model_item_double_clicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked)
-        pub.subscribe(self.on_ext_sig_canvas_node_dclicked, EnumAppSignals.sigV2VCanvasNodeDClicked)
-        pub.subscribe(self.on_ext_sig_canvas_node_note_dclicked, EnumAppSignals.sigV2VCanvasNodeNoteDClicked)
-        pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps)
+        pub.subscribe(self.on_ext_sig_model_item_double_clicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value)
+        pub.subscribe(self.on_ext_sig_canvas_node_dclicked, EnumAppSignals.sigV2VCanvasNodeDClicked.value)
+        pub.subscribe(self.on_ext_sig_canvas_node_note_dclicked, EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value)
+        pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps.value)
+        pub.subscribe(self.on_ext_sig_project_add_user_feature, EnumAppSignals.sigV2VProjectAddUserFeature.value)
+
+    def on_ext_sig_project_add_user_feature(self):
+        _dlg = SelectUserFeatureDialog(self._currentProject, self)
+        _ret = _dlg.ShowModal()
+        if _ret == wx.ID_OK:
+            _selected_feature = _dlg.get_selected_feature()
+            if _selected_feature:
+                _, _stc_uuid, _evt_uuid = self._panelProjectMgr.contentPanel.add_user_feature(_selected_feature)
+                self._currentProject.add_user_feature_event(_selected_feature, _evt_uuid)
+                self._currentProject.add_user_feature_state(_selected_feature, _stc_uuid)
+            else:
+                wx.MessageBox('No Feature selected', 'Info')
 
     def on_ext_sig_canvas_node_show_props(self, item):
         if hasattr(item, 'get_properties'):
@@ -286,11 +299,14 @@ class FrameMain(wx.Frame):
         evt.Skip()
 
     def on_menu_save_clicked(self, evt):
+        # todo: on save update the proj and the state,event...
         if self._currentProject:
             # save all cached pane
             for n_uuid, panel in self._panelCache.items():
                 if isinstance(panel, StateChartCanvasViewPanel):
                     self._currentProject.save_canvas(panel)
+            if self._panelProjectMgr.contentPanel is not None:
+                self._currentProject.save_project(self._panelProjectMgr.contentPanel)
             pass
         else:
             pass
@@ -303,9 +319,22 @@ class FrameMain(wx.Frame):
 
     def on_menu_open_clicked(self, evt):
         if self._currentProject:
+            # fixme: first check if current project saved
             pass
         else:
             pass
+        _dlg = wx.FileDialog(self, defaultDir=APP_SETTING.projectPath,
+                             wildcard='Project file (*.proj)|*.proj')
+        _ret = _dlg.ShowModal()
+        if _ret == wx.ID_OK:
+            _path = _dlg.GetPath()
+            _project = Project('_tmp')
+            _proj_file_io = _project.open_project(_path)
+            _proj_mgr_panel = GuiProjectManagerPanel(self._panelProjectMgr)
+            _proj_mgr_panel.init_project(_project)
+            _proj_mgr_panel.deserialize(_proj_file_io.body)
+            _proj_mgr_panel.uuid = util_get_uuid_string()
+            self._panelProjectMgr.set_content(_proj_mgr_panel)
 
     def on_menu_new_project_clicked(self, evt):
         if self._currentProject:
@@ -316,7 +345,9 @@ class FrameMain(wx.Frame):
         if self._currentProject is not None:
             _proj_mgr_content_panel = GuiProjectManagerPanel(self._panelProjectMgr)
             _proj_mgr_content_panel.init_project(self._currentProject)
+            _proj_mgr_content_panel.uuid = util_get_uuid_string()
             self._panelProjectMgr.set_content(_proj_mgr_content_panel)
+            self._currentProject.save_project(_proj_mgr_content_panel)
 
     def _create_new_project(self):
         self._currentProject = None
@@ -336,16 +367,16 @@ class FrameMain(wx.Frame):
             self._currentProject = Project(_project_name)
             self._currentProject.set_project_workspace_path(_project_path)
             self._currentProject.create_new_project()
-        # todo: propmt new dialog get project name
 
     def on_menu_new_file_clicked(self, evt):
         pass
 
     def on_ext_sig_model_item_double_clicked(self, uuid):
+        _path = self._panelProjectMgr.contentPanel.get_item_path_by_uuid(uuid)
+        _role = self._panelProjectMgr.contentPanel.get_item_role_by_uuid(uuid)
         _exist = self._auiMgr.GetPaneByName(uuid)
-        if not _exist.IsOk():
-            _path = self._panelProjectMgr.contentPanel.get_item_path_by_uuid(uuid)
-            _role = self._panelProjectMgr.contentPanel.get_item_role_by_uuid(uuid)
+        _exist_in_proj = self._currentProject.get_file_io(uuid, _role)
+        if not _exist.IsOk() and (_exist_in_proj is None):
             _caption = '%s' % _path
             if _role == EnumItemRole.DEV_FEATURE_STATE:
                 _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
@@ -361,7 +392,17 @@ class FrameMain(wx.Frame):
             self._auiMgr.AddPane(_panel, _centerDefaultAuiInfo, target=self._centerTargetAuiInfo)
             self._auiMgr.Update()
             self._panelCache.update({uuid: _panel})
+        elif not _exist.IsOk() and _exist_in_proj is not None:
+            if _role == EnumItemRole.DEV_FEATURE_STATE:
+                _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
+                _panel.deserialize(_exist_in_proj.body)
+            elif _role == EnumItemRole.DEV_FEATURE_EVENT:
+                _evt_data = self._currentProject.get_event_data(_role, uuid)
+                _panel = EventEditorPanel(self, _evt_data)
+            else:
+                return
         else:
+            # if exist
             _panel = self._panelCache.get(uuid)
             if _panel.IsShown():
                 self._auiMgr.RequestUserAttention(_panel)

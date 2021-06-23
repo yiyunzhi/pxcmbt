@@ -5,6 +5,7 @@ from .define_gui import *
 from wxgraph import DrawObjectPointSet
 from wxgraph import util_bbox, DrawObjectGroup, utils
 from application.define import EnumItemRole
+from application.class_mbt_event import NodeEvtModel
 
 
 class Serializable:
@@ -25,20 +26,6 @@ class Serializable:
 
     def deserialize(self, data):
         pass
-
-
-class NodeEvtModel:
-    def __init__(self):
-        self.events = list()
-
-    def get_event_names(self):
-        return [x[0] for x in self.events]
-
-    def clear(self):
-        self.events.clear()
-
-    def update(self, event_name, event_data):
-        self.events.append((event_name, event_data))
 
 
 class StateChartNode(Serializable, DrawObjectGroup):

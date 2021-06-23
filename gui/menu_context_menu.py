@@ -115,28 +115,122 @@ class GuiDeviceFeatureContextMenu(GuiContextMenu):
         _menu.Destroy()
 
 
-class GuiUserFeatureContextMenu(GuiContextMenu):
+class GuiDeviceFeatureStateContextMenu(GuiContextMenu):
     def __init__(self, parent):
-        super(GuiUserFeatureContextMenu, self).__init__(name='cmUserFeature', parent=parent)
-        self.popupRenameID = wx.NewIdRef()
-        self.popupPropID = wx.NewIdRef()
-        self.popupStartSession = wx.NewIdRef()
-        self.popupStopSession = wx.NewIdRef()
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_rename_feature_label, id=self.popupRenameID)
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_show_feature_property, id=self.popupPropID)
+        super(GuiDeviceFeatureStateContextMenu, self).__init__(name='cmDeviceFeature', parent=parent)
+        self.popupAddUserFeature = wx.NewIdRef()
+        self.popupPickUpFeature = wx.NewIdRef()
+
+        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_add_user_feature(evt, flag),
+                         id=self.popupAddUserFeature)
+        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_pick_up_user_feature(evt, flag),
+                         id=self.popupPickUpFeature)
 
     def show(self):
         # make a menu
         _menu = wx.Menu()
         # Show how to put an icon in the menu
-        # _item = wx.MenuItem(_menu, self.popupPropID, "Property")
+        # _item = wx.MenuItem(_menu, self.popupNewSessionID, "New Session")
         # bmp = images.Smiles.GetBitmap()
         # item.SetBitmap(bmp)
         # _menu.Append(_item)
         # add some other items
+        _menu.Append(self.popupAddUserFeature, "Add User Feature")
+        _menu.Append(self.popupPickUpFeature, "Pick Up User Feature")
         _menu.AppendSeparator()
-        _menu.Append(self.popupRenameID, "Rename")
-        _menu.Append(self.popupPropID, "Properties")
+        # _menu.AppendSeparator()
+        # _menu.Append(self.popupStartSessions, "Start All")
+        # _menu.Append(self.popupStopSessions, "Stop All")
+        # _menu.AppendSeparator()
+        # make a submenu
+        # sm = wx.Menu()
+        # sm.Append(self.popupID8, "sub item 1")
+        # sm.Append(self.popupID9, "sub item 1")
+        # _menu.Append(self.popupID7, "Test Submenu", sm)
+
+        # Popup the menu.  If an item is selected then its handler
+        # will be called before PopupMenu returns.
+        self.parent.PopupMenu(_menu)
+        _menu.Destroy()
+
+
+class GuiDeviceFeatureEvtContextMenu(GuiContextMenu):
+    def __init__(self, parent):
+        super(GuiDeviceFeatureEvtContextMenu, self).__init__(name='cmDeviceFeature', parent=parent)
+        self.popupAddUserFeature = wx.NewIdRef()
+        self.popupPickUpFeature = wx.NewIdRef()
+
+        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_add_user_feature(evt, flag),
+                         id=self.popupAddUserFeature)
+        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_pick_up_user_feature(evt, flag),
+                         id=self.popupPickUpFeature)
+
+    def show(self):
+        # make a menu
+        _menu = wx.Menu()
+        # Show how to put an icon in the menu
+        # _item = wx.MenuItem(_menu, self.popupNewSessionID, "New Session")
+        # bmp = images.Smiles.GetBitmap()
+        # item.SetBitmap(bmp)
+        # _menu.Append(_item)
+        # add some other items
+        # _menu.Append(self.popupAddUserFeature, "Add User Feature")
+        # _menu.Append(self.popupPickUpFeature, "Pick Up User Feature")
+        # _menu.AppendSeparator()
+        # _menu.AppendSeparator()
+        # _menu.Append(self.popupStartSessions, "Start All")
+        # _menu.Append(self.popupStopSessions, "Stop All")
+        # _menu.AppendSeparator()
+        # make a submenu
+        # sm = wx.Menu()
+        # sm.Append(self.popupID8, "sub item 1")
+        # sm.Append(self.popupID9, "sub item 1")
+        # _menu.Append(self.popupID7, "Test Submenu", sm)
+
+        # Popup the menu.  If an item is selected then its handler
+        # will be called before PopupMenu returns.
+        self.parent.PopupMenu(_menu)
+        _menu.Destroy()
+
+
+class GuiUserFeatureContextMenu(GuiContextMenu):
+    def __init__(self, parent):
+        super(GuiUserFeatureContextMenu, self).__init__(name='cmUserFeature', parent=parent)
+        self.popupNewID = wx.NewIdRef()
+        self.popupAddID = wx.NewIdRef()
+        self.popupClearID = wx.NewIdRef()
+        self.popupStartSession = wx.NewIdRef()
+        self.popupStopSession = wx.NewIdRef()
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_new_user_feature, id=self.popupNewID)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_add_user_feature, id=self.popupAddID)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_clear_user_feature, id=self.popupClearID)
+
+    def show(self):
+        # make a menu
+        _menu = wx.Menu()
+        # Show how to put an icon in the menu
+        _menu.Append(self.popupNewID, "New")
+        _menu.Append(self.popupAddID, "Add")
+        _menu.AppendSeparator()
+        _menu.Append(self.popupClearID, "Clear")
+        # make a submenu
+        # will be called before PopupMenu returns.
+        self.parent.PopupMenu(_menu)
+        _menu.Destroy()
+
+
+class GuiUserFeatureItemContextMenu(GuiContextMenu):
+    def __init__(self, parent):
+        super(GuiUserFeatureItemContextMenu, self).__init__(name='cmUserFeature', parent=parent)
+        self.popupSaveAsLibID = wx.NewIdRef()
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_new_user_feature, id=self.popupSaveAsLibID)
+
+    def show(self):
+        # make a menu
+        _menu = wx.Menu()
+        # Show how to put an icon in the menu
+        _menu.Append(self.popupSaveAsLibID, "SaveAsLib")
+        _menu.AppendSeparator()
         # make a submenu
         # will be called before PopupMenu returns.
         self.parent.PopupMenu(_menu)
@@ -171,9 +265,9 @@ class GuiUserFeatureStateContextMenu(GuiContextMenu):
         _menu.Destroy()
 
 
-class GuiFeatureLibContextMenu(GuiContextMenu):
+class GuiUserFeatureEvtContextMenu(GuiContextMenu):
     def __init__(self, parent):
-        super(GuiFeatureLibContextMenu, self).__init__(name='cmFeatureLib', parent=parent)
+        super(GuiUserFeatureEvtContextMenu, self).__init__(name='cmFeatureLib', parent=parent)
         self.popupReloadID = wx.NewIdRef()
         self.popupShowDetailID = wx.NewIdRef()
         self.parent.Bind(wx.EVT_MENU, self.parent.on_reload_feature_lib, id=self.popupReloadID)
@@ -197,35 +291,9 @@ class GuiFeatureLibContextMenu(GuiContextMenu):
         _menu.Destroy()
 
 
-class GuiFeatureLibItemContextMenu(GuiContextMenu):
-    def __init__(self, parent):
-        super(GuiFeatureLibItemContextMenu, self).__init__(name='cmFeatureLib', parent=parent)
-        self.popupAddToUseID = wx.NewIdRef()
-        self.popupDetailID = wx.NewIdRef()
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_add_feature_to_use, id=self.popupAddToUseID)
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_show_lib_item_detail, id=self.popupDetailID)
-
-    def show(self):
-        # make a menu
-        _menu = wx.Menu()
-        # Show how to put an icon in the menu
-        # _item = wx.MenuItem(_menu, self.popupPropID, "Property")
-        # bmp = images.Smiles.GetBitmap()
-        # item.SetBitmap(bmp)
-        # _menu.Append(_item)
-        # add some other items
-        _menu.AppendSeparator()
-        _menu.Append(self.popupAddToUseID, "Add to Use")
-        _menu.Append(self.popupDetailID, "Detail")
-        # make a submenu
-        # will be called before PopupMenu returns.
-        self.parent.PopupMenu(_menu)
-        _menu.Destroy()
-
-
 class GuiStateItemContextMenu(GuiContextMenu):
     def __init__(self, parent):
-        super(GuiStateItemContextMenu, self).__init__(name='cmNodeItemLib', parent=parent)
+        super(GuiStateItemContextMenu, self).__init__(name='cmFeatureLib', parent=parent)
         self.popupDeleteID = wx.NewIdRef()
         self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_delete_item, id=self.popupDeleteID)
 
@@ -238,8 +306,8 @@ class GuiStateItemContextMenu(GuiContextMenu):
         # item.SetBitmap(bmp)
         # _menu.Append(_item)
         # add some other items
-        _menu.AppendSeparator()
         _menu.Append(self.popupDeleteID, "Delete")
+        _menu.AppendSeparator()
         # make a submenu
         # will be called before PopupMenu returns.
         self.parent.PopupMenu(_menu)

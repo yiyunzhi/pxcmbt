@@ -85,3 +85,17 @@ class MBTEventManager:
 
     def has_outgoing_event(self, evt_name):
         pass
+
+
+class NodeEvtModel:
+    def __init__(self):
+        self.events = list()
+
+    def get_event_names(self):
+        return [x[0] for x in self.events]
+
+    def clear(self):
+        self.events.clear()
+
+    def update(self, event_name, event_data):
+        self.events.append((event_name, event_data))

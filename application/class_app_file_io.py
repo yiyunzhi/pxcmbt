@@ -1,4 +1,8 @@
-from yaml import CLoader, load
+import os
+from yaml import CLoader, load, dump
+from .class_app_setting import APP_SETTING
+from .define import *
+from .utils_helper import *
 
 
 class ApplicationFileHeader:
@@ -8,6 +12,9 @@ class ApplicationFileHeader:
         self.date = kwargs.get('date')
         self.description = kwargs.get('description')
         self.type = kwargs.get('type')
+
+    def persist(self):
+        pass
 
 
 class ApplicationFileBody:
@@ -19,16 +26,17 @@ class ApplicationFileIO:
     HEADER_K = 'HEADER'
     BODY_K = 'BODY'
 
-    def __init__(self, file_path, header_cls=ApplicationFileHeader, body_cls=ApplicationFileBody):
+    def __init__(self, file_path, file_name, header_cls=ApplicationFileHeader, body_cls=ApplicationFileBody):
         self.extend = '.*'
         self.headerCls = header_cls
         self.bodyCls = body_cls
         self.filePath = file_path
+        self.fileName = file_name
         self.header = None
         self.body = None
 
     def read(self):
-        with open(self.filePath) as f:
+        with open(os.path.join(self.filePath, self.fileName)) as f:
             _data = load(f, CLoader)
             if self.HEADER_K in _data and self.headerCls is not None:
                 self.header = self.headerCls(**_data.get(self.HEADER_K))
@@ -59,8 +67,8 @@ class ApplicationInfFileBody(ApplicationFileBody):
 
 
 class ApplicationInfFileIO(ApplicationFileIO):
-    def __init__(self, file_path):
-        ApplicationFileIO.__init__(self, file_path, body_cls=ApplicationInfFileBody)
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, body_cls=ApplicationInfFileBody)
         self.extend = '.inf'
 
 
@@ -73,12 +81,15 @@ class ApplicationStcFileBody(ApplicationFileBody):
 
 
 class ApplicationStcFileIO(ApplicationFileIO):
-    def __init__(self, file_path):
-        ApplicationFileIO.__init__(self, file_path, body_cls=ApplicationStcFileBody)
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, body_cls=ApplicationStcFileBody)
         self.extend = '.stc'
 
     def write(self, data):
-        print('ApplicationStcFileIO write', data)
+        _file_full_path = os.path.join(self.filePath, self.fileName + self.extend)
+        print('write data to ', _file_full_path)
+        with open(_file_full_path, "w") as f:
+            dump(data, f)
 
 
 class ApplicationEvtFileBody(ApplicationFileBody):
@@ -88,6 +99,39 @@ class ApplicationEvtFileBody(ApplicationFileBody):
 
 
 class ApplicationEvtFileIO(ApplicationFileIO):
-    def __init__(self, file_path):
-        ApplicationFileIO.__init__(self, file_path, body_cls=ApplicationEvtFileBody)
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, body_cls=ApplicationEvtFileBody)
         self.extend = '.evt'
+
+
+class ApplicationProjFileBody(ApplicationFileBody):
+    def __init__(self, **kwargs):
+        ApplicationFileBody.__init__(self, **kwargs)
+        self.model=kwargs.get('model')
+        self.rack=kwargs.get('rack')
+
+
+class ApplicationProjFileHeader(ApplicationFileHeader):
+    def __init__(self, **kwargs):
+        ApplicationFileHeader.__init__(self, **kwargs)
+
+    def persist(self):
+        _d = {'version': APP_VERSION,
+              'author': util_get_computer_name(),
+              'date': util_date_now(),
+              'type': 'MBT_PROJ'}
+        return _d
+
+
+class ApplicationProjFileIO(ApplicationFileIO):
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, header_cls=ApplicationProjFileHeader,
+                                   body_cls=ApplicationProjFileBody)
+        self.extend = '.proj'
+
+    def write(self, data):
+        _file_full_path = os.path.join(self.filePath, self.fileName)
+        _hdr = self.headerCls()
+        _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
+        with open(_file_full_path, "w") as f:
+            dump(_data, f)

@@ -163,7 +163,7 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
         self.rbRect = None
         # highlight items
         # bind the event
-        pub.subscribe(self.on_canvas_mode_changed, EnumAppSignals.sigV2VCanvasToolbarModeChanged)
+        pub.subscribe(self.on_canvas_mode_changed, EnumAppSignals.sigV2VCanvasToolbarModeChanged.value)
 
     def _update_position(self, pos):
         self.orgPos = self.curPos
@@ -385,7 +385,7 @@ class GUIModeMouse(GUIModeZoomWithMouseWheelMixin, GUIModeBase):
         if _k_code == wx.WXK_DELETE or _k_code == wx.WXK_NUMPAD_DELETE:
             if self.selectedNodeItems:
                 _lst = [x for x in self.selectedNodeItems]
-                pub.sendMessage(EnumAppSignals.sigV2VGuiModeDelItemRequested, items=_lst)
+                pub.sendMessage(EnumAppSignals.sigV2VGuiModeDelItemRequested.value, items=_lst)
 
     def update_screen(self):
         # The screen has been re-drawn, so StartMove needs to be reset.

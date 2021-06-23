@@ -1,0 +1,12 @@
+---
+HEADER:
+  version: '1.0.1'
+  date: '2020-12-12 16:30:24'
+  author: 'EHTCRA'
+  libName: 'Feature Power2'
+  type: 'MBT_FEATURE_LIB'
+  description: 'Power Feature, 3 state vOK,vLow,vHigh'
+BODY:
+  state: pwr.stc
+  event: pwr.evt
+...

@@ -22,7 +22,11 @@
 import os, sys, platform, math, uuid, bitstring
 import psutil
 import wx
-from application.define import APP_CONSOLE_TIME_WX_FMT
+from .define import APP_CONSOLE_TIME_WX_FMT
+
+
+def util_get_computer_name():
+    return os.getenv('COMPUTERNAME')
 
 
 def util_get_ipv4_if():

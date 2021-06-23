@@ -24,19 +24,22 @@ from pubsub import pub
 from .ctrl_tree import GenericTreeCtrl
 from application.define import StandardItemData, EnumItemRole, EnumAppSignals
 from .define_gui import PATH_GUI_IMAGES
-from .utils_helper import util_get_uuid_string, util_wx_tree_walk_branches
+from application.utils_helper import util_get_uuid_string, util_wx_tree_walk_branches
 from .menu_context_menu import (GuiModelContextMenu,
                                 GuiDeviceFeatureContextMenu,
                                 GuiUserFeatureContextMenu,
                                 GuiUserFeatureStateContextMenu,
-                                GuiFeatureLibContextMenu,
-                                GuiFeatureLibItemContextMenu)
+                                GuiUserFeatureEvtContextMenu,
+                                GuiDeviceFeatureEvtContextMenu,
+                                GuiDeviceFeatureStateContextMenu)
 
 
 class ProjectPanelIconRepo:
     def __init__(self):
         self._icon_size = (16, 16)
         self._image_list = wx.ImageList(*self._icon_size)
+        self.fileIcon = self._image_list.Add(
+            wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, self._icon_size))
         self.invalidIcon = self._image_list.Add(
             wx.ArtProvider.GetBitmap(wx.ART_MISSING_IMAGE, wx.ART_OTHER, self._icon_size))
         self.signalsIcon = self._image_list.Add(
@@ -150,7 +153,8 @@ class GuiProjectManagerContainerPanel(wx.Panel):
 
     def set_content(self, content_panel):
         if self.contentPanel is not None:
-            self.mainSizer.Remove(self.contentPanel)
+            self.mainSizer.Detach(self.contentPanel)
+            self.contentPanel.Destroy()
         self.mainSizer.Add(content_panel, 1, wx.EXPAND)
         self.contentPanel = content_panel
         self.Layout()
@@ -162,6 +166,7 @@ class GuiProjectManagerPanel(wx.Panel):
         # Use the WANTS_CHARS style so the panel doesn't eat the Return key.
         wx.Panel.__init__(self, parent, -1, style=wx.WANTS_CHARS)
         self.role = None
+        self.uuid = None
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.tree = GenericTreeCtrl(self, wx.NewIdRef(), wx.DefaultPosition, wx.DefaultSize,
                                     wx.TR_HAS_BUTTONS
@@ -180,10 +185,11 @@ class GuiProjectManagerPanel(wx.Panel):
         # context menu
         self._modelCtxMenu = GuiModelContextMenu(self)
         self._deviceFeatureCtxMenu = GuiDeviceFeatureContextMenu(self)
+        self._deviceFeatureStateCtxMenu = GuiDeviceFeatureStateContextMenu(self)
+        self._deviceFeatureEvtCtxMenu = GuiDeviceFeatureEvtContextMenu(self)
         self._userFeatureCtxMenu = GuiUserFeatureContextMenu(self)
-        self._featureStateCtxMenu = GuiUserFeatureStateContextMenu(self)
-        self._featureLibCtxMenu = GuiFeatureLibContextMenu(self)
-        self._featureLibItemCtxMenu = GuiFeatureLibItemContextMenu(self)
+        self._userFeatureStateCtxMenu = GuiUserFeatureStateContextMenu(self)
+        self._userFeatureEvtCtxMenu = GuiUserFeatureEvtContextMenu(self)
         # attributes
         self._current_activated_item = None
         # tree build
@@ -260,14 +266,17 @@ class GuiProjectManagerPanel(wx.Panel):
         self.tree.SetItemImage(self._deviceEvtItem, self._iconRepo.eventIcon, wx.TreeItemIcon_Normal)
         self._itemMap.update({self._deviceEvtItemData.uuid: self._deviceEvtItem})
 
-        self._featureLibItem = self.tree.AppendItem(self._modelItem, "Feature Libs")
-        self.featureLibItemData = StandardItemData()
-        self.featureLibItemData.role = EnumItemRole.FEATURE_LIB
-        self.featureLibItemData.uuid = util_get_uuid_string()
-        self.featureLibItemData.labelReadonly = True
-        self.tree.SetItemData(self._featureLibItem, self.featureLibItemData)
-        self.tree.SetItemImage(self._featureLibItem, self._iconRepo.libIcon, wx.TreeItemIcon_Normal)
-        self._itemMap.update({self.featureLibItemData.uuid: self._featureLibItem})
+        self._userFeatureItem = self.tree.AppendItem(self._modelItem, "User")
+        self.userFeatureItemData = StandardItemData()
+        self.userFeatureItemData.role = EnumItemRole.USER_FEATURE
+        self.userFeatureItemData.uuid = util_get_uuid_string()
+        self.userFeatureItemData.labelReadonly = True
+        self.tree.SetItemData(self._userFeatureItem, self.userFeatureItemData)
+        self.tree.SetItemImage(self._userFeatureItem, self._iconRepo.libIcon, wx.TreeItemIcon_Normal)
+        self._itemMap.update({self.userFeatureItemData.uuid: self._userFeatureItem})
+
+        # for i in range(10):
+        #     self._add_user_feature('userFe%s' % i)
 
         self.tree.Expand(self.root)
         self.tree.Expand(self._modelItem)
@@ -285,6 +294,114 @@ class GuiProjectManagerPanel(wx.Panel):
             (wx.ACCEL_NORMAL, wx.WXK_F2, _id_F2)
         ])
         self.SetAcceleratorTable(accel_tbl)
+
+    def serialize(self):
+        _d = dict()
+        _d.update({'uuid': self.uuid, 'role': self.role})
+        _d.update({'model':
+                       {'root': {'data': self.deviceItemData,
+                                 'text': self.tree.GetItemText(self._rootFeatureItem),
+                                 'state': self.deviceStateItemData,
+                                 'event': self._deviceEvtItemData},
+                        'user': {'data': self.userFeatureItemData,
+                                 'text': self.tree.GetItemText(self._userFeatureItem),
+                                 'children': list()}},
+                   'rack':
+                       {'sessions': {'text': self.tree.GetItemText(self._sessions_item),
+                                     'data': self.sessionsItemData,
+                                     'children': list()},
+                        'scripts': {'text': self.tree.GetItemText(self._scripts_item),
+                                    'data': self.scriptsItemData,
+                                    'children': list()}}})
+        # serialize the user features
+        _item, _cookie = self.tree.GetFirstChild(self._userFeatureItem)
+        while _item.IsOk():
+            _state_item, _ = self.tree.GetFirstChild(_item)
+            _evt_item, _ = self.tree.GetNextChild(self._userFeatureItem, _)
+            _d['model']['user']['children'].append({'data': self.tree.GetItemData(_item),
+                                                    'text': self.tree.GetItemText(_item),
+                                                    'state': self.tree.GetItemData(_state_item),
+                                                    'event': self.tree.GetItemData(_evt_item)})
+            _item, _cookie = self.tree.GetNextChild(self._userFeatureItem, _cookie)
+        return _d
+
+    def deserialize(self, data):
+        if hasattr(data, 'model'):
+            _model = data.model
+            _root = _model['root']
+            _user = _model['user']
+            _user_children = _model['user']['children']
+            _root_item_data = _root['data']
+            _root_state_data = _root['state']
+            _root_evt_data = _root['event']
+            self.tree.SetItemText(self._rootFeatureItem, _root['text'])
+            self.tree.SetItemData(self._rootFeatureItem, _root_item_data)
+            self.tree.SetItemData(self._deviceStateItem, _root_state_data)
+            self.tree.SetItemData(self._deviceEvtItem, _root_evt_data)
+
+            self._itemMap.update({_root_item_data.uuid: self._rootFeatureItem})
+            self._itemMap.update({_root_state_data.uuid: self._deviceStateItem})
+            self._itemMap.update({_root_evt_data.uuid: self._deviceEvtItem})
+            # handling the user feature
+            self.tree.SetItemText(self._userFeatureItem, _user['text'])
+            self.tree.SetItemData(self._userFeatureItem, _user['data'])
+            for x in _user_children:
+                _x_text, _x_data, _x_state, _x_event = x['text'], x['data'], x['state'], x['event']
+                self.add_user_feature(_x_text, _x_data, _x_state, _x_event)
+
+        if hasattr(data, 'rack'):
+            _sessions = data.rack['sessions']
+            _scripts = data.rack['scripts']
+            self.tree.SetItemData(self._sessions_item, _sessions['data'])
+            self.tree.SetItemData(self._scripts_item, _scripts['data'])
+
+    def add_user_feature(self, name, item_data=None, state_data=None, evt_data=None):
+        _userFeatureItem = self.tree.AppendItem(self._userFeatureItem, name)
+        if item_data is not None:
+            _userFeatureItemData = item_data
+        else:
+            _userFeatureItemData = StandardItemData()
+            _userFeatureItemData.role = EnumItemRole.USER_FEATURE
+            _userFeatureItemData.uuid = util_get_uuid_string()
+            _userFeatureItemData.labelReadonly = False
+        self.tree.SetItemData(_userFeatureItem, _userFeatureItemData)
+        self.tree.SetItemImage(_userFeatureItem, self._iconRepo.fileIcon, wx.TreeItemIcon_Normal)
+
+        _userFeatureStateItem = self.tree.AppendItem(_userFeatureItem, 'State')
+        if item_data is not None:
+            _userFeatureStateData = state_data
+        else:
+            _userFeatureStateData = StandardItemData()
+            _userFeatureStateData.role = EnumItemRole.USER_FEATURE_STATE
+            _userFeatureStateData.uuid = util_get_uuid_string()
+            _userFeatureStateData.labelReadonly = True
+        self.tree.SetItemData(_userFeatureStateItem, _userFeatureStateData)
+        self.tree.SetItemImage(_userFeatureStateItem, self._iconRepo.stateIcon, wx.TreeItemIcon_Normal)
+
+        _userFeatureEventItem = self.tree.AppendItem(_userFeatureItem, 'Event')
+        if item_data is not None:
+            _userFeatureEventData = evt_data
+        else:
+            _userFeatureEventData = StandardItemData()
+            _userFeatureEventData.role = EnumItemRole.USER_FEATURE_EVENT
+            _userFeatureEventData.uuid = util_get_uuid_string()
+            _userFeatureEventData.labelReadonly = True
+        self.tree.SetItemData(_userFeatureEventItem, _userFeatureEventData)
+        self.tree.SetItemImage(_userFeatureEventItem, self._iconRepo.eventIcon, wx.TreeItemIcon_Normal)
+
+        self._itemMap.update({_userFeatureItemData.uuid: _userFeatureItem})
+        self._itemMap.update({_userFeatureStateData.uuid: _userFeatureStateItem})
+        self._itemMap.update({_userFeatureEventData.uuid: _userFeatureEventItem})
+        return _userFeatureItemData.uuid, _userFeatureStateData.uuid, _userFeatureEventData.uuid
+
+    def on_cm_new_user_feature(self, evt):
+        pass
+
+    def on_cm_add_user_feature(self, evt):
+        pub.sendMessage(EnumAppSignals.sigV2VProjectAddUserFeature.value)
+
+    def on_cm_clear_user_feature(self, evt):
+        pass
 
     def on_item_get_tooltip(self, evt):
         _item = evt.GetItem()
@@ -311,12 +428,12 @@ class GuiProjectManagerPanel(wx.Panel):
                 self._modelCtxMenu.show()
             elif _role == EnumItemRole.DEV_FEATURE:
                 self._deviceFeatureCtxMenu.show()
-            elif _role == EnumItemRole.USER_STATE_FEATURE:
+            elif _role == EnumItemRole.USER_FEATURE:
                 self._userFeatureCtxMenu.show()
-            elif _role == EnumItemRole.FEATURE_LIB:
-                self._featureLibCtxMenu.show()
-            elif _role == EnumItemRole.FEATURE_LIB_ITEM:
-                self._featureLibItemCtxMenu.show()
+            elif _role == EnumItemRole.USER_FEATURE_STATE:
+                self._userFeatureStateCtxMenu.show()
+            elif _role == EnumItemRole.USER_FEATURE_EVENT:
+                self._userFeatureEvtCtxMenu.show()
 
     def on_size(self, event):
         self.tree.SetSize(0, 0, *self.GetClientSize())
@@ -357,7 +474,7 @@ class GuiProjectManagerPanel(wx.Panel):
         _item = event.GetItem()
         _data = self.tree.GetItemData(_item)
         if hasattr(_data, 'uuid'):
-            pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked, uuid=_data.uuid)
+            pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value, uuid=_data.uuid)
 
     def update_item_tool_tip(self, uuid, tooltip_string):
         _item = self._itemMap.get(uuid)
@@ -376,7 +493,7 @@ class GuiProjectManagerPanel(wx.Panel):
             _name = '%s%s' % (original_name, '' if _suffix == 0 else str(_suffix))
         return _name
 
-    def on_add_user_feature(self, evt, flag):
+    def ____on_add_user_feature(self, evt, flag):
         _signals_icon_idx = self._iconRepo.signalsIcon
         _funcs_icon_idx = self._iconRepo.funcsIcon
         _session_icon_idx = getattr(self._iconRepo, 'session%sIconDefault' % flag)

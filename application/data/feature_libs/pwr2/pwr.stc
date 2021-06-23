@@ -1,0 +1,22 @@
+---
+HEADER:
+  version: '1.0.1'
+  date: '2020-12-22 16:30:24'
+  author: 'EHTCRA'
+  type: 'MBT_STC'
+BODY:
+  canvas:
+    scale: 1.0
+    offset: [ 0.0,0.0 ]
+    size: [ -1,-1 ]
+  nodes:
+    - name: sOK
+      pos: [100.0,100.0]
+      uuid: 00111dwadwadsawawd
+      role: ITEM_STATE_NODE
+      textName: 'This is a description for this event.
+               this is a new line'
+  wires:
+    - pass
+
+...

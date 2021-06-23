@@ -1,5 +1,3 @@
-import os, copy
-import wx
 from pubsub import pub
 from wx.lib.agw import aui
 from wxgraph import WxGEvent, DrawObject
@@ -8,7 +6,7 @@ from .define_gui import *
 from .shape_transition import TransitionWireShape
 from .shape_state_node import StateChartNode, StateNodeShape
 from .shape_note_node import NoteNodeShape
-from .utils_helper import util_get_uuid_string
+from application.utils_helper import util_get_uuid_string
 from wxgraph import DrawObjectSquarePoint
 from wxgraph.wxcanvas import WxCanvas
 from wxgraph.draw_graph_dotgrid import DrawGraphDotGrid
@@ -24,20 +22,32 @@ class CanvasSetting:
         self.mFMinScale = 0.4
         self.mFMaxScale = 4.0
         self.mStyle = EnumCanvasStyle.STYLE_DEFAULT
-        self.mBackgroundColor: wx.Colour = wx.Colour(240, 240, 240)
-        self.mCommonHoverColor: wx.Colour = wx.Colour(120, 120, 255)
-        self.mGradientFrom: wx.Colour = wx.Colour(240, 240, 240)
-        self.mGradientTo: wx.Colour = wx.Colour(200, 200, 255)
+        # self.mBackgroundColor: wx.Colour = wx.Colour(240, 240, 240)
+        # self.mCommonHoverColor: wx.Colour = wx.Colour(120, 120, 255)
+        # self.mGradientFrom: wx.Colour = wx.Colour(240, 240, 240)
+        # self.mGradientTo: wx.Colour = wx.Colour(200, 200, 255)
         self.mGridSize: wx.Size = wx.Size(50, 50)
-        self.mGridLineMult: int = 5
-        self.mGridColor: wx.Colour = wx.Colour(200, 200, 200)
-        self.mGridStyle: int = wx.SHORT_DASH
-        self.mShadowOffset: wx.RealPoint = wx.RealPoint(4, 4)
-        self.mShadowFill: wx.Brush = wx.Brush(wx.Colour(150, 150, 150, 128), wx.BRUSHSTYLE_SOLID)
+        # self.mGridLineMult: int = 5
+        # self.mGridColor: wx.Colour = wx.Colour(200, 200, 200)
+        # self.mGridStyle: int = wx.SHORT_DASH
+        # self.mShadowOffset: wx.RealPoint = wx.RealPoint(4, 4)
+        # self.mShadowFill: wx.Brush = wx.Brush(wx.Colour(150, 150, 150, 128), wx.BRUSHSTYLE_SOLID)
         # self.mLstAcceptedShapes = list()
         # self.mIPrintHAlign: int = EnumHAlign.halignCENTER
         # self.mIPrintVAlign: int = EnumVAlign.valignMIDDLE
         # self.mIPrintMode: int = EnumPrintMode.prnFIT_TO_MARGINS
+
+    def serialize(self):
+        _d = {'mDebug': self.mDebug, 'mMode': self.mMode,
+              'mFScale': self.mFScale, 'mFMinScale': self.mFMinScale,
+              'mFMaxScale': self.mFMaxScale, 'mStyle': self.mStyle,
+              'mGridSize': self.mGridSize}
+        return _d
+
+    def deserialize(self, data):
+        for k, v in data:
+            if hasattr(self, k):
+                setattr(self, k, v)
 
 
 class StateChartCanvasViewPanel(wx.Panel):
@@ -183,8 +193,7 @@ class StateChartCanvasViewPanel(wx.Panel):
 
     def serialize(self):
         _d = dict()
-        _d.update({'canvas': {'scale': self.canvasSetting.mFScale,
-                              'size': self.GetSize()},
+        _d.update({'canvas': {'setting': self.canvasSetting.serialize()},
                    'nodes': list(),
                    'wires': list()})
         _objects = self.canvas.get_all_objects()
@@ -196,7 +205,28 @@ class StateChartCanvasViewPanel(wx.Panel):
         return _d
 
     def deserialize(self, data):
-        pass
+        if hasattr(data, 'canvas'):
+            _canvas = data['canvas']['setting']
+        if hasattr(data, 'nodes'):
+            _nodes = data['nodes']
+            for x in _nodes:
+                _cls = x['class']
+                _role = x['role']
+                _uuid = x['uuid']
+                if _cls == 'StateNodeShape':
+                    _conn_style = x['connectionStyle']
+                    _is_visible = x['isVisible']
+                    _name_text = x['nameText']
+                    _position = x['position']
+                    _node = StateNodeShape(_position, _name_text)
+                    _node.isVisible = _is_visible
+                    _node.connectionStyle = _conn_style
+                    _node.update()
+
+        if hasattr(data, 'wires'):
+            _wires = data['wires']
+            for x in _wires:
+                pass
 
     def update_scale_info_test(self):
         self.canvasStatusbar.SetStatusText('scale:%.2F' % self.canvasSetting.mFScale, 0)

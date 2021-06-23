@@ -23,7 +23,7 @@ import wx
 import wx.dataview as dv
 from application.define import APP_CONSOLE_TIME_WX_FMT, ConsoleItemFlagEnum
 from .define_gui import PATH_GUI_IMAGES
-from .utils_helper import util_date_now
+from application.utils_helper import util_date_now
 
 
 class ConsoleDataModel(dv.DataViewIndexListModel):
