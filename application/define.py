@@ -59,4 +59,4 @@ class EnumAppSignals(enum.Enum):
 class EnumMBTEventType(enum.Enum):
     OUTGOING = 'outgoing'
     INCOMING = 'incoming'
-    ALL_VALUES = [OUTGOING, INCOMING]
+    ALL_VALUES = ['outgoing', 'incoming']

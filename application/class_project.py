@@ -56,14 +56,22 @@ class Project:
             pass
         return _f
 
-    def get_event_data(self, role, uuid):
-        _dummy_evt_name = 'abcdefghijk'
-        _file_name = _dummy_evt_name + self._evtFileExt
-        _path = os.path.join(self.modelPath, _file_name)
-        _data = None
-        with open(_path, 'r', encoding='utf-8') as f:
-            _data = yaml.load(f, yaml.CLoader)
-        return _data
+    def get_event_data(self, uuid):
+        _guess_file_path = os.path.join(self.modelPath, uuid + APP_SETTING.evtFileExt)
+        _exist = util_is_dir_exist(_guess_file_path)
+        if _exist:
+            _file_io = ApplicationEvtFileIO(self.modelPath, uuid + APP_SETTING.evtFileExt)
+            _file_io.read()
+            return _file_io
+        else:
+            return None
+
+    def save_event(self, panel):
+        _d = panel.serialize()
+        _uuid = panel.uuid
+        _role = panel.role
+        _file_io = ApplicationEvtFileIO(self.modelPath, _uuid)
+        _file_io.write(_d)
 
     def save_canvas(self, canvas):
         _d = canvas.serialize()

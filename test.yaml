@@ -1,1 +1,6 @@
-!EnumMBTEventType 'OUTGOING'
+!MBTEvent
+name: c
+type: !EnumMBTEventType 'OUTGOING'
+readonly: false
+description: ''
+visible: true

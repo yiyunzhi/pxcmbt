@@ -15,7 +15,7 @@ class MBTEvent:
     def __init__(self, **kwargs):
         self.name = kwargs.get('name', 'None')
         self.type = kwargs.get('type', False)
-        self.description = kwargs.get('description', False)
+        self.description = kwargs.get('description', '')
         self.readonly = kwargs.get('readonly', False)
         self.visible = kwargs.get('visible', True)
         self.data = OrderedDict()
@@ -56,6 +56,8 @@ class MBTEventManager:
         return self._events.get(name)
 
     def deserialize(self, data):
+        if data is None:
+            return
         assert 'HEADER' in data
         assert 'BODY' in data
         _body = data['BODY']

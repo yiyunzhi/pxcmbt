@@ -180,7 +180,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         # self.Bind(wx.EVT_KEY_DOWN, self.on_key_down_view) not works
         # use EVT_CHAR_HOOK replace EVT_KEY_DOWN better, if use a panel in another panel
         self.Bind(wx.EVT_CHAR_HOOK, self.on_key_down_view)
-        pub.subscribe(self.on_node_item_delete_requested, EnumAppSignals.sigV2VGuiModeDelItemRequested)
+        pub.subscribe(self.on_node_item_delete_requested, EnumAppSignals.sigV2VGuiModeDelItemRequested.value)
 
     def _unbind_all_mouse_events(self):
         self.Unbind(WxGEvent.EVT_MOTION)
@@ -295,7 +295,7 @@ class StateChartCanvasViewPanel(wx.Panel):
                 # if self._drawObjectConnPts not in self.canvas.get_fore_draw_list():
                 #     self.canvas.add_object(self._drawObjectConnPts)
                 self.canvas.set_mode(GUIModeConnection())
-        pub.sendMessage(EnumAppSignals.sigV2VCanvasToolbarModeChanged, mode=flag)
+        pub.sendMessage(EnumAppSignals.sigV2VCanvasToolbarModeChanged.value, mode=flag)
 
     def on_canvas_scale_changed(self, event):
         self.canvasSetting.mFScale = event.get_scale()
@@ -352,16 +352,16 @@ class StateChartCanvasViewPanel(wx.Panel):
     def on_double_click_item(self, item):
         print('on_double_click_item', item, item.hitCoordsPixel, item.hitCoords)
         if isinstance(item, StateNodeShape):
-            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeDClicked, uuid=self.uuid, role=self.role, item=item)
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeDClicked.value, uuid=self.uuid, role=self.role, item=item)
         elif isinstance(item, TransitionWireShape):
             pass
         elif isinstance(item, NoteNodeShape):
-            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeNoteDClicked, uuid=self.uuid, role=self.role, item=item)
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value, uuid=self.uuid, role=self.role, item=item)
 
     def on_left_down_item(self, item):
         print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)
         # todo: use has_style('hasProperties')
-        pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeShowProps, item=item)
+        pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeShowProps.value, item=item)
 
     def on_left_up_item(self, item):
         print('on_item_left_up', item, item.hitCoordsPixel, item.hitCoords)

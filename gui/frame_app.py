@@ -42,6 +42,7 @@ from application.class_yaml_tag import *
 
 
 # todo: in built in feature implement a preview of the state
+# todo: event editor add event
 
 class WxLog:
     def WriteText(self, text):
@@ -239,7 +240,7 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_exit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.on_about, id=wx.ID_ABOUT)
         # bind event update UI, multi allowed
-        pub.subscribe(self.on_ext_sig_model_item_double_clicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value)
+        pub.subscribe(self.on_ext_sig_project_item_dclicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_dclicked, EnumAppSignals.sigV2VCanvasNodeDClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_note_dclicked, EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps.value)
@@ -272,7 +273,9 @@ class FrameMain(wx.Frame):
         _ret = _dlg.ShowModal()
 
     def on_ext_sig_canvas_node_dclicked(self, uuid, role, item):
-        _evt_data = self._currentProject.get_event_data(role, uuid)
+        # todo: read self evet model
+        # todo: read event at same level
+        _evt_data = self._currentProject.get_event_data(uuid)
         _dlg = NodeEditorDialog(_evt_data, item, self)
         _ret = _dlg.ShowModal()
 
@@ -281,6 +284,7 @@ class FrameMain(wx.Frame):
         evt.Skip()
 
     def on_tb_pane_save(self, evt):
+        # todo: ctrl+s acc-table
         if self._currentPane is not None:
             print('save the pane')
         evt.Skip()
@@ -305,6 +309,8 @@ class FrameMain(wx.Frame):
             for n_uuid, panel in self._panelCache.items():
                 if isinstance(panel, StateChartCanvasViewPanel):
                     self._currentProject.save_canvas(panel)
+                elif isinstance(panel, EventEditorPanel):
+                    self._currentProject.save_event(panel)
             if self._panelProjectMgr.contentPanel is not None:
                 self._currentProject.save_project(self._panelProjectMgr.contentPanel)
             pass
@@ -369,9 +375,9 @@ class FrameMain(wx.Frame):
             self._currentProject.create_new_project()
 
     def on_menu_new_file_clicked(self, evt):
-        pass
+        wx.MessageBox(' fail to create file, since not implemented', 'Fail')
 
-    def on_ext_sig_model_item_double_clicked(self, uuid):
+    def on_ext_sig_project_item_dclicked(self, uuid):
         _path = self._panelProjectMgr.contentPanel.get_item_path_by_uuid(uuid)
         _role = self._panelProjectMgr.contentPanel.get_item_role_by_uuid(uuid)
         _exist = self._auiMgr.GetPaneByName(uuid)
@@ -381,7 +387,7 @@ class FrameMain(wx.Frame):
             if _role == EnumItemRole.DEV_FEATURE_STATE:
                 _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
             elif _role == EnumItemRole.DEV_FEATURE_EVENT:
-                _evt_data = self._currentProject.get_event_data(_role, uuid)
+                _evt_data = self._currentProject.get_event_data(uuid)
                 _panel = EventEditorPanel(self, _evt_data)
             else:
                 return
@@ -397,8 +403,9 @@ class FrameMain(wx.Frame):
                 _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
                 _panel.deserialize(_exist_in_proj.body)
             elif _role == EnumItemRole.DEV_FEATURE_EVENT:
-                _evt_data = self._currentProject.get_event_data(_role, uuid)
-                _panel = EventEditorPanel(self, _evt_data)
+                _evt_data = self._currentProject.get_event_data(uuid)
+                _panel = EventEditorPanel(self)
+                _panel.deserialize(_evt_data)
             else:
                 return
         else:
