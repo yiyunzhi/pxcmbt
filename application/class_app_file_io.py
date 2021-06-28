@@ -1,5 +1,5 @@
 import os
-from yaml import CLoader, load, dump
+import yaml
 from .class_app_setting import APP_SETTING
 from .define import *
 from .utils_helper import *
@@ -37,7 +37,7 @@ class ApplicationFileIO:
 
     def read(self):
         with open(os.path.join(self.filePath, self.fileName)) as f:
-            _data = load(f, CLoader)
+            _data = yaml.load(f, Loader=yaml.Loader)
             if self.HEADER_K in _data and self.headerCls is not None:
                 self.header = self.headerCls(**_data.get(self.HEADER_K))
             if self.BODY_K in _data and self.bodyCls is not None:
@@ -47,7 +47,7 @@ class ApplicationFileIO:
         _file_full_path = os.path.join(self.filePath, self.fileName + self.extend)
         print('write data to ', _file_full_path)
         with open(_file_full_path, "w") as f:
-            dump(data, f)
+            yaml.dump(data, f)
 
     def get_author(self):
         return self.header.author
@@ -110,7 +110,7 @@ class ApplicationStcFileIO(ApplicationFileIO):
 class ApplicationEvtFileBody(ApplicationFileBody):
     def __init__(self, **kwargs):
         ApplicationFileBody.__init__(self, **kwargs)
-        self.events = kwargs.get('canvas')
+        self.events = kwargs
 
 
 class ApplicationEvtFileHeader(ApplicationFileHeader):
@@ -167,4 +167,4 @@ class ApplicationProjFileIO(ApplicationFileIO):
         _hdr = self.headerCls()
         _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
         with open(_file_full_path, "w") as f:
-            dump(_data, f)
+            yaml.dump(_data, f)

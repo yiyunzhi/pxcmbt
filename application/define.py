@@ -9,7 +9,15 @@ APP_CONSOLE_TIME_PY_FMT = '%m/%d %H:%M:%S.%f'
 
 class StandardItemData:
     __slots__ = ['uuid', 'role', 'flag', 'labelReadonly', 'tooltip', 'slotPath', 'parentUUID']
-    pass
+
+    def __init__(self, **kwargs):
+        self.uuid = kwargs.get('uuid')
+        self.role = kwargs.get('role')
+        self.flag = kwargs.get('flag')
+        self.labelReadonly = kwargs.get('labelReadonly')
+        self.tooltip = kwargs.get('tooltip')
+        self.slotPath = kwargs.get('slotPath')
+        self.parentUUID = kwargs.get('parentUUID')
 
 
 class ConsoleItemFlagEnum:
@@ -54,9 +62,18 @@ class EnumAppSignals(enum.Enum):
     sigV2VCanvasNodeShowProps = 'sigV2VCanvasNodeShowProps'
     sigV2VCanvasNodeNoteDClicked = 'sigV2VCanvasNodeNoteDClicked'
     sigV2VProjectAddUserFeature = 'sigV2VProjectAddUserFeature'
+    sigV2VProjectNewUserFeature = 'sigV2VProjectNewUserFeature'
+    sigV2VProjectSaveUserFeatureAsLib = 'sigV2VProjectSaveUserFeatureAsLib'
 
 
 class EnumMBTEventType(enum.Enum):
     OUTGOING = 'outgoing'
     INCOMING = 'incoming'
     ALL_VALUES = ['outgoing', 'incoming']
+
+
+class EnumMBTEventDataType(enum.Enum):
+    INTEGER = 'integer'
+    STRING = 'string'
+    FLOAT = 'float'
+    ALL = ['integer', 'string', 'float']

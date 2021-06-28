@@ -57,7 +57,7 @@ class StateNodeShape(StateChartNode):
         _d.update({'role': self.role})
         _d.update({'nameText': self.nameText})
         _d.update({'isVisible': self.isVisible})
-        _d.update({'position': self.position})
+        _d.update({'position': tuple(self.position)})
         _d.update({'connectionStyle': self.connectionStyle})
         _d.update({'exitEventModel': self.exitEventModel})
         _d.update({'enterEventModel': self.enterEventModel})
@@ -162,7 +162,7 @@ class InitStateNodeShape(StateChartNode):
         _d.update({'uuid': self.uuid})
         _d.update({'role': self.role})
         _d.update({'isVisible': self.isVisible})
-        _d.update({'position': self.position})
+        _d.update({'position': tuple(self.position)})
         _d.update({'connectionStyle': self.connectionStyle})
         return _d
 
@@ -230,7 +230,7 @@ class FinalStateNodeShape(StateChartNode):
         _d.update({'uuid': self.uuid})
         _d.update({'role': self.role})
         _d.update({'isVisible': self.isVisible})
-        _d.update({'position': self.position})
+        _d.update({'position': tuple(self.position)})
         _d.update({'connectionStyle': self.connectionStyle})
         return _d
 

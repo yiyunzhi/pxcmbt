@@ -223,7 +223,7 @@ class GuiUserFeatureItemContextMenu(GuiContextMenu):
     def __init__(self, parent):
         super(GuiUserFeatureItemContextMenu, self).__init__(name='cmUserFeature', parent=parent)
         self.popupSaveAsLibID = wx.NewIdRef()
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_new_user_feature, id=self.popupSaveAsLibID)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_save_user_feature_as_lib, id=self.popupSaveAsLibID)
 
     def show(self):
         # make a menu

@@ -28,6 +28,7 @@ from application.utils_helper import util_get_uuid_string, util_wx_tree_walk_bra
 from .menu_context_menu import (GuiModelContextMenu,
                                 GuiDeviceFeatureContextMenu,
                                 GuiUserFeatureContextMenu,
+                                GuiUserFeatureItemContextMenu,
                                 GuiUserFeatureStateContextMenu,
                                 GuiUserFeatureEvtContextMenu,
                                 GuiDeviceFeatureEvtContextMenu,
@@ -188,6 +189,7 @@ class GuiProjectManagerPanel(wx.Panel):
         self._deviceFeatureStateCtxMenu = GuiDeviceFeatureStateContextMenu(self)
         self._deviceFeatureEvtCtxMenu = GuiDeviceFeatureEvtContextMenu(self)
         self._userFeatureCtxMenu = GuiUserFeatureContextMenu(self)
+        self._userFeatureItemCtxMenu = GuiUserFeatureItemContextMenu(self)
         self._userFeatureStateCtxMenu = GuiUserFeatureStateContextMenu(self)
         self._userFeatureEvtCtxMenu = GuiUserFeatureEvtContextMenu(self)
         # attributes
@@ -355,21 +357,42 @@ class GuiProjectManagerPanel(wx.Panel):
             self.tree.SetItemData(self._sessions_item, _sessions['data'])
             self.tree.SetItemData(self._scripts_item, _scripts['data'])
 
+    def get_item_by_text(self, search_text, root_item):
+        _item, _cookie = self.tree.GetFirstChild(root_item)
+        while _item.IsOk():
+            _text = self.tree.GetItemText(_item)
+            if _text.lower() == search_text.lower():
+                return _item
+            if self.tree.ItemHasChildren(_item):
+                _match = self.get_item_by_text(search_text, _item)
+                if _match is None:
+                    return None
+                elif _match.IsOk():
+                    return _match
+            _item, _cookie = self.tree.GetNextChild(root_item, _cookie)
+        return None
+
+    def is_uf_name_is_exist(self, name):
+        _item = self.get_item_by_text(name, self._userFeatureItem)
+        return _item is not None
+
     def add_user_feature(self, name, item_data=None, state_data=None, evt_data=None):
         _userFeatureItem = self.tree.AppendItem(self._userFeatureItem, name)
         if item_data is not None:
+            item_data.role = EnumItemRole.USER_FEATURE_ITEM
             _userFeatureItemData = item_data
         else:
             _userFeatureItemData = StandardItemData()
-            _userFeatureItemData.role = EnumItemRole.USER_FEATURE
+            _userFeatureItemData.role = EnumItemRole.USER_FEATURE_ITEM
             _userFeatureItemData.uuid = util_get_uuid_string()
             _userFeatureItemData.labelReadonly = False
         self.tree.SetItemData(_userFeatureItem, _userFeatureItemData)
         self.tree.SetItemImage(_userFeatureItem, self._iconRepo.fileIcon, wx.TreeItemIcon_Normal)
 
         _userFeatureStateItem = self.tree.AppendItem(_userFeatureItem, 'State')
-        if item_data is not None:
+        if state_data is not None:
             _userFeatureStateData = state_data
+            state_data.role = EnumItemRole.USER_FEATURE_STATE
         else:
             _userFeatureStateData = StandardItemData()
             _userFeatureStateData.role = EnumItemRole.USER_FEATURE_STATE
@@ -379,8 +402,9 @@ class GuiProjectManagerPanel(wx.Panel):
         self.tree.SetItemImage(_userFeatureStateItem, self._iconRepo.stateIcon, wx.TreeItemIcon_Normal)
 
         _userFeatureEventItem = self.tree.AppendItem(_userFeatureItem, 'Event')
-        if item_data is not None:
+        if evt_data is not None:
             _userFeatureEventData = evt_data
+            evt_data.role = EnumItemRole.USER_FEATURE_EVENT
         else:
             _userFeatureEventData = StandardItemData()
             _userFeatureEventData.role = EnumItemRole.USER_FEATURE_EVENT
@@ -395,10 +419,25 @@ class GuiProjectManagerPanel(wx.Panel):
         return _userFeatureItemData.uuid, _userFeatureStateData.uuid, _userFeatureEventData.uuid
 
     def on_cm_new_user_feature(self, evt):
-        pass
+        pub.sendMessage(EnumAppSignals.sigV2VProjectNewUserFeature.value)
 
     def on_cm_add_user_feature(self, evt):
         pub.sendMessage(EnumAppSignals.sigV2VProjectAddUserFeature.value)
+
+    def on_cm_save_user_feature_as_lib(self, evt):
+        _item = self.tree.GetSelection()
+        if _item is not None:
+            _uuid = self.tree.GetItemData(_item).uuid
+            _state_item, _evt_item = self.get_user_feature_children(_item)
+            _state_uuid = self.tree.GetItemData(_state_item).uuid
+            _evt_uuid = self.tree.GetItemData(_evt_item).uuid
+            pub.sendMessage(EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value, state_uuid=_state_uuid,
+                            event_uuid=_evt_uuid)
+
+    def get_user_feature_children(self, item):
+        _state_item = self.tree.GetFirstChild(item)
+        _evt_item = self.tree.GetLastChild(item)
+        return _state_item, _evt_item
 
     def on_cm_clear_user_feature(self, evt):
         pass
@@ -407,16 +446,15 @@ class GuiProjectManagerPanel(wx.Panel):
         _item = evt.GetItem()
         _item_data = self.tree.GetItemData(_item)
         if isinstance(_item_data, StandardItemData):
-            if hasattr(_item_data, 'tooltip'):
+            if _item_data.tooltip is not None:
                 evt.SetToolTip(_item_data.tooltip)
 
     def on_f2_pressed(self, evt):
         _selected = self.tree.GetSelection()
         if _selected:
             _data = self.tree.GetItemData(_selected)
-            if hasattr(_data, 'labelReadonly'):
-                if not _data.labelReadonly:
-                    self.on_rename_label()
+            if _data.labelReadonly is not None:
+                self.on_rename_label() if _data.labelReadonly else None
         evt.Skip()
 
     def on_context_menu(self, event):
@@ -430,6 +468,8 @@ class GuiProjectManagerPanel(wx.Panel):
                 self._deviceFeatureCtxMenu.show()
             elif _role == EnumItemRole.USER_FEATURE:
                 self._userFeatureCtxMenu.show()
+            elif _role == EnumItemRole.USER_FEATURE_ITEM:
+                self._userFeatureItemCtxMenu.show()
             elif _role == EnumItemRole.USER_FEATURE_STATE:
                 self._userFeatureStateCtxMenu.show()
             elif _role == EnumItemRole.USER_FEATURE_EVENT:

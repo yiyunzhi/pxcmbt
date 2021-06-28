@@ -50,6 +50,14 @@ class Project:
         os.makedirs(self.modelPath)
         os.makedirs(self.rackPath)
 
+    def create_new_evt_file(self, name):
+        _file_io = ApplicationEvtFileIO(self.modelPath, name)
+        _file_io.write(None)
+
+    def create_new_stc_file(self, name):
+        _file_io = ApplicationStcFileIO(self.modelPath, name)
+        _file_io.write(None)
+
     def get_project_entry_file(self):
         _f = None
         with open(self.projectEntryFilePath, 'r', encoding='utf-8') as f:

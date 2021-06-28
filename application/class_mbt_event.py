@@ -6,15 +6,24 @@ class MBTEventData:
     def __init__(self, **kwargs):
         self.name = kwargs.get('name', 'None')
         self.dataType = kwargs.get('dataType', 'string')
-        self.minVal = kwargs.get('minValue', 0)
-        self.maxVal = kwargs.get('maxValue', 1)
-        self.defaultVal = kwargs.get('default', 0)
+        self.defaultVal = kwargs.get('default', '')
 
 
 class MBTEvent:
     def __init__(self, **kwargs):
+        self.update(**kwargs)
+
+    def __eq__(self, other):
+        return (other.name == self.name
+                and self.type == other.type
+                and self.visible == other.visible
+                and self.readonly == other.readonly
+                and self.description == other.description
+                and self.data == other.data)
+
+    def update(self, **kwargs):
         self.name = kwargs.get('name', 'None')
-        self.type = kwargs.get('type', False)
+        self.type = kwargs.get('type', EnumMBTEventType.OUTGOING.value)
         self.description = kwargs.get('description', '')
         self.readonly = kwargs.get('readonly', False)
         self.visible = kwargs.get('visible', True)
@@ -46,6 +55,15 @@ class MBTEventManager:
         self._events = dict()
         self.lastLoadPath = None
 
+    def update(self, event):
+        _evt = self._events.get(event.name)
+        _evt.name = event.name
+        _evt.type = event.type
+        _evt.description = event.description
+        _evt.visible = event.visible
+        _evt.readonly = event.readonly
+        _evt.data = event.data
+
     def get_events_names(self):
         return list(self._events.keys())
 
@@ -55,6 +73,10 @@ class MBTEventManager:
     def get_event(self, name):
         return self._events.get(name)
 
+    def is_event_changed(self, event):
+        _evt = self._events.get(event.name)
+        return _evt != event
+
     def deserialize(self, data):
         if data is None:
             return
@@ -62,7 +84,12 @@ class MBTEventManager:
         assert 'BODY' in data
         _body = data['BODY']
         for x in _body:
-            _evt = MBTEvent(**x)
+            if isinstance(x, dict):
+                _evt = MBTEvent(**x)
+            elif isinstance(x, MBTEvent):
+                _evt = x
+            else:
+                continue
             self.register_event(_evt)
 
     def serialize(self):
@@ -82,11 +109,8 @@ class MBTEventManager:
         if evt_name in self._events:
             self._events.pop(evt_name)
 
-    def has_incoming_event(self, evt_name):
-        pass
-
-    def has_outgoing_event(self, evt_name):
-        pass
+    def has_event(self, evt_name):
+        return evt_name in self._events
 
 
 class NodeEvtModel:

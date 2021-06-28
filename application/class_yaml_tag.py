@@ -1,6 +1,31 @@
 import yaml
-from .class_mbt_event import NodeEvtModel, MBTEvent
-from .define import EnumItemRole, EnumMBTEventType
+from .class_mbt_event import NodeEvtModel, MBTEvent,MBTEventData
+from .define import EnumItemRole, EnumMBTEventType, StandardItemData
+
+
+class StandardItemDataTag(yaml.YAMLObject):
+    yaml_tag = '!StandardItemData'
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return 'StandardItemDataTag'.format()
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        _d = loader.construct_mapping(node)
+        _inst = StandardItemData()
+        for k, v in _d.items():
+            setattr(_inst, k, v)
+        return _inst
+
+    @classmethod
+    def to_yaml(cls, dumper: yaml.Dumper, data):
+        _mapping = list()
+        for x in data.__slots__:
+            _mapping.append((x, getattr(data, x)))
+        return dumper.represent_mapping(cls.yaml_tag, _mapping)
 
 
 class MBTEventTag(yaml.YAMLObject):
@@ -23,7 +48,31 @@ class MBTEventTag(yaml.YAMLObject):
                     ('type', data.type),
                     ('readonly', data.readonly),
                     ('description', data.description),
-                    ('visible', data.visible)]
+                    ('visible', data.visible),
+                    ('data', data.data)]
+        return dumper.represent_mapping(cls.yaml_tag, _mapping)
+
+
+class MBTEventDataTag(yaml.YAMLObject):
+    yaml_tag = '!MBTEventData'
+
+    def __init__(self):
+        pass
+
+    def __repr__(self):
+        return 'MBTEventDataTag'.format()
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        _d = loader.construct_mapping(node)
+        return MBTEventData(**_d)
+
+    @classmethod
+    def to_yaml(cls, dumper: yaml.Dumper, data):
+        _mapping = [('name', data.name),
+                    ('dataType', data.dataType),
+                    ('default', data.defaultVal),
+                   ]
         return dumper.represent_mapping(cls.yaml_tag, _mapping)
 
 
@@ -93,3 +142,7 @@ yaml.add_constructor(EnumMBTEventTypeTag.yaml_tag, EnumMBTEventTypeTag.from_yaml
 yaml.add_representer(EnumMBTEventType, EnumMBTEventTypeTag.to_yaml)
 yaml.add_constructor(MBTEventTag.yaml_tag, MBTEventTag.from_yaml)
 yaml.add_representer(MBTEvent, MBTEventTag.to_yaml)
+yaml.add_constructor(MBTEventDataTag.yaml_tag, MBTEventDataTag.from_yaml)
+yaml.add_representer(MBTEventData, MBTEventDataTag.to_yaml)
+yaml.add_constructor(StandardItemDataTag.yaml_tag, StandardItemDataTag.from_yaml)
+yaml.add_representer(StandardItemData, StandardItemDataTag.to_yaml)

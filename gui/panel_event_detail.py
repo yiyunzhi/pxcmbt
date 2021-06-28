@@ -1,6 +1,6 @@
 import wx
 import wx.dataview as dv
-from application.define import EnumMBTEventType
+from application.define import EnumMBTEventType, EnumMBTEventDataType
 from application.class_mbt_event import MBTEvent
 
 
@@ -33,13 +33,12 @@ class EventDetailPanel(wx.Panel):
         # init data table
         self.dvlc = dv.DataViewListCtrl(self, style=dv.DV_ROW_LINES)
         self.dvlc.AppendTextColumn('Name', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
-        _col_type_render = dv.DataViewChoiceRenderer(['integer', 'string', 'float'])
+        _col_type_render = dv.DataViewChoiceRenderer(EnumMBTEventDataType.ALL.value)
         _col_type = dv.DataViewColumn('Type', _col_type_render, 1, width=80)
         self.dvlc.AppendColumn(_col_type)
-        self.dvlc.AppendTextColumn('Min', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
-        self.dvlc.AppendTextColumn('Max', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
         self.dvlc.AppendTextColumn('Default', width=96, mode=dv.DATAVIEW_CELL_EDITABLE)
-        # self.dvlc.Bind(dv.EVT_DATAVIEW_ITEM_CONTEXT_MENU, self.on_dvlc_cm)
+        # bind event
+        self.dvlc.Bind(dv.EVT_DATAVIEW_ITEM_CONTEXT_MENU, self.on_dvlc_cm)
         # layout
         self.mainSizer.Add(self._detailTitle, 0, wx.ALL, 5)
         self.mainSizer.AddSpacer(15)
@@ -54,10 +53,27 @@ class EventDetailPanel(wx.Panel):
 
     def on_dvlc_cm(self, evt: dv.DataViewEvent):
         _item = evt.GetItem()
-        _row = self.dvlc.GetSelectedRow()
-        # self.dvlc.EditItem(_item, self.dvlc.GetColumn(evt.GetColumn()))
-        print('cm on dvlc', evt.GetColumn(), _item, _row)
+        _selected_row = self.dvlc.GetSelectedRow()
+        _menu = wx.Menu()
+        _add_ref_id = wx.NewIdRef()
+        _del_ref_id = wx.NewIdRef()
+        _up_ref_id = wx.NewIdRef()
+        _dwn_ref_id = wx.NewIdRef()
+        _menu.Append(_add_ref_id, "Add")
+        _menu.Append(_del_ref_id, "Delete")
+        self.Bind(wx.EVT_MENU, self.on_cm_add, _add_ref_id)
+        self.Bind(wx.EVT_MENU, self.on_cm_del, _del_ref_id)
+        # will be called before PopupMenu returns.
+        self.PopupMenu(_menu)
+        _menu.Destroy()
         evt.Skip()
+
+    def on_cm_add(self, evt):
+        self.dvlc.AppendItem(('NewData', EnumMBTEventDataType.STRING.value, ''))
+
+    def on_cm_del(self, evt):
+        _row = self.dvlc.GetSelectedRow()
+        self.dvlc.DeleteItem(_row)
 
     def set_data(self, data: MBTEvent):
         self.dvlc.DeleteAllItems()
@@ -71,12 +87,14 @@ class EventDetailPanel(wx.Panel):
         self.ctrlEvtPermissionEdit.SetLabelText('R' if data.readonly else 'RW')
         _data = data.data
         for k, v in _data.items():
-            self.dvlc.AppendItem((v.name, v.dataType, str(v.minVal), str(v.maxVal), str(v.defaultVal)))
+            self.dvlc.AppendItem((v.name, v.dataType, str(v.defaultVal)))
 
     def get_data(self):
         _evt_data = list()
         for i in range(self.dvlc.GetItemCount()):
-            _evt_data.append((self.dvlc.GetValue(i, j) for j in range(self.dvlc.GetColumnCount())))
+            _evt_data.append({'name': self.dvlc.GetTextValue(i, 0),
+                              'dataType': self.dvlc.GetTextValue(i, 1),
+                              'default': self.dvlc.GetTextValue(i, 2)})
         _d = {
             'name': self.ctrlEvtNameEdit.GetValue(),
             'description': self.ctrlEvtDescEdit.GetValue(),

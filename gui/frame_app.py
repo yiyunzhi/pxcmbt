@@ -37,6 +37,7 @@ from .define_gui import _, EnumCanvasToolbarMode
 from .dialog_node_editor import NodeEditorDialog, NodeNoteEditorDialog
 from .dialog_new_project import NewProjectDialog
 from .dialog_select_user_feature import SelectUserFeatureDialog
+from .dialog_user_featrue import PromptUserFeatureNameDialog
 from application.utils_helper import *
 from application.class_yaml_tag import *
 
@@ -245,6 +246,22 @@ class FrameMain(wx.Frame):
         pub.subscribe(self.on_ext_sig_canvas_node_note_dclicked, EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps.value)
         pub.subscribe(self.on_ext_sig_project_add_user_feature, EnumAppSignals.sigV2VProjectAddUserFeature.value)
+        pub.subscribe(self.on_ext_sig_project_new_user_feature, EnumAppSignals.sigV2VProjectNewUserFeature.value)
+        pub.subscribe(self.on_ext_sig_project_save_user_feature_as_lib,
+                      EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value)
+
+    def on_ext_sig_project_save_user_feature_as_lib(self, uuid):
+        pass
+
+    def on_ext_sig_project_new_user_feature(self):
+        _dlg = PromptUserFeatureNameDialog(self._panelProjectMgr.contentPanel.is_uf_name_is_exist, self)
+        _ret = _dlg.ShowModal()
+        if _ret == wx.ID_OK:
+            _name = _dlg.ufNameTextEdit.GetValue()
+            _,_state_name,_evt_name = self._panelProjectMgr.contentPanel.add_user_feature(_name)
+            self._currentProject.save_project(self._panelProjectMgr.contentPanel)
+            self._currentProject.create_new_evt_file(_state_name)
+            self._currentProject.create_new_stc_file(_evt_name)
 
     def on_ext_sig_project_add_user_feature(self):
         _dlg = SelectUserFeatureDialog(self._currentProject, self)
@@ -341,6 +358,7 @@ class FrameMain(wx.Frame):
             _proj_mgr_panel.deserialize(_proj_file_io.body)
             _proj_mgr_panel.uuid = util_get_uuid_string()
             self._panelProjectMgr.set_content(_proj_mgr_panel)
+            self._currentProject = _project
 
     def on_menu_new_project_clicked(self, evt):
         if self._currentProject:
@@ -382,13 +400,17 @@ class FrameMain(wx.Frame):
         _role = self._panelProjectMgr.contentPanel.get_item_role_by_uuid(uuid)
         _exist = self._auiMgr.GetPaneByName(uuid)
         _exist_in_proj = self._currentProject.get_file_io(uuid, _role)
-        if not _exist.IsOk() and (_exist_in_proj is None):
-            _caption = '%s' % _path
+        _caption = '%s' % _path
+        if not _exist.IsOk():
             if _role == EnumItemRole.DEV_FEATURE_STATE:
                 _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
+                if _exist_in_proj is not None:
+                    _panel.deserialize(_exist_in_proj.body)
             elif _role == EnumItemRole.DEV_FEATURE_EVENT:
                 _evt_data = self._currentProject.get_event_data(uuid)
                 _panel = EventEditorPanel(self, _evt_data)
+                if _exist_in_proj is not None:
+                    _panel.deserialize(_evt_data)
             else:
                 return
             _panel.uuid = uuid
@@ -398,16 +420,6 @@ class FrameMain(wx.Frame):
             self._auiMgr.AddPane(_panel, _centerDefaultAuiInfo, target=self._centerTargetAuiInfo)
             self._auiMgr.Update()
             self._panelCache.update({uuid: _panel})
-        elif not _exist.IsOk() and _exist_in_proj is not None:
-            if _role == EnumItemRole.DEV_FEATURE_STATE:
-                _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
-                _panel.deserialize(_exist_in_proj.body)
-            elif _role == EnumItemRole.DEV_FEATURE_EVENT:
-                _evt_data = self._currentProject.get_event_data(uuid)
-                _panel = EventEditorPanel(self)
-                _panel.deserialize(_evt_data)
-            else:
-                return
         else:
             # if exist
             _panel = self._panelCache.get(uuid)
