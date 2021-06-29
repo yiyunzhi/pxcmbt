@@ -102,3 +102,9 @@ class EventDetailPanel(wx.Panel):
             'data': _evt_data
         }
         return _d
+
+    def clear(self):
+        self.dvlc.DeleteAllItems()
+        self.ctrlEvtNameEdit.Clear()
+        self.ctrlEvtDescEdit.Clear()
+        self.ctrlEvtPermissionEdit.SetLabelText('')

@@ -14,14 +14,17 @@ class StateNodeShape(StateChartNode):
         self.position = pos
         self.nameText = name
         self.bgColor = '#C7D3D4'
-        self.nameTextBox = DrawObjectScaledTextBox('', pos, 10, pad_size=5, line_width=0, line_color=self.bgColor,
+        self.nameTextBox = DrawObjectScaledTextBox('', pos, 10, width=120, pad_size=5, line_width=0,
+                                                   line_color=self.bgColor,
                                                    color='#603F83',
                                                    weight=wx.FONTWEIGHT_BOLD,
                                                    background_color=self.bgColor)
-        self.evtDescTextBox = DrawObjectScaledTextBox('', pos, 7, pad_size=5, line_width=0, line_color=self.bgColor,
+        self.evtDescTextBox = DrawObjectScaledTextBox('', pos, 7, width=120, pad_size=5, line_width=0,
+                                                      line_color=self.bgColor,
                                                       color='#603F83',
                                                       background_color=self.bgColor)
-        self._bgRect = DrawObjectRectangle(pos, (1, 1), fill_color=self.bgColor, line_color=self.defaultBorderLineColor)
+        self._bgRect = DrawObjectRectangle(pos, (126, 1), fill_color=self.bgColor,
+                                           line_color=self.defaultBorderLineColor)
         self.add_object(self._bgRect)
         self.add_object(self.nameTextBox)
         self.add_object(self.evtDescTextBox)
@@ -57,6 +60,7 @@ class StateNodeShape(StateChartNode):
         _d.update({'role': self.role})
         _d.update({'nameText': self.nameText})
         _d.update({'isVisible': self.isVisible})
+        _d.update({'bbox': self._bgRect.boundingBox})
         _d.update({'position': tuple(self.position)})
         _d.update({'connectionStyle': self.connectionStyle})
         _d.update({'exitEventModel': self.exitEventModel})
@@ -73,7 +77,6 @@ class StateNodeShape(StateChartNode):
         _exit = self.exitEventModel.get_event_names()
         _text = 'Enter:\n%s' % '\n'.join(['->%s' % x for x in _enter]) + '\n' + 'Exit:\n%s' % '\n'.join(
             ['<-%s' % x for x in _exit])
-        print(_text)
         self.evtDescTextBox.set_text(_text)
 
     def set_selected(self, state=True):
@@ -100,7 +103,8 @@ class StateNodeShape(StateChartNode):
         _bb_h = self.boundingBox.height
         _rect = wx.Rect(_bb_left, _bb_top, _bb_w, _bb_h).Inflate(2, 2)
         _rect.Offset(0, -1 * self.boundingBox.height)
-        self._bgRect.set_shape(_rect.GetTopLeft(), _rect.GetSize())
+        _size = _rect.GetSize()
+        self._bgRect.set_shape(_rect.GetTopLeft(), (126, _size.GetHeight()))
 
     def get_connection_points(self):
         # for rectangle shape

@@ -48,7 +48,7 @@ class StateChartNode(Serializable, DrawObjectGroup):
         self._connectionPtShape.set_pen('#0bc', "Solid", 0.5)
         self.isSelected = False
         self.isHighlighted = False
-        self.minConnPtDistance = 30
+        self.minConnPtDistance = 35
         self.inWires = list()
         self.outWires = list()
 
@@ -95,7 +95,7 @@ class StateChartNode(Serializable, DrawObjectGroup):
         _conn_pts = self.get_connection_points()
         if _conn_pts is None:
             return None
-        _lst_conn_pts = [x[1] for x in _conn_pts]
+        _lst_conn_pts = [(x[1][0]-2,x[1][1]) for x in _conn_pts]
         self._connectionPtShape.set_points(_lst_conn_pts)
         return self._connectionPtShape
 

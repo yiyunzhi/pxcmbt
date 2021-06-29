@@ -1,0 +1,69 @@
+BODY:
+  model:
+    root:
+      data: !StandardItemData
+        uuid: 1e73b11047514b9c84f189a049bc9e3c
+        role: !EnumItemRole 'DEV_FEATURE'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      event: !StandardItemData
+        uuid: 78ab30d1140841a3820c0ac5942f51e1
+        role: !EnumItemRole 'DEV_FEATURE_EVENT'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      state: !StandardItemData
+        uuid: 534acdd0293b44e79ed14c6f5bf396c5
+        role: !EnumItemRole 'DEV_FEATURE_STATE'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: Root
+    user:
+      children: []
+      data: !StandardItemData
+        uuid: a11d0337fa354037882a6988d78d74f5
+        role: !EnumItemRole 'USER_FEATURE'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: User
+  rack:
+    scripts:
+      children: []
+      data: !StandardItemData
+        uuid: a77811c8904e456a988ca9ca3d3249f4
+        role: !EnumItemRole 'SCRIPTS'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: Scripts
+    sessions:
+      children: []
+      data: !StandardItemData
+        uuid: 4a9001bcd89245baa2b89c828314c3dc
+        role: !EnumItemRole 'SESSIONS'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: Sessions
+  role: null
+  uuid: e85de0035f5b4705ad43c2131df128f8
+HEADER:
+  author: LIU
+  date: 06/29 11:53:59.748
+  type: MBT_PROJ
+  version: 2.0.1

@@ -45,7 +45,6 @@ class ApplicationFileIO:
 
     def write(self, data):
         _file_full_path = os.path.join(self.filePath, self.fileName + self.extend)
-        print('write data to ', _file_full_path)
         with open(_file_full_path, "w") as f:
             yaml.dump(data, f)
 

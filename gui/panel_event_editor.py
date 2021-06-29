@@ -140,7 +140,9 @@ class EventEditorPanel(wx.Panel):
         # bind events
         self.evtAddBtn.Bind(wx.EVT_BUTTON, self.on_add_event)
         self.evtRemoveBtn.Bind(wx.EVT_BUTTON, self.on_remove_event)
-        self.dvlc.Bind(dv.EVT_DATAVIEW_ITEM_ACTIVATED, self.on_dv_item_activated)
+        # self.dvlc.Bind(dv.EVT_DATAVIEW_ITEM_ACTIVATED, self.on_dv_item_activated)
+        self.dvlc.Bind(dv.EVT_DATAVIEW_SELECTION_CHANGED, self.on_dv_item_select_changed)
+
         # layout
         self.evtLstToolsSizer.Add(self.ctrlSearch, 0)
         self.evtLstToolsSizer.AddStretchSpacer(1)
@@ -189,8 +191,11 @@ class EventEditorPanel(wx.Panel):
                     self.dvlc.DeleteItem(_selected_row)
             self.processedEvt = None
 
-    def on_dv_item_activated(self, evt: dv.DataViewEvent):
+    def on_dv_item_select_changed(self, evt: dv.DataViewEvent):
         _selected_row = self.dvlc.GetSelectedRow()
+        if _selected_row == -1:
+            self.detailPanel.clear()
+            return
         _selected_evt_name = self.dvlc.GetTextValue(_selected_row, 1)
         if self.processedEvt is not None:
             if _selected_evt_name != self.processedEvt.name:

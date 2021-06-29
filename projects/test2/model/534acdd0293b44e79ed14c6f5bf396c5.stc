@@ -1,0 +1,19 @@
+BODY:
+  canvas:
+    setting:
+      mDebug: true
+      mFMaxScale: 4.0
+      mFMinScale: 0.4
+      mFScale: 1.0
+      mGridSize: !!python/object/apply:wx._core.Size
+      - 50
+      - 50
+      mMode: 0
+      mStyle: 1015
+  nodes: []
+  wires: []
+HEADER:
+  author: LIU
+  date: 06/29 11:53:59.736
+  type: MBT_STC
+  version: 2.0.1

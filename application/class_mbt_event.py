@@ -28,8 +28,13 @@ class MBTEvent:
         self.readonly = kwargs.get('readonly', False)
         self.visible = kwargs.get('visible', True)
         self.data = OrderedDict()
-        if kwargs.get('data') is not None:
-            for x in kwargs.get('data'):
+        _data = kwargs.get('data')
+        if _data is None:
+            return
+        if isinstance(_data, OrderedDict):
+            self.data = _data
+        elif isinstance(_data, list):
+            for x in _data:
                 _mbt_data = MBTEventData(**x)
                 self.add_data(_mbt_data)
 
@@ -80,17 +85,11 @@ class MBTEventManager:
     def deserialize(self, data):
         if data is None:
             return
-        assert 'HEADER' in data
-        assert 'BODY' in data
-        _body = data['BODY']
-        for x in _body:
-            if isinstance(x, dict):
-                _evt = MBTEvent(**x)
-            elif isinstance(x, MBTEvent):
-                _evt = x
-            else:
-                continue
-            self.register_event(_evt)
+        if not hasattr(data,'body'):
+            return
+        _evts=data.body.events
+        for k,v in _evts.items():
+            self.register_event(v)
 
     def serialize(self):
         pass

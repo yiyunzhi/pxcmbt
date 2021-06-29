@@ -258,7 +258,7 @@ class FrameMain(wx.Frame):
         _ret = _dlg.ShowModal()
         if _ret == wx.ID_OK:
             _name = _dlg.ufNameTextEdit.GetValue()
-            _,_state_name,_evt_name = self._panelProjectMgr.contentPanel.add_user_feature(_name)
+            _, _state_name, _evt_name = self._panelProjectMgr.contentPanel.add_user_feature(_name)
             self._currentProject.save_project(self._panelProjectMgr.contentPanel)
             self._currentProject.create_new_evt_file(_state_name)
             self._currentProject.create_new_stc_file(_evt_name)
@@ -359,6 +359,14 @@ class FrameMain(wx.Frame):
             _proj_mgr_panel.uuid = util_get_uuid_string()
             self._panelProjectMgr.set_content(_proj_mgr_panel)
             self._currentProject = _project
+            self.remove_cached_pane()
+
+    def remove_cached_pane(self):
+        for k, v in self._panelCache.items():
+            self._auiMgr.DetachPane(v)
+            v.Destroy()
+        self._panelCache.clear()
+        self._auiMgr.Update()
 
     def on_menu_new_project_clicked(self, evt):
         if self._currentProject:
@@ -372,6 +380,7 @@ class FrameMain(wx.Frame):
             _proj_mgr_content_panel.uuid = util_get_uuid_string()
             self._panelProjectMgr.set_content(_proj_mgr_content_panel)
             self._currentProject.save_project(_proj_mgr_content_panel)
+            self.remove_cached_pane()
 
     def _create_new_project(self):
         self._currentProject = None
@@ -402,11 +411,11 @@ class FrameMain(wx.Frame):
         _exist_in_proj = self._currentProject.get_file_io(uuid, _role)
         _caption = '%s' % _path
         if not _exist.IsOk():
-            if _role == EnumItemRole.DEV_FEATURE_STATE:
+            if _role == EnumItemRole.DEV_FEATURE_STATE or _role == EnumItemRole.USER_FEATURE_STATE:
                 _panel = StateChartCanvasViewPanel(self, wx.ID_ANY)
                 if _exist_in_proj is not None:
                     _panel.deserialize(_exist_in_proj.body)
-            elif _role == EnumItemRole.DEV_FEATURE_EVENT:
+            elif _role == EnumItemRole.DEV_FEATURE_EVENT or _role == EnumItemRole.USER_FEATURE_EVENT:
                 _evt_data = self._currentProject.get_event_data(uuid)
                 _panel = EventEditorPanel(self, _evt_data)
                 if _exist_in_proj is not None:

@@ -205,10 +205,16 @@ class StateChartCanvasViewPanel(wx.Panel):
         return _d
 
     def deserialize(self, data):
+        _updated_nodes = dict()
+        _updated_wires = dict()
         if hasattr(data, 'canvas'):
-            _canvas = data['canvas']['setting']
+            _canvas = data.canvas
+            _canvas_setting = _canvas['setting']
+            for k, v in _canvas_setting.items():
+                if hasattr(self.canvasSetting, k):
+                    setattr(self.canvasSetting, k, v)
         if hasattr(data, 'nodes'):
-            _nodes = data['nodes']
+            _nodes = data.nodes
             for x in _nodes:
                 _cls = x['class']
                 _role = x['role']
@@ -218,13 +224,18 @@ class StateChartCanvasViewPanel(wx.Panel):
                     _is_visible = x['isVisible']
                     _name_text = x['nameText']
                     _position = x['position']
+                    _bbox = x['bbox']
                     _node = StateNodeShape(_position, _name_text)
+                    _node.uuid = _uuid
                     _node.isVisible = _is_visible
                     _node.connectionStyle = _conn_style
                     _node.update()
+                    _node.boundingBox = _bbox
+                    _updated_nodes.update({_uuid: _node})
+            self.add_items(list(_updated_nodes.values()))
 
         if hasattr(data, 'wires'):
-            _wires = data['wires']
+            _wires = data.wires
             for x in _wires:
                 pass
 
@@ -331,6 +342,18 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.canvas.draw()
         return _obj
 
+    def add_items(self, items: list):
+        for x in items:
+            _obj = self.canvas.add_object(x)
+            _obj.bind(WxGEvent.EVT_FC_LEFT_DOWN, self.on_left_down_item)
+            _obj.bind(WxGEvent.EVT_FC_LEFT_UP, self.on_left_up_item)
+            _obj.bind(WxGEvent.EVT_FC_RIGHT_DOWN, self.on_right_down_item)
+            _obj.bind(WxGEvent.EVT_FC_RIGHT_UP, self.on_right_up_item)
+            _obj.bind(WxGEvent.EVT_FC_ENTER_OBJECT, self.on_enter_item)
+            _obj.bind(WxGEvent.EVT_FC_LEAVE_OBJECT, self.on_leave_item)
+            _obj.bind(WxGEvent.EVT_FC_LEFT_DCLICK, self.on_double_click_item)
+        self.canvas.draw()
+
     def remove_item(self, item):
         if isinstance(item, DrawObject):
             if self.canvas.has_object(item):
@@ -356,7 +379,8 @@ class StateChartCanvasViewPanel(wx.Panel):
         elif isinstance(item, TransitionWireShape):
             pass
         elif isinstance(item, NoteNodeShape):
-            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value, uuid=self.uuid, role=self.role, item=item)
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value, uuid=self.uuid, role=self.role,
+                            item=item)
 
     def on_left_down_item(self, item):
         print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)
