@@ -35,6 +35,7 @@ from .panel_event_editor import EventEditorPanel
 from .panel_prop_content import CanvasNodePropContentPanel
 from .define_gui import _, EnumCanvasToolbarMode
 from .dialog_node_editor import NodeEditorDialog, NodeNoteEditorDialog
+from .dialog_transition_editor import TransitionEditorDialog
 from .dialog_new_project import NewProjectDialog
 from .dialog_select_user_feature import SelectUserFeatureDialog
 from .dialog_user_featrue import PromptUserFeatureNameDialog
@@ -244,6 +245,7 @@ class FrameMain(wx.Frame):
         pub.subscribe(self.on_ext_sig_project_item_dclicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_dclicked, EnumAppSignals.sigV2VCanvasNodeDClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_note_dclicked, EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value)
+        pub.subscribe(self.on_ext_sig_canvas_transition_dclicked, EnumAppSignals.sigV2VCanvasTransitionDClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_show_props, EnumAppSignals.sigV2VCanvasNodeShowProps.value)
         pub.subscribe(self.on_ext_sig_project_add_user_feature, EnumAppSignals.sigV2VProjectAddUserFeature.value)
         pub.subscribe(self.on_ext_sig_project_new_user_feature, EnumAppSignals.sigV2VProjectNewUserFeature.value)
@@ -290,11 +292,22 @@ class FrameMain(wx.Frame):
         _ret = _dlg.ShowModal()
 
     def on_ext_sig_canvas_node_dclicked(self, uuid, role, item):
-        # todo: read self evet model
-        # todo: read event at same level
-        _evt_data = self._currentProject.get_event_data(uuid)
+        _evt_uuid = self.get_associated_event_uuid(uuid)
+        _evt_data = self._currentProject.get_event_data(_evt_uuid)
         _dlg = NodeEditorDialog(_evt_data, item, self)
         _ret = _dlg.ShowModal()
+
+    def on_ext_sig_canvas_transition_dclicked(self, uuid, role, item):
+        _evt_uuid = self.get_associated_event_uuid(uuid)
+        _evt_data = self._currentProject.get_event_data(_evt_uuid)
+        _dlg = TransitionEditorDialog(_evt_data, item, self)
+        _ret = _dlg.ShowModal()
+
+    def get_associated_event_uuid(self, uuid):
+        _evt_uuid = self._panelProjectMgr.contentPanel.find_event_sibling_uuid_of(uuid)
+        if _evt_uuid is None:
+            raise IOError('no associated uuid found')
+        return _evt_uuid
 
     def on_child_focused(self, evt):
         _win = evt.GetWindow()

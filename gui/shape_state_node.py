@@ -28,7 +28,8 @@ class StateNodeShape(StateChartNode):
         self.add_object(self._bgRect)
         self.add_object(self.nameTextBox)
         self.add_object(self.evtDescTextBox)
-        self.update()
+        self.set_name(name)
+        self.update_event_desc_text()
 
     def get_properties(self, pg_parent):
         _pg_main = wxpg.PropertyGridManager(pg_parent, wx.ID_ANY,
@@ -67,17 +68,19 @@ class StateNodeShape(StateChartNode):
         _d.update({'enterEventModel': self.enterEventModel})
         return _d
 
-    def _update_name(self):
-        self.nameTextBox.set_text(self.nameText)
+    def set_name(self, name):
+        self.nameText = name
+        self.nameTextBox.set_text(name)
         self.evtDescTextBox.set_position(
             wx.RealPoint(self.nameTextBox.boundingBox.left, self.nameTextBox.boundingBox.bottom - 5))
+        self.update_bg()
 
-    def _update_event_desc_text(self):
+    def update_event_desc_text(self):
         _enter = self.enterEventModel.get_event_names()
         _exit = self.exitEventModel.get_event_names()
-        _text = 'Enter:\n%s' % '\n'.join(['->%s' % x for x in _enter]) + '\n' + 'Exit:\n%s' % '\n'.join(
-            ['<-%s' % x for x in _exit])
+        _text = 'Enter: (%s)' % len(_enter) + '\n' + 'Exit: (%s)' % len(_exit)
         self.evtDescTextBox.set_text(_text)
+        self.update_bg()
 
     def set_selected(self, state=True):
         if state:
@@ -93,16 +96,14 @@ class StateNodeShape(StateChartNode):
             self._bgRect.set_line_color(self.defaultBorderLineColor)
         self.isHighlighted = state
 
-    def update(self):
-        self._update_name()
-        self._update_event_desc_text()
+    def update_bg(self):
         self.calc_bounding_box()
-        _bb_left = self.boundingBox.left
-        _bb_top = self.boundingBox.top
-        _bb_w = self.boundingBox.width
-        _bb_h = self.boundingBox.height
+        _bb_left = self.nameTextBox.boundingBox.left
+        _bb_top = self.nameTextBox.boundingBox.top
+        _bb_w = self.nameTextBox.boundingBox.width
+        _bb_h = self.nameTextBox.boundingBox.height+self.evtDescTextBox.boundingBox.height+5
         _rect = wx.Rect(_bb_left, _bb_top, _bb_w, _bb_h).Inflate(2, 2)
-        _rect.Offset(0, -1 * self.boundingBox.height)
+        _rect.Offset(0, -1 * _bb_h)
         _size = _rect.GetSize()
         self._bgRect.set_shape(_rect.GetTopLeft(), (126, _size.GetHeight()))
 

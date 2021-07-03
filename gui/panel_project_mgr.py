@@ -340,6 +340,9 @@ class GuiProjectManagerPanel(wx.Panel):
             self.tree.SetItemData(self._rootFeatureItem, _root_item_data)
             self.tree.SetItemData(self._deviceStateItem, _root_state_data)
             self.tree.SetItemData(self._deviceEvtItem, _root_evt_data)
+            self.deviceItemData = _root_item_data
+            self.deviceStateItemData = _root_state_data
+            self._deviceEvtItemData = _root_evt_data
 
             self._itemMap.update({_root_item_data.uuid: self._rootFeatureItem})
             self._itemMap.update({_root_state_data.uuid: self._deviceStateItem})
@@ -375,6 +378,19 @@ class GuiProjectManagerPanel(wx.Panel):
     def is_uf_name_is_exist(self, name):
         _item = self.get_item_by_text(name, self._userFeatureItem)
         return _item is not None
+
+    def find_event_sibling_uuid_of(self, uuid):
+        _item = self._itemMap.get(uuid)
+        if _item is None:
+            return None
+        _item_parent = self.tree.GetItemParent(_item)
+        if _item_parent is None:
+            return None
+        _gen_items = util_wx_tree_walk_branches(self.tree, _item_parent)
+        for x in _gen_items:
+            _item_data = self.tree.GetItemData(x)
+            if _item_data.role in [EnumItemRole.USER_FEATURE_EVENT, EnumItemRole.DEV_FEATURE_EVENT]:
+                return _item_data.uuid
 
     def add_user_feature(self, name, item_data=None, state_data=None, evt_data=None):
         _userFeatureItem = self.tree.AppendItem(self._userFeatureItem, name)

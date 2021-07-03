@@ -220,6 +220,7 @@ class StateChartCanvasViewPanel(wx.Panel):
                 _role = x['role']
                 _uuid = x['uuid']
                 if _cls == 'StateNodeShape':
+                    # todo: restore event model
                     _conn_style = x['connectionStyle']
                     _is_visible = x['isVisible']
                     _name_text = x['nameText']
@@ -229,27 +230,57 @@ class StateChartCanvasViewPanel(wx.Panel):
                     _node.uuid = _uuid
                     _node.isVisible = _is_visible
                     _node.connectionStyle = _conn_style
-                    _node.update()
-                    _node.boundingBox = _bbox
+                    _node.set_name(_name_text)
+                    _node.update_event_desc_text()
                     _updated_nodes.update({_uuid: _node})
             self.add_items(list(_updated_nodes.values()))
 
         if hasattr(data, 'wires'):
             _wires = data.wires
             for x in _wires:
-                pass
+                _cls = x['class']
+                _role = x['role']
+                _uuid = x['uuid']
+                _text = x['text']
+                _arrow_angle = x['arrowAngle']
+                _arrow_dir = x['arrowDirection']
+                _wp = x['wayPoint']
+                _src_pt = x['srcPosition']
+                _dst_pt = x['dstPosition']
+                _src_node_uuid = x['srcNodeUUID']
+                _dst_node_uuid = x['dstNodeUUID']
+                _src_node = _updated_nodes.get(_src_node_uuid)
+                _dst_node = _updated_nodes.get(_dst_node_uuid)
+                if _cls == 'TransitionWireShape':
+                    _wire = self.create_wire_item(_src_node, _dst_node, _src_pt, _dst_pt)
+                    _wire.set_text(_text)
+                    _wire.uuid = _uuid
+                    _wire.role = _role
+                    _wire.wayPoints = _wp
+                    _wire.arrow.arrowHeadAngle = _arrow_angle
+                    _wire.arrow.direction = _arrow_dir
+                    _updated_wires.update({_uuid: _wire})
+                    self._wires.update({_uuid: _wire})
+                    _wire.srcNode.add_out_wire(_wire)
+                    _wire.dstNode.add_in_wire(_wire)
+            self.add_items(list(_updated_wires.values()))
+            self.canvas.draw()
 
     def update_scale_info_test(self):
         self.canvasStatusbar.SetStatusText('scale:%.2F' % self.canvasSetting.mFScale, 0)
 
-    def add_connection_pair(self, src_node, dst_node, src_pt, dst_pt):
+    def create_wire_item(self, src_node, dst_node, src_pt, dst_pt, uuid=None):
         _wire = TransitionWireShape()
-        _wire.uuid = util_get_uuid_string()
+        _wire.uuid = util_get_uuid_string() if uuid is None else uuid
         _wire.srcNode = src_node
         _wire.dstNode = dst_node
         _wire.set_src_point(src_pt)
         _wire.set_dst_point(dst_pt)
         _wire.set_connection_valid_style()
+        return _wire
+
+    def add_connection_pair(self, src_node, dst_node, src_pt, dst_pt):
+        _wire = self.create_wire_item(src_node, dst_node, src_pt, dst_pt)
         self.add_item(_wire)
         self._wires.update({_wire.uuid: _wire})
         _wire.srcNode.add_out_wire(_wire)
@@ -375,12 +406,14 @@ class StateChartCanvasViewPanel(wx.Panel):
     def on_double_click_item(self, item):
         print('on_double_click_item', item, item.hitCoordsPixel, item.hitCoords)
         if isinstance(item, StateNodeShape):
-            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeDClicked.value, uuid=self.uuid, role=self.role, item=item)
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeDClicked.value, uuid=self.uuid,
+                            role=self.role, item=item)
         elif isinstance(item, TransitionWireShape):
-            pass
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasTransitionDClicked.value, uuid=self.uuid,
+                            role=self.role, item=item)
         elif isinstance(item, NoteNodeShape):
-            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value, uuid=self.uuid, role=self.role,
-                            item=item)
+            pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value, uuid=self.uuid,
+                            role=self.role, item=item)
 
     def on_left_down_item(self, item):
         print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)

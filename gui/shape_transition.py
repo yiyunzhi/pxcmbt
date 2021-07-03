@@ -1,15 +1,18 @@
 import math, copy
 import wx
+import wx.propgrid as wxpg
 import numpy as N
 from wxgraph import (DrawObjectGroup,
                      DrawObjectScaledTextBox,
                      DrawObjectArrow,
                      DrawObjectSquarePoint,
                      DrawObjectLine)
-from .define_gui import *
-from .base_state_chart_node import StateChartNode, StateChartTransition
+
 import wxgraph.util_bbox as bbox
 from wxgraph.utils import util_angle_between_degree, util_find_closest_pt_idx
+from .define_gui import *
+from .base_state_chart_node import StateChartNode, StateChartTransition
+from application.define import EnumItemRole
 
 
 class TransitionWireShape(StateChartTransition):
@@ -42,6 +45,43 @@ class TransitionWireShape(StateChartTransition):
         self.add_object(self.arrow)
         self._update_transition_text_position()
         self._calc_way_point()
+
+    def get_properties(self, pg_parent):
+        _pg_main = wxpg.PropertyGridManager(pg_parent, wx.ID_ANY,
+                                            style=wxpg.PG_SPLITTER_AUTO_CENTER | wxpg.PG_BOLD_MODIFIED)
+        _pg_uuid = wxpg.StringProperty("uuid", 'uuid', value=self.uuid)
+        _pg_main.SetPropertyReadOnly(_pg_uuid)
+        _pg_main.Append(_pg_uuid)
+
+        _pg_role = wxpg.StringProperty("role", 'role', value=EnumItemRole(self.role).name)
+        _pg_main.SetPropertyReadOnly(_pg_role)
+        _pg_main.Append(_pg_role)
+
+        _pg_src_position = wxpg.StringProperty("srcPosition", 'srcPosition',
+                                               value='(%s,%s)' % (self.srcPt[0], self.srcPt[1]))
+        _pg_main.SetPropertyReadOnly(_pg_src_position)
+        _pg_main.Append(_pg_src_position)
+
+        _pg_dst_position = wxpg.StringProperty("dstPosition", 'dstPosition',
+                                               value='(%s,%s)' % (self.dstPt[0], self.dstPt[1]))
+        _pg_main.SetPropertyReadOnly(_pg_dst_position)
+        _pg_main.Append(_pg_dst_position)
+
+        if self.srcNode is not None:
+            _pg_src_node_uuid = wxpg.StringProperty("srcUUID", 'srcUUID', value=self.srcNode.uuid)
+            _pg_main.SetPropertyReadOnly(_pg_src_node_uuid)
+            _pg_main.Append(_pg_src_node_uuid)
+        if self.dstNode is not None:
+            _pg_src_node_uuid = wxpg.StringProperty("dstUUID", 'dstUUID', value=self.dstNode.uuid)
+            _pg_main.SetPropertyReadOnly(_pg_src_node_uuid)
+            _pg_main.Append(_pg_src_node_uuid)
+
+        _pg_name = wxpg.StringProperty("name", 'name',
+                                       value=self.text)
+        _pg_main.SetPropertyReadOnly(_pg_name)
+        _pg_main.Append(_pg_name)
+
+        return _pg_main
 
     def serialize(self):
         _d = dict()
@@ -104,6 +144,10 @@ class TransitionWireShape(StateChartTransition):
 
     def get_control_points_length(self):
         return 3
+
+    def set_text(self, text):
+        self.text = text
+        self.textBox.set_text(text)
 
     def set_src_point(self, src_pt):
         self.srcPt = src_pt
@@ -174,7 +218,7 @@ class TransitionWireShape(StateChartTransition):
         # _sign_x = 1 if self.dstPt[0] >= _pt_c1[0] else -1
         # _sign_y = 1 if self.dstPt[1] >= _pt_c1[1] else -1
 
-    def deserialize(self):
+    def deserialize(self, *args):
         # todo: add serialize for all node
         pass
 

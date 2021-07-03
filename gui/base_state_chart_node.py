@@ -12,7 +12,7 @@ class Serializable:
     def __init__(self):
         pass
 
-    def get_properties(self):
+    def get_properties(self,*args):
         pass
 
     def set_property(self, prop_name, prop_val):
@@ -36,6 +36,7 @@ class StateChartNode(Serializable, DrawObjectGroup):
         Serializable.__init__(self)
         self.uuid = None
         self.role = EnumItemRole.ITEM_STATE
+        self.position = None
         self.enterEventModel = NodeEvtModel()
         self.exitEventModel = NodeEvtModel()
         self.highLightBorderLineColor = '#00FF00'
@@ -51,6 +52,15 @@ class StateChartNode(Serializable, DrawObjectGroup):
         self.minConnPtDistance = 35
         self.inWires = list()
         self.outWires = list()
+
+    def move(self, delta):
+        DrawObjectGroup.move(self, delta)
+        if self.position is not None:
+            self.position += delta
+        self.on_position_changed(delta)
+
+    def on_position_changed(self, delta):
+        pass
 
     def get_properties(self, *args):
         pass
@@ -95,7 +105,7 @@ class StateChartNode(Serializable, DrawObjectGroup):
         _conn_pts = self.get_connection_points()
         if _conn_pts is None:
             return None
-        _lst_conn_pts = [(x[1][0]-2,x[1][1]) for x in _conn_pts]
+        _lst_conn_pts = [(x[1][0] - 2, x[1][1]) for x in _conn_pts]
         self._connectionPtShape.set_points(_lst_conn_pts)
         return self._connectionPtShape
 
@@ -119,6 +129,7 @@ class StateChartTransition(Serializable, DrawObjectGroup):
         Serializable.__init__(self)
         self.uuid = None
         self.role = EnumItemRole.ITEM_TRANSITION
+        self.triggerEventModel = NodeEvtModel()
         self.shapeStyle = EnumShapeStyle.STYLE_DEFAULT
         self.isSelected = False
 

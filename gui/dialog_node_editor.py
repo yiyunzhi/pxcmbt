@@ -75,7 +75,7 @@ class NodeEditorDialog(wx.Dialog):
 
     def on_ok_clicked(self, evt):
         _item = self._editorPanel.item
-        _item.nameText = self._editorPanel.ctrlNameEdit.GetValue()
+        _name_text = self._editorPanel.ctrlNameEdit.GetValue()
         _enter_events = self._editorPanel.ctrlEventsEnterEdit.get_selected_events()
         _exit_events = self._editorPanel.ctrlEventsExitEdit.get_selected_events()
         _item.enterEventModel.clear()
@@ -84,7 +84,8 @@ class NodeEditorDialog(wx.Dialog):
             _item.enterEventModel.update(a, b)
         for a, b in _exit_events:
             _item.exitEventModel.update(a, b)
-        _item.update()
+        _item.set_name(_name_text)
+        _item.update_event_desc_text()
         evt.Skip()
 
     def on_cancel_clicked(self, evt):
