@@ -170,6 +170,7 @@ class WxCanvas(wx.Panel):
         # bind event
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_CLOSE, self.on_close)
 
         self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
@@ -640,12 +641,19 @@ class WxCanvas(wx.Panel):
                                              self.panelSize[1],
                                              depth=self.hitTestBitmapDepth)
 
+    def on_close(self, event=None):
+        if self.sizeTimer.IsRunning():
+            self.sizeTimer.Stop()
+            self.on_size_timer()
+        event.Skip()
+
     def on_size(self, event=None):
         """
         On size handler.
         """
         self.initialize_panel()
-        self.sizeTimer.Start(50, oneShot=True)
+        # self.sizeTimer.Start(10, oneShot=True)
+        self.on_size_timer()
 
     def on_size_timer(self, event=None):
         """
@@ -711,7 +719,6 @@ class WxCanvas(wx.Panel):
         animation, for instance.
 
         """
-
         if N.sometrue(self.panelSize <= 2):
             # it's possible for this to get called before being properly initialized.
             return
@@ -743,7 +750,6 @@ class WxCanvas(wx.Panel):
             self._draw_objects(_dc, self._drawList, _screen_dc, self.viewPortBB, _ht_dc)
             self._backgroundDirty = False
             del _ht_dc
-
         if self._foreDrawList:
             # If an object was just added to the Foreground, there might not yet be a buffer
             if self._foregroundBuffer is None:

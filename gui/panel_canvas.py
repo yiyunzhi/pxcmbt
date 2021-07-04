@@ -167,6 +167,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         return _tb
 
     def _bind_event(self):
+        self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(WxGEvent.EVT_MOTION, self.on_motion_view)
         self.Bind(WxGEvent.EVT_MOUSEWHEEL, self.on_mouse_wheel_view)
         self.Bind(WxGEvent.EVT_LEFT_DOWN, self.on_mouse_left_down_view)
@@ -220,8 +221,9 @@ class StateChartCanvasViewPanel(wx.Panel):
                 _role = x['role']
                 _uuid = x['uuid']
                 if _cls == 'StateNodeShape':
-                    # todo: restore event model
                     _conn_style = x['connectionStyle']
+                    _enter_evt_model = x['enterEventModel']
+                    _exit_evt_model = x['exitEventModel']
                     _is_visible = x['isVisible']
                     _name_text = x['nameText']
                     _position = x['position']
@@ -230,6 +232,8 @@ class StateChartCanvasViewPanel(wx.Panel):
                     _node.uuid = _uuid
                     _node.isVisible = _is_visible
                     _node.connectionStyle = _conn_style
+                    _node.enterEventModel = _enter_evt_model
+                    _node.exitEventModel = _exit_evt_model
                     _node.set_name(_name_text)
                     _node.update_event_desc_text()
                     _updated_nodes.update({_uuid: _node})
@@ -249,6 +253,7 @@ class StateChartCanvasViewPanel(wx.Panel):
                 _dst_pt = x['dstPosition']
                 _src_node_uuid = x['srcNodeUUID']
                 _dst_node_uuid = x['dstNodeUUID']
+                _wire_evt_model = x['eventModel']
                 _src_node = _updated_nodes.get(_src_node_uuid)
                 _dst_node = _updated_nodes.get(_dst_node_uuid)
                 if _cls == 'TransitionWireShape':
@@ -256,15 +261,21 @@ class StateChartCanvasViewPanel(wx.Panel):
                     _wire.set_text(_text)
                     _wire.uuid = _uuid
                     _wire.role = _role
+                    _wire.triggerEventModel = _wire_evt_model
                     _wire.wayPoints = _wp
                     _wire.arrow.arrowHeadAngle = _arrow_angle
                     _wire.arrow.direction = _arrow_dir
+                    _wire.update_base_line()
+                    _wire.update_transition_text_position()
                     _updated_wires.update({_uuid: _wire})
                     self._wires.update({_uuid: _wire})
                     _wire.srcNode.add_out_wire(_wire)
                     _wire.dstNode.add_in_wire(_wire)
             self.add_items(list(_updated_wires.values()))
             self.canvas.draw()
+
+    def on_size(self, evt):
+        evt.Skip()
 
     def update_scale_info_test(self):
         self.canvasStatusbar.SetStatusText('scale:%.2F' % self.canvasSetting.mFScale, 0)

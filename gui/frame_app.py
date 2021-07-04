@@ -78,7 +78,7 @@ class FrameMain(wx.Frame):
         # set up center pane aui info
         self._centerTargetAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)). \
             DestroyOnClose(False).Center().Snappable().Dockable(). \
-            MinimizeButton(True).MaximizeButton(True)
+            MinimizeButton(True).MaximizeButton(True).Floatable(False)
         # Attributes
         # fixme: here use a dummy project
         self._currentProject = Project('default')
@@ -436,8 +436,11 @@ class FrameMain(wx.Frame):
             else:
                 return
             _panel.uuid = uuid
+            #_centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
+            #    DestroyOnClose(False).Center().Snappable().Dockable(). \
+            #    MinimizeButton(True).MaximizeButton(True)
             _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
-                DestroyOnClose(False).Center().Snappable().Dockable(). \
+                DestroyOnClose(False).Center().Dockable(). \
                 MinimizeButton(True).MaximizeButton(True)
             self._auiMgr.AddPane(_panel, _centerDefaultAuiInfo, target=self._centerTargetAuiInfo)
             self._auiMgr.Update()

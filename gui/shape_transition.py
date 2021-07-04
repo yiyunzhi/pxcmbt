@@ -43,7 +43,7 @@ class TransitionWireShape(StateChartTransition):
         self.add_object(self.textBox)
         self.add_object(self.baseLine)
         self.add_object(self.arrow)
-        self._update_transition_text_position()
+        self.update_transition_text_position()
         self._calc_way_point()
 
     def get_properties(self, pg_parent):
@@ -89,6 +89,7 @@ class TransitionWireShape(StateChartTransition):
         _d.update({'uuid': self.uuid})
         _d.update({'role': self.role})
         _d.update({'text': self.text})
+        _d.update({'eventModel': self.triggerEventModel})
         _d.update({'isVisible': self.isVisible})
         _d.update({'srcPosition': self.srcPt})
         _d.update({'dstPosition': self.dstPt})
@@ -129,6 +130,7 @@ class TransitionWireShape(StateChartTransition):
         _pts.extend(self.wayPoints)
         _pts.append(self.dstPt)
         self.baseLine.set_points(_pts)
+        self.update_transition_text_position()
 
     def guess_control_point(self, pt):
         _ctrl_pts = self.get_control_points()
@@ -152,17 +154,17 @@ class TransitionWireShape(StateChartTransition):
     def set_src_point(self, src_pt):
         self.srcPt = src_pt
         self._calc_way_point()
-        self._update_base_line()
-        self._update_transition_text_position()
-        self._update_arrow()
+        self.update_base_line()
+        self.update_transition_text_position()
+        self.update_arrow()
 
     def set_dst_point(self, dst_pt):
         self.dstPt = dst_pt
         # _prev_pts = self.arrowLine.Points
         self._calc_way_point()
-        self._update_base_line()
-        self._update_transition_text_position()
-        self._update_arrow()
+        self.update_base_line()
+        self.update_transition_text_position()
+        self.update_arrow()
 
     def save_hit(self):
         self._hitCbsBackup = dict()
@@ -174,17 +176,23 @@ class TransitionWireShape(StateChartTransition):
             for evt, cb in self._hitCbsBackup.items():
                 self.bind(evt, cb)
 
-    def _update_base_line(self):
+    def update_base_line(self):
         _pts = list()
         _pts.append(self.srcPt)
         _pts.extend(self.wayPoints)
         _pts.append(self.dstPt)
         self.baseLine.set_points(_pts)
 
-    def _update_transition_text_position(self):
-        self.textBox.set_position((self.srcPt + self.dstPt) / 2)
+    def update_transition_text_position(self):
+        if self.wayPoints:
+            if len(self.wayPoints) > 2:
+                self.textBox.set_position(tuple(self.wayPoints[1]))
+            else:
+                self.textBox.set_position((self.srcPt + self.dstPt) / 2)
+        else:
+            self.textBox.set_position((self.srcPt + self.dstPt) / 2)
 
-    def _update_arrow(self):
+    def update_arrow(self):
         self.arrow.set_position(self.dstPt)
         if self.dstNode is None:
             _calc_angle_trg_pt = self.baseLine.points[1]
