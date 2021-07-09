@@ -5,6 +5,7 @@ from collections import OrderedDict
 from application.class_transition_matrix import TransitionMatrix
 from application.class_state_model import StateModel
 from transitions import Machine, Transition
+import urllib.parse
 
 # assume get we follow data from canvas
 fa_states = ['faA', 'faB', 'faC']
@@ -104,7 +105,9 @@ class MBTRunner:
             self.features.pop(uuid)
 
     def build(self):
-        # todo: suite=A&case=a_pwr&step=0&feature=a&levent=dd0&revent=ortrr&callback=stepdone
+        # todo: suite=A&case=a_pwr&step=0&feature=a&levent=dd0&leventdata=00&revent=ortrr&reventdata=12&callback=stepdone
+        params = {'name': 'Rajeev Singh', 'phone': ['+919999999999', '+628888888888']}
+        print(urllib.parse.urlencode(params, doseq=True))
         for uid, feature in self.features.items():
             _trans_matrix = feature.transMatrix
             _lst_trans_ma = _trans_matrix.matrix
