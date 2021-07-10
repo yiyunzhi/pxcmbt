@@ -66,12 +66,53 @@ class Feature:
         self.stateModel = state_model
         self.events = events
         self.transMatrix = None
+        self.bFeature = None
 
     def __ilshift__(self, other):
         assert isinstance(other, Feature)
+        self.bFeature = other
         if self.stateModel is not None and other.stateModel is not None:
             self.transMatrix = TransitionMatrix(self.stateModel, other.stateModel)
         return self
+
+    @property
+    def p_suite_name(self):
+        if self.bFeature is None:
+            return None
+        return '%s_%s' % (self.name, self.bFeature.name)
+
+    @property
+    def p_cases(self):
+        if self.bFeature is None or self.transMatrix is None:
+            return None
+        _cases = list()
+        for x in self.stateModel.states:
+            pass
+        return _cases
+
+    def __iter__(self):
+        if self.transMatrix is not None:
+            _lst_trans_ma = self.transMatrix.matrix
+            # suite=a_pwr&case=a_sok&step=0&feature=a&levent=dd0&leventdata=00&revent=ortrr&reventdata=12&callback=stepdone
+            for a, b in _lst_trans_ma:
+                _left_feature_evts = a.transition.events
+                _step = 0
+                for bb in b:
+                    _step += 1
+                    _right_feature_evts = bb.transition.events
+                    # todo: add leventData,reventdata
+                    _params = {'suite': self.p_suite_name,
+                               'case': '%s_%s' % (a.transition.name, bb.transition.name),
+                               'step': _step,
+                               'stepTotal': len(b),
+                               'feature': self.name,
+                               'levent': _left_feature_evts,
+                               'revent': _right_feature_evts,
+                               'callback': 'stepdone'
+                               }
+                    yield urllib.parse.urlencode(_params, doseq=True)
+        else:
+            return None
 
 
 statemodel_a = StateModel(fa_states, fa_states_init, fa_transitions)
@@ -96,6 +137,9 @@ class MBTRunner:
         self.features = OrderedDict()
         if features is not None and isinstance(features, list):
             [self.features.update({x.uuid: x}) for x in features]
+            self.build()
+        self.suites = list()
+        self.cursor = 0
 
     def add_feature(self, feature):
         self.features.update({feature.uuid: feature})
@@ -105,25 +149,45 @@ class MBTRunner:
             self.features.pop(uuid)
 
     def build(self):
-        # todo: suite=A&case=a_pwr&step=0&feature=a&levent=dd0&leventdata=00&revent=ortrr&reventdata=12&callback=stepdone
-        params = {'name': 'Rajeev Singh', 'phone': ['+919999999999', '+628888888888']}
-        print(urllib.parse.urlencode(params, doseq=True))
+        self.suites.clear()
         for uid, feature in self.features.items():
-            _trans_matrix = feature.transMatrix
-            _lst_trans_ma = _trans_matrix.matrix
-            for a, b in _lst_trans_ma:
-                _left_feature_evts = a.transition.events
-                #getattr(feature.stateModel, a.transition.name)(_left_feature_evts)
-                for bb in b:
-                    _right_feature_evts = bb.transition.events
-                    #getattr(_trans_matrix.bModel, bb.transition.name)(_right_feature_evts)
-                    yield feature.name, _left_feature_evts, _right_feature_evts
+            [self.suites.append(x) for x in feature]
 
     def next(self):
-        return next(self._get())
+        _params = {'cursor': self.cursor,
+                   'total': len(self.suites),
+                   }
+        _progress_info = urllib.parse.urlencode(_params, doseq=True)
+        if self.cursor >= len(self.suites):
+            _state_info = 'state=END'
+            _res = '%s&%s' % (_state_info, _progress_info)
+        else:
+            _state_info = 'state=OK'
+            _res = self.suites[self.cursor]
+            self.cursor += 1
+            _res = '%s&%s&%s' % (_state_info, _res, _progress_info)
+        return _res
+
+    def get_percent(self):
+        if self.suites:
+            return self.cursor / len(self.suites)
+        else:
+            return .0
 
     def abort(self):
-        pass
+        return True
+
+    def restart(self):
+        self.build()
+        self.cursor = 0
+        return True
+
+    def restart_from(self, cursor):
+        if cursor < len(self.suites):
+            self.cursor = cursor
+            return True
+        else:
+            return False
 
 
 class MBTOnlineTestServer:
@@ -158,12 +222,13 @@ _mbt_test_runner.add_feature(feature_a)
 _mbt_test_runner.add_feature(feature_b)
 _mbt_test_runner.add_feature(feature_c)
 _mbt_test_runner.add_feature(feature_d)
-
+_mbt_test_runner.build()
 # _mbt_test_server = MBTOnlineTestServer(_mbt_test_runner)
 # _mbt_test_server.start()
 # print('TestServer started')
-_cases=_mbt_test_runner._get()
-print(next(_cases))
-print(next(_cases))
-print(next(_cases))
-print(next(_cases))
+for i in range(20):
+    print('-->', _mbt_test_runner.next())
+_mbt_test_runner.restart()
+print('---->restart<-------')
+for i in range(20):
+    print('-->', _mbt_test_runner.next())
