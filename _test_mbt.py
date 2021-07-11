@@ -1,5 +1,5 @@
-from pxcmbt_editor.pxcmbt.feature import Feature, FeatureGraph, StateMachine
-from pxcmbt_editor.pxcmbt.case_generator import LivingCaseGenerator
+from pxcmbt.feature import Feature, FeatureGraph, StateMachine
+from pxcmbt.case_generator import LivingCaseGenerator
 
 _root_states = ['sNoPar', 'sPared', 'sRun', 'sDiag', 'sFS']
 _root_tt = [

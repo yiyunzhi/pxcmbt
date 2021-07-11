@@ -1,49 +1,28 @@
-# -*- coding: utf-8 -*-
-
-# ------------------------------------------------------------------------------
-#                                                                            --
-#                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
-#                                                                            --
-# ------------------------------------------------------------------------------
-# Project       : 
-# Sourcefile(s) : class_transition_matrix.py
-# ------------------------------------------------------------------------------
-#
-# File          : class_transition_matrix.py
-#
-# Author(s)     : Gaofeng Zhang
-#
-# Status        : in work
-#
-# Description   : siehe unten
-#
-#
-# ------------------------------------------------------------------------------
+import itertools
 import numpy as np
 
 
-class TransitionMatrixNode:
-    def __init__(self, row_trans, col_trans):
-        self.rowTrans = row_trans
-        self.colTrans = col_trans
-        self.isChecked = False
+class TransitionNode:
+    def __init__(self, transition):
+        self.transition = transition
         self.isReadonly = False
-        self.isEnabled = True
+        self.isEnable = True
+
+    def __repr__(self):
+        return 'TransitionNode: %s' % self.transition
 
 
 class TransitionMatrix:
-    def __init__(self, state_machine):
-        # todo: use numpy store the data
-        self.nodes = None
+    """
+    used for storing the matrix data of the result, which dotted transitions from two
+    statemachines.
+    """
 
-    def get_size(self):
-        pass
-
-    def get_enabled_count(self):
-        pass
-
-    def left_join(self, state_machine):
-        pass
-
-    def right_join(self, state_machine):
-        pass
+    def __init__(self, state_model_a, state_model_b):
+        self.aModel = state_model_a
+        self.bModel = state_model_b
+        self.aTrans = state_model_a.get_transitions()
+        self.bTrans = state_model_b.get_transitions()
+        self.matrix = list()
+        for x in self.aTrans:
+            self.matrix.append((TransitionNode(x), [TransitionNode(y) for y in self.bTrans]))
