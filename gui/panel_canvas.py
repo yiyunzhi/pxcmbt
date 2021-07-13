@@ -193,6 +193,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.Unbind(WxGEvent.EVT_SCALE_CHANGED)
 
     def serialize(self):
+        # todo: generate the transition table
         _d = dict()
         _d.update({'canvas': {'setting': self.canvasSetting.serialize()},
                    'nodes': list(),

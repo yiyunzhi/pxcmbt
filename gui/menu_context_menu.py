@@ -223,12 +223,15 @@ class GuiUserFeatureItemContextMenu(GuiContextMenu):
     def __init__(self, parent):
         super(GuiUserFeatureItemContextMenu, self).__init__(name='cmUserFeature', parent=parent)
         self.popupSaveAsLibID = wx.NewIdRef()
+        self.popupMaskOnRootID = wx.NewIdRef()
         self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_save_user_feature_as_lib, id=self.popupSaveAsLibID)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_mask_on_root, id=self.popupMaskOnRootID)
 
     def show(self):
         # make a menu
         _menu = wx.Menu()
         # Show how to put an icon in the menu
+        _menu.Append(self.popupMaskOnRootID, "MaskOnRoot")
         _menu.Append(self.popupSaveAsLibID, "SaveAsLib")
         _menu.AppendSeparator()
         # make a submenu

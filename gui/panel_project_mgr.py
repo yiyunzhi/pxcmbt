@@ -450,6 +450,16 @@ class GuiProjectManagerPanel(wx.Panel):
             pub.sendMessage(EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value, state_uuid=_state_uuid,
                             event_uuid=_evt_uuid)
 
+    def on_cm_mask_on_root(self, evt):
+        _item = self.tree.GetSelection()
+        if _item is not None:
+            _uuid = self.tree.GetItemData(_item).uuid
+            _state_item, _evt_item = self.get_user_feature_children(_item)
+            _state_uuid = self.tree.GetItemData(_state_item).uuid
+            _evt_uuid = self.tree.GetItemData(_evt_item).uuid
+            pub.sendMessage(EnumAppSignals.sigV2VMaskUserFeatureOnRoot.value, state_uuid=_state_uuid,
+                            event_uuid=_evt_uuid)
+
     def get_user_feature_children(self, item):
         _state_item = self.tree.GetFirstChild(item)
         _evt_item = self.tree.GetLastChild(item)

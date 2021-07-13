@@ -251,9 +251,18 @@ class FrameMain(wx.Frame):
         pub.subscribe(self.on_ext_sig_project_new_user_feature, EnumAppSignals.sigV2VProjectNewUserFeature.value)
         pub.subscribe(self.on_ext_sig_project_save_user_feature_as_lib,
                       EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value)
+        pub.subscribe(self.on_ext_sig_mask_user_feature_on_root,
+                      EnumAppSignals.sigV2VMaskUserFeatureOnRoot.value)
 
-    def on_ext_sig_project_save_user_feature_as_lib(self, uuid):
+    def on_ext_sig_project_save_user_feature_as_lib(self, state_uuid, event_uuid):
+        # todo: finish this
         pass
+
+    def on_ext_sig_mask_user_feature_on_root(self, state_uuid, event_uuid):
+        # todo: check from file, give to dialog generate feature and transitionmatrix
+        if state_uuid in self._panelCache:
+            _state_pane = self._panelCache.get(state_uuid)
+
 
     def on_ext_sig_project_new_user_feature(self):
         _dlg = PromptUserFeatureNameDialog(self._panelProjectMgr.contentPanel.is_uf_name_is_exist, self)
@@ -330,6 +339,9 @@ class FrameMain(wx.Frame):
         evt.Skip()
 
     def on_window_closed(self, evt):
+        if self._currentProject is not None:
+            _perspective = self._auiMgr.SavePerspective()
+            self._currentProject.save_ui_perspective(_perspective)
         evt.Skip()
 
     def on_menu_save_clicked(self, evt):
@@ -373,6 +385,9 @@ class FrameMain(wx.Frame):
             self._panelProjectMgr.set_content(_proj_mgr_panel)
             self._currentProject = _project
             self.remove_cached_pane()
+            _ui_pesp = self._currentProject.load_ui_perspective()
+            if _ui_pesp is not None:
+                self._auiMgr.LoadPerspective(self._currentProject.load_ui_perspective())
 
     def remove_cached_pane(self):
         for k, v in self._panelCache.items():
@@ -436,7 +451,7 @@ class FrameMain(wx.Frame):
             else:
                 return
             _panel.uuid = uuid
-            #_centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
+            # _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
             #    DestroyOnClose(False).Center().Snappable().Dockable(). \
             #    MinimizeButton(True).MaximizeButton(True)
             _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \

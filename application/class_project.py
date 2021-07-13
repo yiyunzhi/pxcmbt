@@ -139,3 +139,14 @@ class Project:
         if _feature is not None:
             # copy from data to project and rename it
             shutil.copyfile(_feature.evtFile, os.path.join(self.modelPath, rename + APP_SETTING.evtFileExt))
+
+    def save_ui_perspective(self, perspective_str):
+        with open(os.path.join(self.path, 'ui.pepc'), "w") as f:
+            f.write(perspective_str)
+
+    def load_ui_perspective(self):
+        _path = os.path.join(self.path, 'ui.pepc')
+        if util_is_dir_exist(_path):
+            with open(os.path.join(self.path, 'ui.pepc'), "r") as f:
+                return f.read()
+        return None
