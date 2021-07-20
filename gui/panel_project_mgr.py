@@ -360,6 +360,25 @@ class GuiProjectManagerPanel(wx.Panel):
             self.tree.SetItemData(self._sessions_item, _sessions['data'])
             self.tree.SetItemData(self._scripts_item, _scripts['data'])
 
+    def get_text_by_uuid(self, uuid):
+        if uuid in self._itemMap:
+            _item = self._itemMap[uuid]
+            return self.tree.GetItemText(_item)
+        else:
+            return None
+
+    def get_feature_text_by_uuid(self, uuid):
+        if uuid in self._itemMap:
+            _item = self._itemMap[uuid]
+            _data = self.tree.GetItemData(_item)
+            if _data.role in [EnumItemRole.USER_FEATURE_STATE,
+                              EnumItemRole.USER_FEATURE_EVENT,
+                              EnumItemRole.DEV_FEATURE_STATE,
+                              EnumItemRole.DEV_FEATURE_EVENT]:
+                _parent_item = self.tree.GetItemParent(_item)
+                return self.tree.GetItemText(_parent_item)
+        return None
+
     def get_item_by_text(self, search_text, root_item):
         _item, _cookie = self.tree.GetFirstChild(root_item)
         while _item.IsOk():
@@ -434,6 +453,9 @@ class GuiProjectManagerPanel(wx.Panel):
         self._itemMap.update({_userFeatureEventData.uuid: _userFeatureEventItem})
         return _userFeatureItemData.uuid, _userFeatureStateData.uuid, _userFeatureEventData.uuid
 
+    def get_root_state_uuid(self):
+        return self.deviceStateItemData.uuid
+
     def on_cm_new_user_feature(self, evt):
         pub.sendMessage(EnumAppSignals.sigV2VProjectNewUserFeature.value)
 
@@ -455,7 +477,7 @@ class GuiProjectManagerPanel(wx.Panel):
         if _item is not None:
             _uuid = self.tree.GetItemData(_item).uuid
             _state_item, _evt_item = self.get_user_feature_children(_item)
-            _state_uuid = self.tree.GetItemData(_state_item).uuid
+            _state_uuid = self.tree.GetItemData(_state_item[0]).uuid
             _evt_uuid = self.tree.GetItemData(_evt_item).uuid
             pub.sendMessage(EnumAppSignals.sigV2VMaskUserFeatureOnRoot.value, state_uuid=_state_uuid,
                             event_uuid=_evt_uuid)

@@ -10,18 +10,26 @@ class WebViewPanel(wx.Panel):
         wx.Panel.__init__(self, parent, wx_id)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.browser = wx.html2.WebView.New(self)
-        self.browser.LoadURL(wx.FileSystem.FileNameToURL('index.html'))
         self.mainSizer.Add(self.browser, 1, wx.EXPAND)
         self.SetSizer(self.mainSizer)
         self.Layout()
+
+    def show_html(self, html):
+        self.browser.SetPage(html)
+
+    def show_html_from_url(self, url):
+        self.browser.LoadURL(url)
+
+    def show_html_from_file(self, file_path):
+        self.browser.LoadURL(wx.FileSystem.FileNameToURL(file_path))
 
 
 class AppFrame(wx.Frame):
     def __init__(self, parent):
         wx.Frame.__init__(self, parent)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-        self.webViewPanel=WebViewPanel(self)
-        self.mainSizer.Add(self.webViewPanel,1,wx.EXPAND)
+        self.webViewPanel = WebViewPanel(self)
+        self.mainSizer.Add(self.webViewPanel, 1, wx.EXPAND)
         self.SetSizer(self.mainSizer)
         self.Layout()
 

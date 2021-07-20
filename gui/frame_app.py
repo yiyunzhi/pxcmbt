@@ -39,6 +39,7 @@ from .dialog_transition_editor import TransitionEditorDialog
 from .dialog_new_project import NewProjectDialog
 from .dialog_select_user_feature import SelectUserFeatureDialog
 from .dialog_user_featrue import PromptUserFeatureNameDialog
+from .dialog_transition_matrix import TransitionMatrixDialog
 from application.utils_helper import *
 from application.class_yaml_tag import *
 
@@ -259,10 +260,16 @@ class FrameMain(wx.Frame):
         pass
 
     def on_ext_sig_mask_user_feature_on_root(self, state_uuid, event_uuid):
-        # todo: check from file, give to dialog generate feature and transitionmatrix
-        if state_uuid in self._panelCache:
-            _state_pane = self._panelCache.get(state_uuid)
-
+        # todo: first get the root transitions
+        if self._currentProject:
+            _root_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
+            _root_stc_file_io = self._currentProject.get_file_io(_root_uuid, EnumItemRole.DEV_FEATURE_STATE)
+            _uf_stc_file_io = self._currentProject.get_file_io(state_uuid, EnumItemRole.USER_FEATURE_STATE)
+            _uf_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(state_uuid)
+            _root_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_uuid)
+            _dlg = TransitionMatrixDialog(self,_uf_stc_file_io,_root_stc_file_io)
+            _dlg.set_graph_cluster_name(_uf_name,_root_name)
+            _ret = _dlg.ShowModal()
 
     def on_ext_sig_project_new_user_feature(self):
         _dlg = PromptUserFeatureNameDialog(self._panelProjectMgr.contentPanel.is_uf_name_is_exist, self)

@@ -22,6 +22,44 @@ class ApplicationFileBody:
         pass
 
 
+class DotGraphStringIO:
+    def __init__(self):
+        self.content = ''
+
+    def write(self, val):
+        self.content += val
+
+    def clear(self):
+        self.content = ''
+
+
+class DotGraphHtmlFileIO:
+    def __init__(self):
+        self.filePath = APP_SETTING.applicationMaskStateDotGraphHtmlTemplatePath
+        self.fileName = 'index.html'
+        self.outputFileName = '_index.html'
+        self.content = None
+        self.dotGraphStringIO = DotGraphStringIO()
+
+    def read(self):
+        with open(os.path.join(self.filePath, self.fileName), encoding='utf-8') as f:
+            self.content = f.read()
+
+    def write(self, val):
+        pass
+
+    def update_dot_graph(self, dot_string=None):
+        if dot_string is None:
+            dot_string = self.dotGraphStringIO.content
+        if dot_string is not None:
+            dot_string = dot_string.replace('\n', '').replace('\r', '').replace('\t', '')
+            _html_content = self.content.replace('$DOT_GRAPH_STRING', dot_string)
+            with open(os.path.join(self.filePath, self.outputFileName), 'w', encoding='utf-8') as f:
+                f.write(_html_content)
+            return os.path.join(self.filePath, self.outputFileName)
+        return None
+
+
 class ApplicationFileIO:
     HEADER_K = 'HEADER'
     BODY_K = 'BODY'
@@ -92,6 +130,19 @@ class ApplicationStcFileBody(ApplicationFileBody):
         self.canvas = kwargs.get('canvas')
         self.nodes = kwargs.get('nodes')
         self.wires = kwargs.get('wires')
+
+    def get_transitions_list(self):
+        if self.wires is not None:
+            return [x['text'] for x in self.wires]
+        return []
+
+    def get_states_list(self):
+        if self.nodes is not None:
+            return [x['nameText'] for x in self.nodes]
+        return []
+
+    def get_init_state_name(self):
+        pass
 
 
 class ApplicationStcFileIO(ApplicationFileIO):

@@ -319,6 +319,9 @@ class StateChartCanvasViewPanel(wx.Panel):
             self._wires.pop(_uuid)
         self.remove_item(wire)
 
+    def get_transitions(self):
+        return list(self._wires.values())
+
     def on_node_item_delete_requested(self, items):
         for x in items:
             # first remove the wires

@@ -6,6 +6,8 @@ class AppSetting:
     projectPath = os.path.join(os.getcwd(), 'projects')
     applicationPath = os.path.join(os.getcwd(), 'application')
     applicationDataPath = os.path.join(applicationPath, 'data')
+    applicationHtmlTemplatePath = os.path.join(applicationDataPath, 'html_template')
+    applicationMaskStateDotGraphHtmlTemplatePath = os.path.join(applicationHtmlTemplatePath, 'masked_state_dot_graph')
     featureLibsPath = os.path.join(applicationDataPath, 'feature_libs')
     evtFileExt = '.evt'
     stateFileExt = '.stc'

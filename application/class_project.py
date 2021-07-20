@@ -64,6 +64,20 @@ class Project:
             pass
         return _f
 
+    # def get_user_feature_transitions(self, uuid):
+    #     _file_io = self.get_file_io(uuid, EnumItemRole.USER_FEATURE_STATE)
+    #     if _file_io is not None:
+    #         _file_io.read()
+    #         return _file_io.body.wires
+    #     return None
+    #
+    # def get_root_feature_transitions(self, uuid):
+    #     _file_io = self.get_file_io(uuid, EnumItemRole.DEV_FEATURE_STATE)
+    #     if _file_io is not None:
+    #         _file_io.read()
+    #         return _file_io.body.wires
+    #     return None
+
     def get_event_data(self, uuid):
         _guess_file_path = os.path.join(self.modelPath, uuid + APP_SETTING.evtFileExt)
         _exist = util_is_dir_exist(_guess_file_path)
