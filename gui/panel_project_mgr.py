@@ -66,6 +66,9 @@ class ProjectPanelIconRepo:
         self.modelIcon = self._image_list.Add(
             wx.Image(PATH_GUI_IMAGES + '\\icon_model.png', wx.BITMAP_TYPE_PNG).Scale(
                 *self._icon_size).ConvertToBitmap())
+        self.keyIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_key.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
         self.variableIcon = self._image_list.Add(
             wx.Image(PATH_GUI_IMAGES + '\\icon_variable.png', wx.BITMAP_TYPE_PNG).Scale(
                 *self._icon_size).ConvertToBitmap())
@@ -320,10 +323,12 @@ class GuiProjectManagerPanel(wx.Panel):
         while _item.IsOk():
             _state_item, _ = self.tree.GetFirstChild(_item)
             _evt_item, _ = self.tree.GetNextChild(self._userFeatureItem, _)
+            _resolver_item, _ = self.tree.GetNextChild(self._userFeatureItem, _)
             _d['model']['user']['children'].append({'data': self.tree.GetItemData(_item),
                                                     'text': self.tree.GetItemText(_item),
                                                     'state': self.tree.GetItemData(_state_item),
-                                                    'event': self.tree.GetItemData(_evt_item)})
+                                                    'event': self.tree.GetItemData(_evt_item),
+                                                    'resolver': self.tree.GetItemData(_resolver_item)})
             _item, _cookie = self.tree.GetNextChild(self._userFeatureItem, _cookie)
         return _d
 
@@ -351,8 +356,9 @@ class GuiProjectManagerPanel(wx.Panel):
             self.tree.SetItemText(self._userFeatureItem, _user['text'])
             self.tree.SetItemData(self._userFeatureItem, _user['data'])
             for x in _user_children:
-                _x_text, _x_data, _x_state, _x_event = x['text'], x['data'], x['state'], x['event']
-                self.add_user_feature(_x_text, _x_data, _x_state, _x_event)
+                _x_text, _x_data, _x_state, _x_event, _x_resolver = x['text'], x['data'], x['state'], x['event'], x[
+                    'resolver']
+                self.add_user_feature(_x_text, _x_data, _x_state, _x_event, _x_resolver)
 
         if hasattr(data, 'rack'):
             _sessions = data.rack['sessions']
@@ -399,6 +405,7 @@ class GuiProjectManagerPanel(wx.Panel):
         return _item is not None
 
     def find_event_sibling_uuid_of(self, uuid):
+        # fixme: next version, store association in Itemdata
         _item = self._itemMap.get(uuid)
         if _item is None:
             return None
@@ -410,8 +417,24 @@ class GuiProjectManagerPanel(wx.Panel):
             _item_data = self.tree.GetItemData(x)
             if _item_data.role in [EnumItemRole.USER_FEATURE_EVENT, EnumItemRole.DEV_FEATURE_EVENT]:
                 return _item_data.uuid
+        return None
 
-    def add_user_feature(self, name, item_data=None, state_data=None, evt_data=None):
+    def find_state_sibling_uuid_of(self, uuid):
+        # fixme: next version, store association in Itemdata
+        _item = self._itemMap.get(uuid)
+        if _item is None:
+            return None
+        _item_parent = self.tree.GetItemParent(_item)
+        if _item_parent is None:
+            return None
+        _gen_items = util_wx_tree_walk_branches(self.tree, _item_parent)
+        for x in _gen_items:
+            _item_data = self.tree.GetItemData(x)
+            if _item_data.role in [EnumItemRole.USER_FEATURE_STATE]:
+                return _item_data.uuid
+        return None
+
+    def add_user_feature(self, name, item_data=None, state_data=None, evt_data=None, resolver_data=None):
         _userFeatureItem = self.tree.AppendItem(self._userFeatureItem, name)
         if item_data is not None:
             item_data.role = EnumItemRole.USER_FEATURE_ITEM
@@ -448,13 +471,29 @@ class GuiProjectManagerPanel(wx.Panel):
         self.tree.SetItemData(_userFeatureEventItem, _userFeatureEventData)
         self.tree.SetItemImage(_userFeatureEventItem, self._iconRepo.eventIcon, wx.TreeItemIcon_Normal)
 
+        _userFeatureResolverItem = self.tree.AppendItem(_userFeatureItem, 'Resolver')
+        if resolver_data is not None:
+            _userFeatureResolverData = resolver_data
+            resolver_data.role = EnumItemRole.USER_FEATURE_RESOLVER
+        else:
+            _userFeatureResolverData = StandardItemData()
+            _userFeatureResolverData.role = EnumItemRole.USER_FEATURE_RESOLVER
+            _userFeatureResolverData.uuid = util_get_uuid_string()
+            _userFeatureResolverData.labelReadonly = True
+        self.tree.SetItemData(_userFeatureResolverItem, _userFeatureResolverData)
+        self.tree.SetItemImage(_userFeatureResolverItem, self._iconRepo.keyIcon, wx.TreeItemIcon_Normal)
+
         self._itemMap.update({_userFeatureItemData.uuid: _userFeatureItem})
         self._itemMap.update({_userFeatureStateData.uuid: _userFeatureStateItem})
         self._itemMap.update({_userFeatureEventData.uuid: _userFeatureEventItem})
-        return _userFeatureItemData.uuid, _userFeatureStateData.uuid, _userFeatureEventData.uuid
+        self._itemMap.update({_userFeatureResolverData.uuid: _userFeatureResolverItem})
+        return _userFeatureItemData.uuid, _userFeatureStateData.uuid, _userFeatureEventData.uuid, _userFeatureResolverData.uuid
 
     def get_root_state_uuid(self):
         return self.deviceStateItemData.uuid
+
+    def get_root_event_uuid(self):
+        return self._deviceEvtItemData.uuid
 
     def on_cm_new_user_feature(self, evt):
         pub.sendMessage(EnumAppSignals.sigV2VProjectNewUserFeature.value)
@@ -470,16 +509,6 @@ class GuiProjectManagerPanel(wx.Panel):
             _state_uuid = self.tree.GetItemData(_state_item).uuid
             _evt_uuid = self.tree.GetItemData(_evt_item).uuid
             pub.sendMessage(EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value, state_uuid=_state_uuid,
-                            event_uuid=_evt_uuid)
-
-    def on_cm_mask_on_root(self, evt):
-        _item = self.tree.GetSelection()
-        if _item is not None:
-            _uuid = self.tree.GetItemData(_item).uuid
-            _state_item, _evt_item = self.get_user_feature_children(_item)
-            _state_uuid = self.tree.GetItemData(_state_item[0]).uuid
-            _evt_uuid = self.tree.GetItemData(_evt_item).uuid
-            pub.sendMessage(EnumAppSignals.sigV2VMaskUserFeatureOnRoot.value, state_uuid=_state_uuid,
                             event_uuid=_evt_uuid)
 
     def get_user_feature_children(self, item):

@@ -11,6 +11,7 @@ class AppSetting:
     featureLibsPath = os.path.join(applicationDataPath, 'feature_libs')
     evtFileExt = '.evt'
     stateFileExt = '.stc'
+    resolverFileExt = '.rsv'
     infoFileExt = '.inf'
     projFileExt = '.proj'
 
@@ -19,6 +20,8 @@ class AppSetting:
             return EnumWorkDomain.MODEL, self.stateFileExt
         elif role in [EnumItemRole.USER_FEATURE_EVENT, EnumItemRole.DEV_FEATURE_EVENT]:
             return EnumWorkDomain.MODEL, self.evtFileExt
+        elif role in [EnumItemRole.USER_FEATURE_RESOLVER]:
+            return EnumWorkDomain.MODEL, self.resolverFileExt
         else:
             return None,None
 

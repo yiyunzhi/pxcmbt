@@ -44,6 +44,7 @@ class EnumItemRole(enum.IntEnum):
     USER_FEATURE_ITEM = 51
     USER_FEATURE_STATE = 52
     USER_FEATURE_EVENT = 53
+    USER_FEATURE_RESOLVER = 54
     ITEM_STATE = 100
     ITEM_TRANSITION = 110
     ITEM_NODE_NOTE = 120
@@ -51,6 +52,7 @@ class EnumItemRole(enum.IntEnum):
 
 class EnumPanelRole(enum.IntEnum):
     STATE_CHART_CANVAS = 0
+    USER_FEATURE_RESOLVER = 1
 
 
 class EnumAppSignals(enum.Enum):
@@ -64,7 +66,6 @@ class EnumAppSignals(enum.Enum):
     sigV2VProjectAddUserFeature = 'sigV2VProjectAddUserFeature'
     sigV2VProjectNewUserFeature = 'sigV2VProjectNewUserFeature'
     sigV2VProjectSaveUserFeatureAsLib = 'sigV2VProjectSaveUserFeatureAsLib'
-    sigV2VMaskUserFeatureOnRoot = 'sigV2VMaskUserFeatureOnRoot'
 
 
 class EnumMBTEventType(enum.Enum):

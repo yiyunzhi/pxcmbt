@@ -1,11 +1,12 @@
 import wx
 import wx.grid as gridlib
-from .panel_header import HeaderPanel
+from application.define import *
 from .panel_compound_canvas_dot_graph import CompoundCanvasDotGraphViewPanel
+from .panel_header import HeaderPanel
 
 
 class TransMatrixGrid(gridlib.Grid):
-    def __init__(self, parent, col_labels: list, row_labels: list, states: list = None):
+    def __init__(self, parent, col_labels: list, row_labels: list, transitions: list = None):
         gridlib.Grid.__init__(self, parent, -1)
         self.CreateGrid(len(row_labels), len(col_labels))
         self.editorChoices = ['observed', 'ignored']
@@ -15,7 +16,7 @@ class TransMatrixGrid(gridlib.Grid):
             self.SetColLabelValue(idx, x)
         for idx, x in enumerate(row_labels):
             self.SetRowLabelValue(idx, x)
-        if states is not None:
+        if transitions is not None:
             pass
         else:
             for x in range(len(row_labels)):
@@ -27,12 +28,11 @@ class TransMatrixGrid(gridlib.Grid):
         self.AutoSize()
 
 
-class TransitionMatrixDialog(wx.Dialog):
-    def __init__(self, parent, a_stc_file_io, b_stc_file_io, wx_id=wx.ID_ANY, title='TransitionMatrix',
-                 size=wx.DefaultSize,
-                 pos=wx.DefaultPosition,
-                 style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER, name='TransitionMatrixDialog'):
-        wx.Dialog.__init__(self, parent, wx_id, title, pos, size, style, name)
+class FeatureResolverPanel(wx.Panel):
+    def __init__(self, parent, a_stc_file_io, b_stc_file_io):
+        wx.Panel.__init__(self, parent, wx.ID_ANY)
+        self.uuid = None
+        self.role = EnumPanelRole.USER_FEATURE_RESOLVER
         self.aSTCFileIO = a_stc_file_io
         self.bSTCFileIO = b_stc_file_io
         self.aName = 'A'
@@ -49,11 +49,13 @@ class TransitionMatrixDialog(wx.Dialog):
 
         _btn_cancel = wx.Button(self, wx.ID_CANCEL)
         _btn_cancel.SetHelpText("The Cancel button cancels the dialog. (Cool, huh?)")
+        _btn_update = wx.Button(self, wx.ID_ANY)
         self._btnSizer.AddButton(_btn_cancel)
+        self._btnSizer.AddButton(_btn_update)
         self._btnSizer.Realize()
         # bind event
         _btn_ok.Bind(wx.EVT_BUTTON, self.on_ok_clicked)
-        self.Bind(wx.EVT_SHOW, self.on_this_show)
+        _btn_update.Bind(wx.EVT_BUTTON, self.on_update_clicked)
         # layout
         self.mainSizer.Add(HeaderPanel('TransitionMatrix', 'TransitionMatrix', parent=self), 0,
                            wx.EXPAND | wx.ALL, 5)
@@ -62,38 +64,40 @@ class TransitionMatrixDialog(wx.Dialog):
         self.mainSizer.Add(self._btnSizer, 0, wx.ALL, 5)
         self.SetSizerAndFit(self.mainSizer)
 
+    def serialize(self):
+        _d = dict()
+        return _d
+
+    def deserialize(self, data):
+        pass
+
     def set_graph_cluster_name(self, a_name, b_name):
         a_name = a_name if a_name is not None else 'A'
         b_name = b_name if b_name is not None else 'B'
         self.aName, self.bName = a_name, b_name
         self.matrixTab.SetCornerLabelValue('%s\%s' % (self.aName, self.bName))
 
-    def init_matrix_table(self, states=None):
+    def show_graph(self):
         if self.aSTCFileIO is not None and self.bSTCFileIO is not None:
-            _col_labels, _row_labels = list(), list()
+            self.compoundCanvasDotGraphView.show_graph(self.aSTCFileIO, self.bSTCFileIO, self.aName, self.bName)
+
+    def init_matrix_table(self, transitions=None):
+        _col_labels, _row_labels = list(), list()
+        if self.aSTCFileIO is not None and self.bSTCFileIO is not None:
             # first add column, root feature
             for x in self.bSTCFileIO.body.get_transitions_list():
                 _col_labels.append(x)
             # then append rows
             for x in self.aSTCFileIO.body.get_transitions_list():
                 _row_labels.append(x)
-            _tab = TransMatrixGrid(self, _col_labels, _row_labels, states)
-            return _tab
-        return None
+        _tab = TransMatrixGrid(self, _col_labels, _row_labels, transitions)
+        return _tab
 
-    def on_this_show(self, evt):
-        self.compoundCanvasDotGraphView.show_graph(self.aSTCFileIO, self.bSTCFileIO, self.aName, self.bName)
-
-    def on_name_entered(self, evt):
-        # self.ufNameExistMsgLabel.SetLabel('')
-        evt.Skip()
+    def update(self):
+        pass
 
     def on_ok_clicked(self, evt):
-        # _name = self.ufNameTextEdit.GetValue()
-        # if not _name or not _name.strip():
-        #     self.ufNameExistMsgLabel.SetLabel('name can not empty')
-        #     return
-        # if self.refFuncNameChecker(self.ufNameTextEdit.GetValue()):
-        #     self.ufNameExistMsgLabel.SetLabel('name %s is already exist' % _name)
-        #     return
         evt.Skip()
+
+    def on_update_clicked(self, evt):
+        self.update()

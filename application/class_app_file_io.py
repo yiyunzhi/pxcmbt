@@ -77,9 +77,15 @@ class ApplicationFileIO:
         with open(os.path.join(self.filePath, self.fileName)) as f:
             _data = yaml.load(f, Loader=yaml.Loader)
             if self.HEADER_K in _data and self.headerCls is not None:
-                self.header = self.headerCls(**_data.get(self.HEADER_K))
+                _header = _data.get(self.HEADER_K)
+                if _header is None:
+                    _header = dict()
+                self.header = self.headerCls(**_header)
             if self.BODY_K in _data and self.bodyCls is not None:
-                self.body = self.bodyCls(**_data.get(self.BODY_K))
+                _body = _data.get(self.BODY_K)
+                if _body is None:
+                    _body = dict()
+                self.body = self.bodyCls(**_body)
 
     def write(self, data):
         _file_full_path = os.path.join(self.filePath, self.fileName + self.extend)
@@ -145,6 +151,11 @@ class ApplicationStcFileBody(ApplicationFileBody):
         pass
 
 
+class ApplicationRsvFileBody(ApplicationFileBody):
+    def __init__(self, **kwargs):
+        ApplicationFileBody.__init__(self, **kwargs)
+
+
 class ApplicationStcFileIO(ApplicationFileIO):
     def __init__(self, file_path, file_name):
         ApplicationFileIO.__init__(self, file_path, file_name, header_cls=ApplicationStcFileHeader,
@@ -155,6 +166,30 @@ class ApplicationStcFileIO(ApplicationFileIO):
         _hdr = self.headerCls()
         _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
         super(ApplicationStcFileIO, self).write(_data)
+
+
+class ApplicationRsvFileHeader(ApplicationFileHeader):
+    def __init__(self, **kwargs):
+        ApplicationFileHeader.__init__(self, **kwargs)
+
+    def persist(self):
+        _d = {'version': APP_VERSION,
+              'author': util_get_computer_name(),
+              'date': util_date_now(),
+              'type': 'MBT_RSV'}
+        return _d
+
+
+class ApplicationRsvFileIO(ApplicationFileIO):
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, header_cls=ApplicationRsvFileHeader,
+                                   body_cls=ApplicationRsvFileBody)
+        self.extend = '.rsv'
+
+    def write(self, data):
+        _hdr = self.headerCls()
+        _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
+        super(ApplicationRsvFileIO, self).write(_data)
 
 
 class ApplicationEvtFileBody(ApplicationFileBody):

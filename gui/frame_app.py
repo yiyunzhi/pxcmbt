@@ -33,13 +33,13 @@ from .panel_props_container import PropContainerPanel
 from .panel_console import ConsolePanel
 from .panel_event_editor import EventEditorPanel
 from .panel_prop_content import CanvasNodePropContentPanel
+from .panel_resolver import FeatureResolverPanel
 from .define_gui import _, EnumCanvasToolbarMode
 from .dialog_node_editor import NodeEditorDialog, NodeNoteEditorDialog
 from .dialog_transition_editor import TransitionEditorDialog
 from .dialog_new_project import NewProjectDialog
 from .dialog_select_user_feature import SelectUserFeatureDialog
 from .dialog_user_featrue import PromptUserFeatureNameDialog
-from .dialog_transition_matrix import TransitionMatrixDialog
 from application.utils_helper import *
 from application.class_yaml_tag import *
 
@@ -252,34 +252,42 @@ class FrameMain(wx.Frame):
         pub.subscribe(self.on_ext_sig_project_new_user_feature, EnumAppSignals.sigV2VProjectNewUserFeature.value)
         pub.subscribe(self.on_ext_sig_project_save_user_feature_as_lib,
                       EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value)
-        pub.subscribe(self.on_ext_sig_mask_user_feature_on_root,
-                      EnumAppSignals.sigV2VMaskUserFeatureOnRoot.value)
 
     def on_ext_sig_project_save_user_feature_as_lib(self, state_uuid, event_uuid):
         # todo: finish this
         pass
 
-    def on_ext_sig_mask_user_feature_on_root(self, state_uuid, event_uuid):
-        # todo: first get the root transitions
-        if self._currentProject:
-            _root_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
-            _root_stc_file_io = self._currentProject.get_file_io(_root_uuid, EnumItemRole.DEV_FEATURE_STATE)
-            _uf_stc_file_io = self._currentProject.get_file_io(state_uuid, EnumItemRole.USER_FEATURE_STATE)
-            _uf_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(state_uuid)
-            _root_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_uuid)
-            _dlg = TransitionMatrixDialog(self,_uf_stc_file_io,_root_stc_file_io)
-            _dlg.set_graph_cluster_name(_uf_name,_root_name)
-            _ret = _dlg.ShowModal()
+    # def on_cm_mask_on_root(self, evt):
+    #     _item = self.tree.GetSelection()
+    #     if _item is not None:
+    #         _uuid = self.tree.GetItemData(_item).uuid
+    #         _state_item, _evt_item = self.get_user_feature_children(_item)
+    #         _state_uuid = self.tree.GetItemData(_state_item[0]).uuid
+    #         _evt_uuid = self.tree.GetItemData(_evt_item).uuid
+    #         pub.sendMessage(EnumAppSignals.sigV2VMaskUserFeatureOnRoot.value, state_uuid=_state_uuid,
+    #                         event_uuid=_evt_uuid)
+    # def on_ext_sig_mask_user_feature_on_root(self, state_uuid, event_uuid):
+    #     # todo: first get the root transitions
+    #     if self._currentProject:
+    #         _root_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
+    #         _root_stc_file_io = self._currentProject.get_file_io(_root_uuid, EnumItemRole.DEV_FEATURE_STATE)
+    #         _uf_stc_file_io = self._currentProject.get_file_io(state_uuid, EnumItemRole.USER_FEATURE_STATE)
+    #         _uf_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(state_uuid)
+    #         _root_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_uuid)
+    #         _dlg = TransitionMatrixDialog(self,_uf_stc_file_io,_root_stc_file_io)
+    #         _dlg.set_graph_cluster_name(_uf_name,_root_name)
+    #         _ret = _dlg.ShowModal()
 
     def on_ext_sig_project_new_user_feature(self):
         _dlg = PromptUserFeatureNameDialog(self._panelProjectMgr.contentPanel.is_uf_name_is_exist, self)
         _ret = _dlg.ShowModal()
         if _ret == wx.ID_OK:
             _name = _dlg.ufNameTextEdit.GetValue()
-            _, _state_name, _evt_name = self._panelProjectMgr.contentPanel.add_user_feature(_name)
+            _, _state_name, _evt_name,_resolver_name = self._panelProjectMgr.contentPanel.add_user_feature(_name)
             self._currentProject.save_project(self._panelProjectMgr.contentPanel)
             self._currentProject.create_new_evt_file(_state_name)
             self._currentProject.create_new_stc_file(_evt_name)
+            self._currentProject.create_new_rsv_file(_resolver_name)
 
     def on_ext_sig_project_add_user_feature(self):
         _dlg = SelectUserFeatureDialog(self._currentProject, self)
@@ -287,7 +295,8 @@ class FrameMain(wx.Frame):
         if _ret == wx.ID_OK:
             _selected_feature = _dlg.get_selected_feature()
             if _selected_feature:
-                _, _stc_uuid, _evt_uuid = self._panelProjectMgr.contentPanel.add_user_feature(_selected_feature)
+                _, _stc_uuid, _evt_uuid, _resolver_uuid = self._panelProjectMgr.contentPanel.add_user_feature(
+                    _selected_feature)
                 self._currentProject.add_user_feature_event(_selected_feature, _evt_uuid)
                 self._currentProject.add_user_feature_state(_selected_feature, _stc_uuid)
             else:
@@ -325,6 +334,12 @@ class FrameMain(wx.Frame):
             raise IOError('no associated uuid found')
         return _evt_uuid
 
+    def get_associated_state_uuid(self, uuid):
+        _stc_uuid = self._panelProjectMgr.contentPanel.find_state_sibling_uuid_of(uuid)
+        if _stc_uuid is None:
+            raise IOError('no associated uuid found')
+        return _stc_uuid
+
     def on_child_focused(self, evt):
         _win = evt.GetWindow()
         evt.Skip()
@@ -360,6 +375,8 @@ class FrameMain(wx.Frame):
                     self._currentProject.save_canvas(panel)
                 elif isinstance(panel, EventEditorPanel):
                     self._currentProject.save_event(panel)
+                elif isinstance(panel,FeatureResolverPanel):
+                    self._currentProject.save_resolver(panel)
             if self._panelProjectMgr.contentPanel is not None:
                 self._currentProject.save_project(self._panelProjectMgr.contentPanel)
             pass
@@ -415,6 +432,10 @@ class FrameMain(wx.Frame):
             _proj_mgr_content_panel.uuid = util_get_uuid_string()
             self._panelProjectMgr.set_content(_proj_mgr_content_panel)
             self._currentProject.save_project(_proj_mgr_content_panel)
+            _root_evt_uuid = self._panelProjectMgr.contentPanel.get_root_event_uuid()
+            _root_stc_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
+            self._currentProject.create_new_stc_file(_root_stc_uuid)
+            self._currentProject.create_new_evt_file(_root_evt_uuid)
             self.remove_cached_pane()
 
     def _create_new_project(self):
@@ -455,21 +476,32 @@ class FrameMain(wx.Frame):
                 _panel = EventEditorPanel(self, _evt_data)
                 if _exist_in_proj is not None:
                     _panel.deserialize(_evt_data)
+            elif _role == EnumItemRole.USER_FEATURE_RESOLVER:
+                _root_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
+                _root_stc_file_io = self._currentProject.get_file_io(_root_uuid, EnumItemRole.DEV_FEATURE_STATE)
+                _state_uuid=self.get_associated_state_uuid(uuid)
+                _uf_stc_file_io = self._currentProject.get_file_io(_state_uuid, EnumItemRole.USER_FEATURE_STATE)
+                _uf_name = self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_state_uuid)
+                _root_name = self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_uuid)
+                _panel = FeatureResolverPanel(self, _uf_stc_file_io, _root_stc_file_io)
+                _panel.set_graph_cluster_name(_uf_name, _root_name)
+                _panel.show_graph()
+                if _exist_in_proj is not None:
+                    _panel.deserialize(_exist_in_proj.body)
             else:
                 return
             _panel.uuid = uuid
-            # _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
-            #    DestroyOnClose(False).Center().Snappable().Dockable(). \
-            #    MinimizeButton(True).MaximizeButton(True)
             _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
-                DestroyOnClose(False).Center().Dockable(). \
-                MinimizeButton(True).MaximizeButton(True)
+               DestroyOnClose(False).Center().Snappable().Dockable(). \
+               MinimizeButton(True).MaximizeButton(True)
             self._auiMgr.AddPane(_panel, _centerDefaultAuiInfo, target=self._centerTargetAuiInfo)
             self._auiMgr.Update()
             self._panelCache.update({uuid: _panel})
         else:
             # if exist
             _panel = self._panelCache.get(uuid)
+            if _panel.role == EnumItemRole.USER_FEATURE_RESOLVER:
+                _panel.update()
             if _panel.IsShown():
                 self._auiMgr.RequestUserAttention(_panel)
             else:

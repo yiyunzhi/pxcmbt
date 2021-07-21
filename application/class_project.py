@@ -58,6 +58,10 @@ class Project:
         _file_io = ApplicationStcFileIO(self.modelPath, name)
         _file_io.write(None)
 
+    def create_new_rsv_file(self, name):
+        _file_io = ApplicationRsvFileIO(self.modelPath, name)
+        _file_io.write(None)
+
     def get_project_entry_file(self):
         _f = None
         with open(self.projectEntryFilePath, 'r', encoding='utf-8') as f:
@@ -95,6 +99,13 @@ class Project:
         _file_io = ApplicationEvtFileIO(self.modelPath, _uuid)
         _file_io.write(_d)
 
+    def save_resolver(self, panel):
+        _d = panel.serialize()
+        _uuid = panel.uuid
+        _role = panel.role
+        _file_io = ApplicationRsvFileIO(self.modelPath, _uuid)
+        _file_io.write(_d)
+
     def save_canvas(self, canvas):
         _d = canvas.serialize()
         _uuid = canvas.uuid
@@ -130,6 +141,8 @@ class Project:
             return ApplicationStcFileIO
         elif extend == APP_SETTING.infoFileExt:
             return ApplicationInfFileIO
+        elif extend == APP_SETTING.resolverFileExt:
+            return ApplicationRsvFileIO
         else:
             return None
 
