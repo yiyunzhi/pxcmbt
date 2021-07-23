@@ -29,27 +29,31 @@ class CompoundCanvasDotGraphViewPanel(wx.Panel):
         _gv_graph_root2 = _gv_graph.newItem(b_name)
         _node_1_map = dict()
         _node_2_map = dict()
-        for x in _nodes1:
-            _node = _gv_graph.newItem(x['nameText'], _gv_graph_root1)
-            _node_1_map.update({x['uuid']: _node})
-            _gv_graph.propertyAppend(_node, "tooltip", x['nameText'])
-        for x in _nodes2:
-            _node = _gv_graph.newItem(x['nameText'], _gv_graph_root2)
-            _node_2_map.update({x['uuid']: _node})
-            _gv_graph.propertyAppend(_node, "tooltip", x['nameText'])
-        for x in _wires1:
-            _src_node = _node_1_map.get(x['srcNodeUUID'])
-            _dst_node = _node_1_map.get(x['dstNodeUUID'])
-            if _src_node is not None and _dst_node is not None:
-                _link = _gv_graph.newLink(_src_node, _dst_node)
-                _gv_graph.propertyAppend(_link, "label", x['text'])
-                #_gv_graph.propertyAppend(_link, "tooltip", x['text'])
-        for x in _wires2:
-            _src_node = _node_2_map.get(x['srcNodeUUID'])
-            _dst_node = _node_2_map.get(x['dstNodeUUID'])
-            if _src_node is not None and _dst_node is not None:
-                _link = _gv_graph.newLink(_src_node, _dst_node)
-                _gv_graph.propertyAppend(_link, "label", x['text'])
+        if _nodes1 is not None:
+            for x in _nodes1:
+                _node = _gv_graph.newItem(x['nameText'], _gv_graph_root1)
+                _node_1_map.update({x['uuid']: _node})
+                _gv_graph.propertyAppend(_node, "tooltip", x['nameText'])
+        if _nodes2 is not None:
+            for x in _nodes2:
+                _node = _gv_graph.newItem(x['nameText'], _gv_graph_root2)
+                _node_2_map.update({x['uuid']: _node})
+                _gv_graph.propertyAppend(_node, "tooltip", x['nameText'])
+        if _wires1 is not None:
+            for x in _wires1:
+                _src_node = _node_1_map.get(x['srcNodeUUID'])
+                _dst_node = _node_1_map.get(x['dstNodeUUID'])
+                if _src_node is not None and _dst_node is not None:
+                    _link = _gv_graph.newLink(_src_node, _dst_node)
+                    _gv_graph.propertyAppend(_link, "label", x['text'])
+                    #_gv_graph.propertyAppend(_link, "tooltip", x['text'])
+        if _wires2 is not None:
+            for x in _wires2:
+                _src_node = _node_2_map.get(x['srcNodeUUID'])
+                _dst_node = _node_2_map.get(x['dstNodeUUID'])
+                if _src_node is not None and _dst_node is not None:
+                    _link = _gv_graph.newLink(_src_node, _dst_node)
+                    _gv_graph.propertyAppend(_link, "label", x['text'])
         _gv_graph.dot(string_io)
 
     def show_graph(self, a_stc_file_io, b_stc_file_io, a_name='A', b_name='B'):

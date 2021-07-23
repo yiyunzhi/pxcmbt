@@ -76,6 +76,9 @@ class ApplicationFileIO:
     def read(self):
         with open(os.path.join(self.filePath, self.fileName)) as f:
             _data = yaml.load(f, Loader=yaml.Loader)
+            if _data is None:
+                # todo: log or show a message box
+                return
             if self.HEADER_K in _data and self.headerCls is not None:
                 _header = _data.get(self.HEADER_K)
                 if _header is None:
@@ -88,7 +91,11 @@ class ApplicationFileIO:
                 self.body = self.bodyCls(**_body)
 
     def write(self, data):
-        _file_full_path = os.path.join(self.filePath, self.fileName + self.extend)
+        if '.' in self.fileName:
+            _file_name = self.fileName
+        else:
+            _file_name = self.fileName + self.extend
+        _file_full_path = os.path.join(self.filePath, _file_name)
         with open(_file_full_path, "w") as f:
             yaml.dump(data, f)
 
@@ -105,6 +112,18 @@ class ApplicationFileIO:
         return self.header.type
 
 
+class ApplicationInfFileHeader(ApplicationFileHeader):
+    def __init__(self, **kwargs):
+        ApplicationFileHeader.__init__(self, **kwargs)
+
+    def persist(self):
+        _d = {'version': APP_VERSION,
+              'author': util_get_computer_name(),
+              'date': util_date_now(),
+              'type': 'MBT_FEATURE_LIB'}
+        return _d
+
+
 class ApplicationInfFileBody(ApplicationFileBody):
     def __init__(self, **kwargs):
         ApplicationFileBody.__init__(self, **kwargs)
@@ -114,8 +133,19 @@ class ApplicationInfFileBody(ApplicationFileBody):
 
 class ApplicationInfFileIO(ApplicationFileIO):
     def __init__(self, file_path, file_name):
-        ApplicationFileIO.__init__(self, file_path, file_name, body_cls=ApplicationInfFileBody)
+        ApplicationFileIO.__init__(self, file_path, file_name, header_cls=ApplicationInfFileHeader,
+                                   body_cls=ApplicationInfFileBody)
         self.extend = '.inf'
+        self.headerDescription = ''
+        self.headerLibName = ''
+
+    def write(self, data):
+        _hdr = self.headerCls()
+        _hdr_d = _hdr.persist()
+        _hdr_d.update({'description': self.headerDescription})
+        _hdr_d.update({'libName': self.headerLibName})
+        _data = dict({self.HEADER_K: _hdr_d, self.BODY_K: data})
+        super(ApplicationInfFileIO, self).write(_data)
 
 
 class ApplicationStcFileHeader(ApplicationFileHeader):
@@ -136,6 +166,9 @@ class ApplicationStcFileBody(ApplicationFileBody):
         self.canvas = kwargs.get('canvas')
         self.nodes = kwargs.get('nodes')
         self.wires = kwargs.get('wires')
+
+    def get_dict(self):
+        return {'canvas': self.canvas, 'nodes': self.nodes, 'wires': self.wires}
 
     def get_transitions_list(self):
         if self.wires is not None:
@@ -162,9 +195,15 @@ class ApplicationStcFileIO(ApplicationFileIO):
                                    body_cls=ApplicationStcFileBody)
         self.extend = '.stc'
 
-    def write(self, data):
+    def write(self, data=None):
         _hdr = self.headerCls()
-        _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
+        if data is None:
+            if self.body:
+                _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: self.body.get_dict()})
+            else:
+                _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: {}})
+        else:
+            _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
         super(ApplicationStcFileIO, self).write(_data)
 
 

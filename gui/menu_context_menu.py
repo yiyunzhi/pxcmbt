@@ -79,12 +79,12 @@ class GuiModelContextMenu(GuiContextMenu):
 class GuiDeviceFeatureContextMenu(GuiContextMenu):
     def __init__(self, parent):
         super(GuiDeviceFeatureContextMenu, self).__init__(name='cmDeviceFeature', parent=parent)
-        self.popupAddUserFeature = wx.NewIdRef()
+        self.popupReplaceFeature = wx.NewIdRef()
         self.popupPickUpFeature = wx.NewIdRef()
 
-        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_add_user_feature(evt, flag),
-                         id=self.popupAddUserFeature)
-        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_pick_up_user_feature(evt, flag),
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_replace_root_feature,
+                         id=self.popupReplaceFeature)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_add_root_feature,
                          id=self.popupPickUpFeature)
 
     def show(self):
@@ -96,8 +96,8 @@ class GuiDeviceFeatureContextMenu(GuiContextMenu):
         # item.SetBitmap(bmp)
         # _menu.Append(_item)
         # add some other items
-        _menu.Append(self.popupAddUserFeature, "Add User Feature")
-        _menu.Append(self.popupPickUpFeature, "Pick Up User Feature")
+        _menu.Append(self.popupPickUpFeature, "ReplaceWith")
+        #_menu.Append(self.popupReplaceFeature, "Replace")
         _menu.AppendSeparator()
         # _menu.AppendSeparator()
         # _menu.Append(self.popupStartSessions, "Start All")
@@ -121,10 +121,10 @@ class GuiDeviceFeatureStateContextMenu(GuiContextMenu):
         self.popupAddUserFeature = wx.NewIdRef()
         self.popupPickUpFeature = wx.NewIdRef()
 
-        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_add_user_feature(evt, flag),
-                         id=self.popupAddUserFeature)
-        self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_pick_up_user_feature(evt, flag),
-                         id=self.popupPickUpFeature)
+        # self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_add_user_feature(evt, flag),
+        #                  id=self.popupAddUserFeature)
+        # self.parent.Bind(wx.EVT_MENU, lambda evt, flag='': self.parent.on_pick_up_user_feature(evt, flag),
+        #                  id=self.popupPickUpFeature)
 
     def show(self):
         # make a menu
@@ -135,9 +135,9 @@ class GuiDeviceFeatureStateContextMenu(GuiContextMenu):
         # item.SetBitmap(bmp)
         # _menu.Append(_item)
         # add some other items
-        _menu.Append(self.popupAddUserFeature, "Add User Feature")
-        _menu.Append(self.popupPickUpFeature, "Pick Up User Feature")
-        _menu.AppendSeparator()
+        #_menu.Append(self.popupAddUserFeature, "Add User Feature")
+        #_menu.Append(self.popupPickUpFeature, "Pick Up User Feature")
+        #_menu.AppendSeparator()
         # _menu.AppendSeparator()
         # _menu.Append(self.popupStartSessions, "Start All")
         # _menu.Append(self.popupStopSessions, "Stop All")
@@ -223,14 +223,19 @@ class GuiUserFeatureItemContextMenu(GuiContextMenu):
     def __init__(self, parent):
         super(GuiUserFeatureItemContextMenu, self).__init__(name='cmUserFeature', parent=parent)
         self.popupSaveAsLibID = wx.NewIdRef()
-        self.popupMaskOnRootID = wx.NewIdRef()
+        self.popupRenameID = wx.NewIdRef()
+        self.popupDeleteID = wx.NewIdRef()
         self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_save_user_feature_as_lib, id=self.popupSaveAsLibID)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_rename_user_feature, id=self.popupRenameID)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_del_user_feature, id=self.popupDeleteID)
 
     def show(self):
         # make a menu
         _menu = wx.Menu()
         # Show how to put an icon in the menu
         _menu.Append(self.popupSaveAsLibID, "SaveAsLib")
+        _menu.Append(self.popupRenameID, "Rename")
+        _menu.Append(self.popupDeleteID, "Remove")
         _menu.AppendSeparator()
         # make a submenu
         # will be called before PopupMenu returns.
@@ -245,7 +250,6 @@ class GuiUserFeatureStateContextMenu(GuiContextMenu):
         self.popupPropID = wx.NewIdRef()
         self.popupStartSession = wx.NewIdRef()
         self.popupStopSession = wx.NewIdRef()
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_rename_feature_state_label, id=self.popupRenameID)
         self.parent.Bind(wx.EVT_MENU, self.parent.on_show_feature_state_property, id=self.popupPropID)
 
     def show(self):
@@ -258,7 +262,6 @@ class GuiUserFeatureStateContextMenu(GuiContextMenu):
         # _menu.Append(_item)
         # add some other items
         _menu.AppendSeparator()
-        _menu.Append(self.popupRenameID, "Rename")
         _menu.Append(self.popupPropID, "Properties")
         # make a submenu
         # will be called before PopupMenu returns.
@@ -269,10 +272,10 @@ class GuiUserFeatureStateContextMenu(GuiContextMenu):
 class GuiUserFeatureEvtContextMenu(GuiContextMenu):
     def __init__(self, parent):
         super(GuiUserFeatureEvtContextMenu, self).__init__(name='cmFeatureLib', parent=parent)
-        self.popupReloadID = wx.NewIdRef()
-        self.popupShowDetailID = wx.NewIdRef()
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_reload_feature_lib, id=self.popupReloadID)
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_show_lib_detail, id=self.popupShowDetailID)
+        # self.popupReloadID = wx.NewIdRef()
+        # self.popupShowDetailID = wx.NewIdRef()
+        # self.parent.Bind(wx.EVT_MENU, self.parent.on_reload_feature_lib, id=self.popupReloadID)
+        # self.parent.Bind(wx.EVT_MENU, self.parent.on_show_lib_detail, id=self.popupShowDetailID)
 
     def show(self):
         # make a menu
@@ -283,9 +286,9 @@ class GuiUserFeatureEvtContextMenu(GuiContextMenu):
         # item.SetBitmap(bmp)
         # _menu.Append(_item)
         # add some other items
-        _menu.AppendSeparator()
-        _menu.Append(self.popupReloadID, "Reload")
-        _menu.Append(self.popupShowDetailID, "Detail")
+        # _menu.AppendSeparator()
+        # _menu.Append(self.popupReloadID, "Reload")
+        # _menu.Append(self.popupShowDetailID, "Detail")
         # make a submenu
         # will be called before PopupMenu returns.
         self.parent.PopupMenu(_menu)

@@ -41,27 +41,27 @@ class FeatureResolverPanel(wx.Panel):
         self.matrixTab = self.init_matrix_table(None)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         # layout
-        self._btnSizer = wx.StdDialogButtonSizer()
-        _btn_ok = wx.Button(self, wx.ID_OK)
-        _btn_ok.SetHelpText("The OK button completes the dialog")
-        _btn_ok.SetDefault()
-        self._btnSizer.AddButton(_btn_ok)
-
-        _btn_cancel = wx.Button(self, wx.ID_CANCEL)
-        _btn_cancel.SetHelpText("The Cancel button cancels the dialog. (Cool, huh?)")
-        _btn_update = wx.Button(self, wx.ID_ANY)
-        self._btnSizer.AddButton(_btn_cancel)
-        self._btnSizer.AddButton(_btn_update)
-        self._btnSizer.Realize()
-        # bind event
-        _btn_ok.Bind(wx.EVT_BUTTON, self.on_ok_clicked)
-        _btn_update.Bind(wx.EVT_BUTTON, self.on_update_clicked)
+        # self._btnSizer = wx.StdDialogButtonSizer()
+        # _btn_ok = wx.Button(self, wx.ID_OK)
+        # _btn_ok.SetHelpText("The OK button completes the dialog")
+        # _btn_ok.SetDefault()
+        # self._btnSizer.AddButton(_btn_ok)
+        #
+        # _btn_cancel = wx.Button(self, wx.ID_CANCEL)
+        # _btn_cancel.SetHelpText("The Cancel button cancels the dialog. (Cool, huh?)")
+        # _btn_update = wx.Button(self, wx.ID_ANY)
+        # self._btnSizer.AddButton(_btn_cancel)
+        # self._btnSizer.AddButton(_btn_update)
+        # self._btnSizer.Realize()
+        # # bind event
+        # _btn_ok.Bind(wx.EVT_BUTTON, self.on_ok_clicked)
+        # _btn_update.Bind(wx.EVT_BUTTON, self.on_update_clicked)
         # layout
         self.mainSizer.Add(HeaderPanel('TransitionMatrix', 'TransitionMatrix', parent=self), 0,
                            wx.EXPAND | wx.ALL, 5)
         self.mainSizer.Add(self.matrixTab, 1, wx.EXPAND | wx.ALL, 5)
         self.mainSizer.Add(self.compoundCanvasDotGraphView, 1, wx.EXPAND | wx.ALL, 5)
-        self.mainSizer.Add(self._btnSizer, 0, wx.ALL, 5)
+        #self.mainSizer.Add(self._btnSizer, 0, wx.ALL, 5)
         self.SetSizerAndFit(self.mainSizer)
 
     def serialize(self):

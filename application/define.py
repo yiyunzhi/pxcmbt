@@ -14,7 +14,7 @@ class StandardItemData:
         self.uuid = kwargs.get('uuid')
         self.role = kwargs.get('role')
         self.flag = kwargs.get('flag')
-        self.labelReadonly = kwargs.get('labelReadonly')
+        self.labelReadonly = kwargs.get('labelReadonly',True)
         self.tooltip = kwargs.get('tooltip')
         self.slotPath = kwargs.get('slotPath')
         self.parentUUID = kwargs.get('parentUUID')
@@ -64,8 +64,10 @@ class EnumAppSignals(enum.Enum):
     sigV2VCanvasNodeShowProps = 'sigV2VCanvasNodeShowProps'
     sigV2VCanvasNodeNoteDClicked = 'sigV2VCanvasNodeNoteDClicked'
     sigV2VProjectAddUserFeature = 'sigV2VProjectAddUserFeature'
+    sigV2VProjectDelUserFeature = 'sigV2VProjectDelUserFeature'
     sigV2VProjectNewUserFeature = 'sigV2VProjectNewUserFeature'
     sigV2VProjectSaveUserFeatureAsLib = 'sigV2VProjectSaveUserFeatureAsLib'
+    sigV2VProjectAddRootFeature = 'sigV2VProjectAddRootFeature'
 
 
 class EnumMBTEventType(enum.Enum):

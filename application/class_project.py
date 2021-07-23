@@ -17,10 +17,11 @@ class Project:
         self._projFileExt = APP_SETTING.projFileExt
         self.projectEntryFilePath = os.path.join(self.path, self.name + self._projFileExt)
         self.builtInFeaturesMap = dict()
-        self._init_built_in_features()
+        self.update_built_in_features()
         self.savedState = False
 
-    def _init_built_in_features(self):
+    def update_built_in_features(self):
+        self.builtInFeaturesMap.clear()
         for root, dirs, files in os.walk(APP_SETTING.featureLibsPath):
             if files:
                 _name = root.split(os.sep)[-1]
@@ -35,6 +36,31 @@ class Project:
                         _feature.evtFile = _file_path
                     elif file.endswith(APP_SETTING.stateFileExt):
                         _feature.stcFile = _file_path
+
+    def is_feature_lib_exist(self, name):
+        return name in self.builtInFeaturesMap
+
+    def create_feature_lib(self, name, desc, copy_state_uuid=None, copy_event_uuid=None):
+        # fixme: first check given file if copyable
+        _lib_path = os.path.join(APP_SETTING.featureLibsPath, name)
+        os.makedirs(_lib_path)
+        _inf_file_io = ApplicationInfFileIO(_lib_path, 'lib')
+        _inf_file_io.headerDescription = desc
+        _inf_file_io.headerLibName = 'Feature %s' % name
+        _inf_file_io.write({'state': '%s.stc' % name, 'event': '%s.evt' % name})
+        if copy_event_uuid is None:
+            _file_io = ApplicationEvtFileIO(_lib_path, name)
+            _file_io.write(None)
+        else:
+            _copy_event_from_path = os.path.join(self.modelPath, copy_event_uuid + APP_SETTING.evtFileExt)
+            shutil.copyfile(_copy_event_from_path, os.path.join(_lib_path, name + APP_SETTING.evtFileExt))
+        if copy_state_uuid is None:
+            _file_io = ApplicationStcFileIO(_lib_path, name)
+            _file_io.write(None)
+        else:
+            _copy_state_from_path = os.path.join(self.modelPath, copy_state_uuid + APP_SETTING.stateFileExt)
+            shutil.copyfile(_copy_state_from_path, os.path.join(_lib_path, name + APP_SETTING.stateFileExt))
+        self.update_built_in_features()
 
     def set_project_workspace_path(self, path):
         self.path = os.path.join(path, self.name)
@@ -155,17 +181,71 @@ class Project:
         _file_io.read()
         return _file_io
 
+    def _renew_stc_uuid(self, file_io):
+        _replaced = dict()
+        _body = file_io.body
+        _nodes = _body.nodes
+        _wires = _body.wires
+        for x in _nodes:
+            _old_uuid = x['uuid']
+            _new_uuid = util_get_uuid_string()
+            _replaced.update({_old_uuid: _new_uuid})
+            x['uuid'] = _new_uuid
+        for x in _wires:
+            _old_uuid = x['uuid']
+            _old_src_node_uuid = x['srcNodeUUID']
+            _old_dst_node_uuid = x['dstNodeUUID']
+            if _old_uuid in _replaced:
+                _new_uuid = _replaced[_old_uuid]
+            else:
+                _new_uuid = util_get_uuid_string()
+            if _old_src_node_uuid in _replaced:
+                _new_src_node_uuid = _replaced[_old_src_node_uuid]
+            else:
+                _new_src_node_uuid = util_get_uuid_string()
+            if _old_dst_node_uuid in _replaced:
+                _new_dst_node_uuid = _replaced[_old_dst_node_uuid]
+            else:
+                _new_dst_node_uuid = util_get_uuid_string()
+            x['uuid'] = _new_uuid
+            x['srcNodeUUID'] = _new_src_node_uuid
+            x['dstNodeUUID'] = _new_dst_node_uuid
+
     def add_user_feature_state(self, feature_name, rename):
         _feature = self.builtInFeaturesMap.get(feature_name)
         if _feature is not None:
+            _dst_path = os.path.join(self.modelPath, rename + APP_SETTING.stateFileExt)
             # copy from data to project and rename it
-            shutil.copyfile(_feature.stcFile, os.path.join(self.modelPath, rename + APP_SETTING.stateFileExt))
+            shutil.copyfile(_feature.stcFile, _dst_path)
+            # renew uuid
+            _file_io = ApplicationStcFileIO(self.modelPath, rename + APP_SETTING.stateFileExt)
+            _file_io.read()
+            self._renew_stc_uuid(_file_io)
+            _file_io.write()
 
     def add_user_feature_event(self, feature_name, rename):
         _feature = self.builtInFeaturesMap.get(feature_name)
         if _feature is not None:
             # copy from data to project and rename it
             shutil.copyfile(_feature.evtFile, os.path.join(self.modelPath, rename + APP_SETTING.evtFileExt))
+
+    def add_root_feature_event(self, feature_name, rename):
+        _feature = self.builtInFeaturesMap.get(feature_name)
+        if _feature is not None:
+            # copy from data to project and rename it
+            shutil.copyfile(_feature.evtFile, os.path.join(self.modelPath, rename + APP_SETTING.evtFileExt))
+
+    def add_root_feature_state(self, feature_name, rename):
+        _feature = self.builtInFeaturesMap.get(feature_name)
+        if _feature is not None:
+            _dst_path = os.path.join(self.modelPath, rename + APP_SETTING.stateFileExt)
+            # copy from data to project and rename it
+            shutil.copyfile(_feature.stcFile, _dst_path)
+            # renew uuid
+            _file_io = ApplicationStcFileIO(self.modelPath, rename + APP_SETTING.stateFileExt)
+            _file_io.read()
+            self._renew_stc_uuid(_file_io)
+            _file_io.write()
 
     def save_ui_perspective(self, perspective_str):
         with open(os.path.join(self.path, 'ui.pepc'), "w") as f:
@@ -177,3 +257,18 @@ class Project:
             with open(os.path.join(self.path, 'ui.pepc'), "r") as f:
                 return f.read()
         return None
+
+    def remove_stc_file(self, uuid):
+        _path = os.path.join(self.modelPath, uuid + APP_SETTING.stateFileExt)
+        if util_is_dir_exist(_path):
+            os.remove(_path)
+
+    def remove_evt_file(self, uuid):
+        _path = os.path.join(self.modelPath, uuid + APP_SETTING.evtFileExt)
+        if util_is_dir_exist(_path):
+            os.remove(_path)
+
+    def remove_rsv_file(self, uuid):
+        _path = os.path.join(self.modelPath, uuid + APP_SETTING.resolverFileExt)
+        if util_is_dir_exist(_path):
+            os.remove(_path)

@@ -231,13 +231,17 @@ class TransitionWireShape(StateChartTransition):
         pass
 
     def on_left_down(self):
-        print('state left down')
+        #print('state left down')
+        pass
 
     def on_enter(self):
-        print('transition on_enter')
+        #print('transition on_enter')
+        pass
 
     def on_leave(self):
-        print('transition on_leave')
+        #print('transition on_leave')
+        pass
 
     def on_left_up(self):
-        print('transition on left up')
+        #print('transition on left up')
+        pass

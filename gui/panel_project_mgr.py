@@ -295,10 +295,10 @@ class GuiProjectManagerPanel(wx.Panel):
 
         self.Bind(wx.EVT_MENU, self.on_f2_pressed, id=_id_F2)
 
-        accel_tbl = wx.AcceleratorTable([
+        _accel_tbl = wx.AcceleratorTable([
             (wx.ACCEL_NORMAL, wx.WXK_F2, _id_F2)
         ])
-        self.SetAcceleratorTable(accel_tbl)
+        self.SetAcceleratorTable(_accel_tbl)
 
     def serialize(self):
         _d = dict()
@@ -501,23 +501,62 @@ class GuiProjectManagerPanel(wx.Panel):
     def on_cm_add_user_feature(self, evt):
         pub.sendMessage(EnumAppSignals.sigV2VProjectAddUserFeature.value)
 
+    def on_cm_rename_user_feature(self, evt):
+        _item = self.tree.GetSelection()
+        self.rename_item_label(_item)
+
+    def rename_item_label(self, item):
+        if item is not None:
+            _item_text = self.tree.GetItemText(item)
+            _dlg = wx.TextEntryDialog(self, 'rename this feature', caption='Rename',
+                                      value=_item_text)
+            _ret = _dlg.ShowModal()
+            if _ret == wx.ID_OK:
+                self.tree.SetItemText(item, _dlg.GetValue())
+
+    def on_cm_del_user_feature(self, evt):
+        _item = self.tree.GetSelection()
+        if _item is not None:
+            _item_data = self.tree.GetItemData(_item)
+            _ret = wx.MessageBox('Do you really want delete this feature?', 'Delete', style=wx.YES_NO)
+            if _ret == wx.YES:
+                _state_item, _evt_item, _resolver_item = self.get_user_feature_children(_item)
+                _state_item_data = self.tree.GetItemData(_state_item)
+                _evt_item_data = self.tree.GetItemData(_evt_item)
+                _resolver_item_data = self.tree.GetItemData(_resolver_item)
+                _state_uuid = _state_item_data.uuid
+                _evt_uuid = _evt_item_data.uuid
+                _resolver_uuid = _resolver_item_data.uuid
+                self.tree.Delete(_item)
+                pub.sendMessage(EnumAppSignals.sigV2VProjectDelUserFeature.value, state_uuid=_state_uuid,
+                                event_uuid=_evt_uuid, resolver_uuid=_resolver_uuid)
+
     def on_cm_save_user_feature_as_lib(self, evt):
         _item = self.tree.GetSelection()
         if _item is not None:
             _uuid = self.tree.GetItemData(_item).uuid
-            _state_item, _evt_item = self.get_user_feature_children(_item)
+            _state_item, _evt_item, _ = self.get_user_feature_children(_item)
             _state_uuid = self.tree.GetItemData(_state_item).uuid
             _evt_uuid = self.tree.GetItemData(_evt_item).uuid
             pub.sendMessage(EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value, state_uuid=_state_uuid,
                             event_uuid=_evt_uuid)
 
     def get_user_feature_children(self, item):
-        _state_item = self.tree.GetFirstChild(item)
-        _evt_item = self.tree.GetLastChild(item)
-        return _state_item, _evt_item
+        _state_item, _ = self.tree.GetFirstChild(item)
+        _evt_item, _ = self.tree.GetNextChild(item, _)
+        _resolver_item, _ = self.tree.GetNextChild(item, _)
+        return _state_item, _evt_item, _resolver_item
 
     def on_cm_clear_user_feature(self, evt):
         pass
+
+    def on_replace_root_feature(self, evt):
+        # replace root feature from lib
+        pass
+
+    def on_cm_add_root_feature(self, evt):
+        # select root feature from lib
+        pub.sendMessage(EnumAppSignals.sigV2VProjectAddRootFeature.value)
 
     def on_item_get_tooltip(self, evt):
         _item = evt.GetItem()
@@ -531,7 +570,7 @@ class GuiProjectManagerPanel(wx.Panel):
         if _selected:
             _data = self.tree.GetItemData(_selected)
             if _data.labelReadonly is not None:
-                self.on_rename_label() if _data.labelReadonly else None
+                self.rename_item_label(_selected) if not _data.labelReadonly else None
         evt.Skip()
 
     def on_context_menu(self, event):
@@ -675,7 +714,7 @@ class GuiProjectManagerPanel(wx.Panel):
             EnumRackPanelSignals.sigV2VRackItemShowPropsReq.send(self, uuid=_item_data.uuid)
         evt.Skip()
 
-    def on_rename_feature_state_label(self, *args):
+    def __on_rename_feature_state_label(self, *args):
         _selected = self.tree.GetSelection()
         # _focused = self.tree.GetFocusedItem()
         _dlg = wx.TextEntryDialog(self, 'New name', 'Rename', 'Rename')

@@ -4,7 +4,7 @@ from wxgraph import WxGEvent, DrawObject
 from application.define import *
 from .define_gui import *
 from .shape_transition import TransitionWireShape
-from .shape_state_node import StateChartNode, StateNodeShape
+from .shape_state_node import StateChartNode, StateNodeShape, InitStateNodeShape, FinalStateNodeShape
 from .shape_note_node import NoteNodeShape
 from application.utils_helper import util_get_uuid_string
 from wxgraph import DrawObjectSquarePoint
@@ -16,7 +16,7 @@ from .menu_context_menu import GuiStateItemContextMenu
 
 class CanvasSetting:
     def __init__(self):
-        self.mDebug = True
+        self.mDebug = False
         self.mMode = 0
         self.mFScale = 1.0
         self.mFMinScale = 0.4
@@ -233,12 +233,41 @@ class StateChartCanvasViewPanel(wx.Panel):
                         _bbox = x['bbox']
                         _node = StateNodeShape(_position, _name_text)
                         _node.uuid = _uuid
+                        _node.role = _role
                         _node.isVisible = _is_visible
                         _node.connectionStyle = _conn_style
                         _node.enterEventModel = _enter_evt_model
                         _node.exitEventModel = _exit_evt_model
                         _node.set_name(_name_text)
                         _node.update_event_desc_text()
+                        _updated_nodes.update({_uuid: _node})
+                    elif _cls == 'InitStateNodeShape':
+                        _position = x['position']
+                        _is_visible = x['isVisible']
+                        _node = InitStateNodeShape(_position)
+                        _node.uuid = _uuid
+                        _node.role = _role
+                        _node.isVisible = _is_visible
+                        _updated_nodes.update({_uuid: _node})
+                    elif _cls == 'NoteNodeShape':
+                        _position = x['position']
+                        _is_visible = x['isVisible']
+                        _text = x['text']
+                        _conn_style = x['connectionStyle']
+                        _node = NoteNodeShape(_position, _text)
+                        _node.uuid = _uuid
+                        _node.role = _role
+                        _node.connectionStyle=_conn_style
+                        _node.set_text(_text)
+                        _node.isVisible = _is_visible
+                        _updated_nodes.update({_uuid: _node})
+                    elif _cls == 'FinalStateNodeShape':
+                        _position = x['position']
+                        _is_visible = x['isVisible']
+                        _node = FinalStateNodeShape(_position)
+                        _node.uuid = _uuid
+                        _node.role = _role
+                        _node.isVisible = _is_visible
                         _updated_nodes.update({_uuid: _node})
                 self.add_items(list(_updated_nodes.values()))
 
@@ -422,7 +451,7 @@ class StateChartCanvasViewPanel(wx.Panel):
             self.canvas.remove_object(self._drawObjectCurrentConnPt)
 
     def on_double_click_item(self, item):
-        print('on_double_click_item', item, item.hitCoordsPixel, item.hitCoords)
+        #print('on_double_click_item', item, item.hitCoordsPixel, item.hitCoords)
         if isinstance(item, StateNodeShape):
             pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeDClicked.value, uuid=self.uuid,
                             role=self.role, item=item)
@@ -434,26 +463,29 @@ class StateChartCanvasViewPanel(wx.Panel):
                             role=self.role, item=item)
 
     def on_left_down_item(self, item):
-        print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)
+        #print('on_item_left_down', item, item.hitCoordsPixel, item.hitCoords)
         # todo: use has_style('hasProperties')
         pub.sendMessage(EnumAppSignals.sigV2VCanvasNodeShowProps.value, item=item)
 
     def on_left_up_item(self, item):
-        print('on_item_left_up', item, item.hitCoordsPixel, item.hitCoords)
+        #print('on_item_left_up', item, item.hitCoordsPixel, item.hitCoords)
+        pass
 
     def on_right_down_item(self, item):
-        print('on_right_down_item', item, item.hitCoordsPixel, item.hitCoords)
+        #print('on_right_down_item', item, item.hitCoordsPixel, item.hitCoords)
+        pass
 
     def on_right_up_item(self, item):
-        print('on_item_right_up', item, item.hitCoordsPixel, item.hitCoords)
+        #print('on_item_right_up', item, item.hitCoordsPixel, item.hitCoords)
         _cm = GuiStateItemContextMenu(self)
         _cm.show()
 
     def on_cm_delete_item(self, event):
-        print('delete item')
+        #print('delete item')
+        pass
 
     def on_enter_item(self, item):
-        print('on_enter_item', item, item.hitCoordsPixel, item.hitCoords)
+        #print('on_enter_item', item, item.hitCoordsPixel, item.hitCoords)
         item.on_enter()
         _gui_mode = self.canvas.GUIMode
         if isinstance(_gui_mode, GUIModeConnection):
@@ -471,7 +503,7 @@ class StateChartCanvasViewPanel(wx.Panel):
         self.canvas.draw(True)
 
     def on_leave_item(self, item):
-        print('on_leave_item', item, item.hitCoordsPixel, item.hitCoords)
+        #print('on_leave_item', item, item.hitCoordsPixel, item.hitCoords)
         item.on_leave()
         try:
             self.show_item_connect_points(item, False)
@@ -489,15 +521,16 @@ class StateChartCanvasViewPanel(wx.Panel):
         evt.Skip()
 
     def on_mouse_wheel_view(self, evt: wx.MouseEvent):
-        print('on_mouse_wheel_canvas', evt)
+        #print('on_mouse_wheel_canvas', evt)
         evt.Skip()
 
     def on_double_click_view(self, *args):
-        print('on_double_click_view', *args)
+        #print('on_double_click_view', *args)
+        pass
 
     def on_mouse_left_down_view(self, evt: wx.MouseEvent):
         # todo: while place should show a dialog the name give to
-        print('mouse left down view')
+        #print('mouse left down view')
         _pos = evt.GetPosition()
         _world_pos = self.canvas.pixel_to_world(_pos)
         evt.Skip()
@@ -514,11 +547,11 @@ class StateChartCanvasViewPanel(wx.Panel):
         pass
 
     def on_mouse_middle_down_view(self, evt):
-        print('on_mouse_middle_down_view', evt)
+        #print('on_mouse_middle_down_view', evt)
         evt.Skip()
 
     def on_mouse_middle_up_view(self, evt):
-        print('on_mouse_middle_up_view', evt)
+        #print('on_mouse_middle_up_view', evt)
         evt.Skip()
 
     def on_save_as_png(self, event=None):

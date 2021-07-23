@@ -139,22 +139,27 @@ class StateNodeShape(StateChartNode):
         return _pts
 
     def on_left_down(self):
-        print('state left down')
+        #print('state left down')
+        pass
 
     def on_enter(self):
-        print('state on_enter')
+        #print('state on_enter')
+        pass
 
     def on_leave(self):
-        print('state on_leave')
+        #print('state on_leave')
+        pass
 
     def on_left_up(self):
-        print('state on left up')
+        #print('state on left up')
+        pass
 
 
 class InitStateNodeShape(StateChartNode):
     def __init__(self, pos, in_foreground=False, visible=True):
         StateChartNode.__init__(self, in_foreground=in_foreground, is_visible=visible)
         self.position = pos
+        self.nameText='INIT'
         self._circle = DrawObjectCircle(pos, 16,
                                         line_color=self.defaultBorderLineColor,
                                         fill_color=self.defaultBorderLineColor,
@@ -164,6 +169,7 @@ class InitStateNodeShape(StateChartNode):
     def serialize(self):
         _d = dict()
         _d.update({'class': self.__class__.__name__})
+        _d.update({'nameText': self.nameText})
         _d.update({'uuid': self.uuid})
         _d.update({'role': self.role})
         _d.update({'isVisible': self.isVisible})
@@ -182,6 +188,10 @@ class InitStateNodeShape(StateChartNode):
         _pg_main.SetPropertyReadOnly(_pg_role)
         _pg_main.Append(_pg_role)
 
+        _pg_name = wxpg.StringProperty("name", 'name', value=self.nameText)
+        _pg_main.SetPropertyReadOnly(_pg_name)
+        _pg_main.Append(_pg_name)
+
         _pg_position = wxpg.StringProperty("position", 'position',
                                            value='(%s,%s)' % (self.position[0], self.position[1]))
         _pg_main.SetPropertyReadOnly(_pg_position)
@@ -192,10 +202,10 @@ class InitStateNodeShape(StateChartNode):
     def get_connection_points(self):
         _bb = self.boundingBox
         _pts = list()
-        _pts.append(((0, 1), (_bb.center[0], _bb.top)))
-        _pts.append(((0, -1), (_bb.center[0], _bb.bottom)))
-        _pts.append(((1, 0), (_bb.right, _bb.center[1])))
-        _pts.append(((-1, 0), (_bb.left, _bb.center[1])))
+        _pts.append(((0, 1), (_bb.center[0]+3, _bb.top)))
+        _pts.append(((0, -1), (_bb.center[0]+3, _bb.bottom)))
+        _pts.append(((1, 0), (_bb.right+1, _bb.center[1])))
+        _pts.append(((-1, 0), (_bb.left+3, _bb.center[1])))
         return _pts
 
     def set_selected(self, state=True):
@@ -208,22 +218,27 @@ class InitStateNodeShape(StateChartNode):
         self.isSelected = state
 
     def on_left_down(self):
-        print('state left down')
+        #print('state left down')
+        pass
 
     def on_enter(self):
-        print('state on_enter')
+        #print('state on_enter')
+        pass
 
     def on_leave(self):
-        print('state on_leave')
+        #print('state on_leave')
+        pass
 
     def on_left_up(self):
-        print('state on left up')
+        #print('state on left up')
+        pass
 
 
 class FinalStateNodeShape(StateChartNode):
     def __init__(self, pos, in_foreground=False, visible=True):
         StateChartNode.__init__(self, in_foreground=in_foreground, is_visible=visible)
         self.position = pos
+        self.nameText = 'FINAL'
         self._innerCircle = DrawObjectCircle(pos, 14, fill_color='#000000')
         self._outerCircle = DrawObjectCircle(pos, 22, line_color=self.defaultBorderLineColor)
         self.add_object(self._innerCircle)
@@ -232,6 +247,7 @@ class FinalStateNodeShape(StateChartNode):
     def serialize(self):
         _d = dict()
         _d.update({'class': self.__class__.__name__})
+        _d.update({'nameText': self.nameText})
         _d.update({'uuid': self.uuid})
         _d.update({'role': self.role})
         _d.update({'isVisible': self.isVisible})
@@ -250,6 +266,10 @@ class FinalStateNodeShape(StateChartNode):
         _pg_main.SetPropertyReadOnly(_pg_role)
         _pg_main.Append(_pg_role)
 
+        _pg_name = wxpg.StringProperty("name", 'name', value=self.nameText)
+        _pg_main.SetPropertyReadOnly(_pg_name)
+        _pg_main.Append(_pg_name)
+
         _pg_position = wxpg.StringProperty("position", 'position',
                                            value='(%s,%s)' % (self.position[0], self.position[1]))
         _pg_main.SetPropertyReadOnly(_pg_position)
@@ -260,10 +280,10 @@ class FinalStateNodeShape(StateChartNode):
     def get_connection_points(self):
         _bb = self.boundingBox
         _pts = list()
-        _pts.append(((0, 1), (_bb.center[0], _bb.top)))
-        _pts.append(((0, -1), (_bb.center[0], _bb.bottom)))
-        _pts.append(((1, 0), (_bb.right, _bb.center[1])))
-        _pts.append(((-1, 0), (_bb.left, _bb.center[1])))
+        _pts.append(((0, 1), (_bb.center[0]+3, _bb.top)))
+        _pts.append(((0, -1), (_bb.center[0]+3, _bb.bottom)))
+        _pts.append(((1, 0), (_bb.right+1, _bb.center[1])))
+        _pts.append(((-1, 0), (_bb.left+3, _bb.center[1])))
         return _pts
 
     def set_selected(self, state=True):
@@ -274,13 +294,17 @@ class FinalStateNodeShape(StateChartNode):
         self.isSelected = state
 
     def on_left_down(self):
-        print('state left down')
+        #print('state left down')
+        pass
 
     def on_enter(self):
-        print('state on_enter')
+        #print('state on_enter')
+        pass
 
     def on_leave(self):
-        print('state on_leave')
+        #print('state on_leave')
+        pass
 
     def on_left_up(self):
-        print('state on left up')
+        #print('state on left up')
+        pass
