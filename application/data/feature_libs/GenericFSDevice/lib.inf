@@ -1,0 +1,11 @@
+BODY:
+  event: GenericFSDevice.evt
+  state: GenericFSDevice.stc
+HEADER:
+  author: LIU
+  date: 07/23 15:00:36.656
+  description: "Allgemeiner Ger\xE4t, das 6 States hat.\n-----------------\nsPOWERED\n\
+    sNO_PARED\nsPARAED\nsRUN\nsDIAG\nsFS"
+  libName: Feature GenericFSDevice
+  type: MBT_FEATURE_LIB
+  version: 2.0.1
