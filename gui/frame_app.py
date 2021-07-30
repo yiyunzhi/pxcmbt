@@ -332,11 +332,18 @@ class FrameMain(wx.Frame):
                     self._currentProject.add_root_feature_event(_selected_feature_name, _evt_uuid)
                     self._currentProject.add_root_feature_state(_selected_feature_name, _stc_uuid)
                     if _stc_uuid in self._panelCache:
-                        self._auiMgr.DetachPane(self._panelCache[_stc_uuid])
+                        _pane_info = self._panelCache[_stc_uuid]
+                        _pane=self._auiMgr.GetPaneByName(_stc_uuid)
+                        self._auiMgr.ClosePane(_pane)
+                        self._auiMgr.DetachPane(_pane_info)
                         self._panelCache.pop(_stc_uuid)
                     if _evt_uuid in self._panelCache:
-                        self._auiMgr.DetachPane(self._panelCache[_evt_uuid])
+                        _pane_info = self._panelCache[_evt_uuid]
+                        _pane = self._auiMgr.GetPaneByName(_evt_uuid)
+                        self._auiMgr.ClosePane(_pane)
+                        self._auiMgr.DetachPane(_pane_info)
                         self._panelCache.pop(_evt_uuid)
+                    self._auiMgr.Update()
                 else:
                     wx.MessageBox('No Feature selected', 'Info')
 
