@@ -68,6 +68,7 @@ class EnumAppSignals(enum.Enum):
     sigV2VProjectNewUserFeature = 'sigV2VProjectNewUserFeature'
     sigV2VProjectSaveUserFeatureAsLib = 'sigV2VProjectSaveUserFeatureAsLib'
     sigV2VProjectAddRootFeature = 'sigV2VProjectAddRootFeature'
+    sigV2VProjectEmptyRootFeature = 'sigV2VProjectEmptyRootFeature'
 
 
 class EnumMBTEventType(enum.Enum):

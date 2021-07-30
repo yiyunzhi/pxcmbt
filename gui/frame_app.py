@@ -257,6 +257,7 @@ class FrameMain(wx.Frame):
                       EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value)
         pub.subscribe(self.on_ext_sig_project_del_user_feature, EnumAppSignals.sigV2VProjectDelUserFeature.value)
         pub.subscribe(self.on_ext_sig_project_add_root_feature, EnumAppSignals.sigV2VProjectAddRootFeature.value)
+        pub.subscribe(self.on_ext_sig_project_empty_root_feature, EnumAppSignals.sigV2VProjectEmptyRootFeature.value)
 
     def on_ext_sig_project_save_user_feature_as_lib(self, state_uuid, event_uuid):
         _dlg = PromptUserFeatureAsLibDialog(self._currentProject.is_feature_lib_exist, self)
@@ -333,7 +334,7 @@ class FrameMain(wx.Frame):
                     self._currentProject.add_root_feature_state(_selected_feature_name, _stc_uuid)
                     if _stc_uuid in self._panelCache:
                         _pane_info = self._panelCache[_stc_uuid]
-                        _pane=self._auiMgr.GetPaneByName(_stc_uuid)
+                        _pane = self._auiMgr.GetPaneByName(_stc_uuid)
                         self._auiMgr.ClosePane(_pane)
                         self._auiMgr.DetachPane(_pane_info)
                         self._panelCache.pop(_stc_uuid)
@@ -346,6 +347,27 @@ class FrameMain(wx.Frame):
                     self._auiMgr.Update()
                 else:
                     wx.MessageBox('No Feature selected', 'Info')
+
+    def on_ext_sig_project_empty_root_feature(self):
+        _ret = wx.MessageBox('Current data of root item will be deleted!', 'Info', style=wx.YES_NO)
+        if _ret == wx.YES:
+            _evt_uuid = self._panelProjectMgr.contentPanel.get_root_event_uuid()
+            _stc_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
+            self._currentProject.empty_root_feature_event(_evt_uuid)
+            self._currentProject.empty_root_feature_state(_stc_uuid)
+            if _stc_uuid in self._panelCache:
+                _pane_info = self._panelCache[_stc_uuid]
+                _pane = self._auiMgr.GetPaneByName(_stc_uuid)
+                self._auiMgr.ClosePane(_pane)
+                self._auiMgr.DetachPane(_pane_info)
+                self._panelCache.pop(_stc_uuid)
+            if _evt_uuid in self._panelCache:
+                _pane_info = self._panelCache[_evt_uuid]
+                _pane = self._auiMgr.GetPaneByName(_evt_uuid)
+                self._auiMgr.ClosePane(_pane)
+                self._auiMgr.DetachPane(_pane_info)
+                self._panelCache.pop(_evt_uuid)
+            self._auiMgr.Update()
 
     def on_ext_sig_canvas_node_show_props(self, item):
         if hasattr(item, 'get_properties'):

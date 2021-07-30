@@ -550,9 +550,9 @@ class GuiProjectManagerPanel(wx.Panel):
     def on_cm_clear_user_feature(self, evt):
         pass
 
-    def on_replace_root_feature(self, evt):
-        # replace root feature from lib
-        pass
+    def on_empty_root_feature(self, evt):
+        # empty root feature
+        pub.sendMessage(EnumAppSignals.sigV2VProjectEmptyRootFeature.value)
 
     def on_cm_add_root_feature(self, evt):
         # select root feature from lib

@@ -79,11 +79,11 @@ class GuiModelContextMenu(GuiContextMenu):
 class GuiDeviceFeatureContextMenu(GuiContextMenu):
     def __init__(self, parent):
         super(GuiDeviceFeatureContextMenu, self).__init__(name='cmDeviceFeature', parent=parent)
-        self.popupReplaceFeature = wx.NewIdRef()
+        self.popupEmptyFeature = wx.NewIdRef()
         self.popupPickUpFeature = wx.NewIdRef()
 
-        self.parent.Bind(wx.EVT_MENU, self.parent.on_replace_root_feature,
-                         id=self.popupReplaceFeature)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_empty_root_feature,
+                         id=self.popupEmptyFeature)
         self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_add_root_feature,
                          id=self.popupPickUpFeature)
 
@@ -97,7 +97,7 @@ class GuiDeviceFeatureContextMenu(GuiContextMenu):
         # _menu.Append(_item)
         # add some other items
         _menu.Append(self.popupPickUpFeature, "ReplaceWith")
-        #_menu.Append(self.popupReplaceFeature, "Replace")
+        _menu.Append(self.popupEmptyFeature, "Empty")
         _menu.AppendSeparator()
         # _menu.AppendSeparator()
         # _menu.Append(self.popupStartSessions, "Start All")

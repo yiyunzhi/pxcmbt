@@ -247,6 +247,18 @@ class Project:
             self._renew_stc_uuid(_file_io)
             _file_io.write()
 
+    def empty_root_feature_state(self, name):
+        _file_io = ApplicationStcFileIO(self.modelPath, name + APP_SETTING.stateFileExt)
+        _file_io.read()
+        _file_io.body = None
+        _file_io.write()
+
+    def empty_root_feature_event(self, name):
+        _file_io = ApplicationStcFileIO(self.modelPath, name + APP_SETTING.evtFileExt)
+        _file_io.read()
+        _file_io.body = None
+        _file_io.write()
+
     def save_ui_perspective(self, perspective_str):
         with open(os.path.join(self.path, 'ui.pepc'), "w") as f:
             f.write(perspective_str)
