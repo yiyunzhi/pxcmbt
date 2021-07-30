@@ -3,6 +3,7 @@ import yaml
 from .class_app_setting import APP_SETTING
 from .define import *
 from .utils_helper import *
+from .class_graphviz import Graphviz
 
 
 class ApplicationFileHeader:
@@ -33,31 +34,18 @@ class DotGraphStringIO:
         self.content = ''
 
 
-class DotGraphHtmlFileIO:
-    def __init__(self):
-        self.filePath = APP_SETTING.applicationMaskStateDotGraphHtmlTemplatePath
-        self.fileName = 'index.html'
-        self.outputFileName = '_index.html'
+class DotGraphImageFileIO:
+    def __init__(self, name):
+        self.filePath = APP_SETTING.graphvizTempPath
+        self.fileName = '%s.png' % name
         self.content = None
-        self.dotGraphStringIO = DotGraphStringIO()
+        self.graphviz = Graphviz(APP_SETTING.graphvizBinPath, os.path.join(self.filePath, self.fileName))
 
     def read(self):
-        with open(os.path.join(self.filePath, self.fileName), encoding='utf-8') as f:
-            self.content = f.read()
+        return os.path.join(self.filePath, self.fileName)
 
-    def write(self, val):
-        pass
-
-    def update_dot_graph(self, dot_string=None):
-        if dot_string is None:
-            dot_string = self.dotGraphStringIO.content
-        if dot_string is not None:
-            dot_string = dot_string.replace('\n', '').replace('\r', '').replace('\t', '')
-            _html_content = self.content.replace('$DOT_GRAPH_STRING', dot_string)
-            with open(os.path.join(self.filePath, self.outputFileName), 'w', encoding='utf-8') as f:
-                f.write(_html_content)
-            return os.path.join(self.filePath, self.outputFileName)
-        return None
+    def write(self, dot_string):
+        return self.graphviz.render_dot_string_to_file(dot_string)
 
 
 class ApplicationFileIO:

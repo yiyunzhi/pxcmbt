@@ -39,3 +39,22 @@ class CanvasNodePropContentPanel(PropsContentPanel):
 
     def set_props(self, *args):
         pass
+
+
+class FeaturePropsContentPanel(PropsContentPanel):
+    # todo: in next version
+    def __init__(self, feature_data_item, project, **kwargs):
+        PropsContentPanel.__init__(self, feature_data_item.uuid, feature_data_item.role, **kwargs)
+        self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.project = project
+        self.SetSizer(self.mainSizer)
+        self.propMgr = project.get_feature_properties(self, feature_data_item)
+        self.mainSizer.Add(self.propMgr, 1, wx.EXPAND)
+        self.Layout()
+        self.Fit()
+
+    def get_props(self, *args):
+        pass
+
+    def set_props(self, *args):
+        pass

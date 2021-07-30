@@ -56,6 +56,7 @@ class EnumPanelRole(enum.IntEnum):
 
 
 class EnumAppSignals(enum.Enum):
+    sigV2VProjectItemSelectChanged = 'sigV2VProjectItemSelectChanged'
     sigV2VModelTreeItemDoubleClicked = 'sigV2VModelTreeItemDoubleClicked'
     sigV2VCanvasToolbarModeChanged = 'sigV2VCanvasToolbarModeChanged'
     sigV2VGuiModeDelItemRequested = 'sigV2VGuiModeDelItemRequested'

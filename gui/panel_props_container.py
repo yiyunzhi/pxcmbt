@@ -71,3 +71,5 @@ class PropsContentPanel(wx.Panel):
 
     def set_props(self, *args):
         raise NotImplementedError()
+
+

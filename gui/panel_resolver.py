@@ -37,10 +37,11 @@ class FeatureResolverPanel(wx.Panel):
         self.bSTCFileIO = b_stc_file_io
         self.aName = 'A'
         self.bName = 'B'
-        self.compoundCanvasDotGraphView = CompoundCanvasDotGraphViewPanel(self)
+        self.compoundCanvasDotGraphView = CompoundCanvasDotGraphViewPanel(self, self.uuid)
         self.matrixTab = self.init_matrix_table(None)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         # layout
+        # todo: next version->use sash windows
         # self._btnSizer = wx.StdDialogButtonSizer()
         # _btn_ok = wx.Button(self, wx.ID_OK)
         # _btn_ok.SetHelpText("The OK button completes the dialog")
@@ -61,7 +62,7 @@ class FeatureResolverPanel(wx.Panel):
                            wx.EXPAND | wx.ALL, 5)
         self.mainSizer.Add(self.matrixTab, 1, wx.EXPAND | wx.ALL, 5)
         self.mainSizer.Add(self.compoundCanvasDotGraphView, 1, wx.EXPAND | wx.ALL, 5)
-        #self.mainSizer.Add(self._btnSizer, 0, wx.ALL, 5)
+        # self.mainSizer.Add(self._btnSizer, 0, wx.ALL, 5)
         self.SetSizerAndFit(self.mainSizer)
 
     def serialize(self):

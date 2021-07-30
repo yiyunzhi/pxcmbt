@@ -622,7 +622,7 @@ class GuiProjectManagerPanel(wx.Panel):
         _item = event.GetItem()
         self._current_activated_item = _item
         _data = self.tree.GetItemData(_item)
-        # pub.sendMessage(EnumAppSignals.sigV2MRackItemSelectChanged,sender=self,data=_data)
+        pub.sendMessage(EnumAppSignals.sigV2VProjectItemSelectChanged.value, item_data=_data)
         event.Skip()
 
     def on_item_activate(self, event):

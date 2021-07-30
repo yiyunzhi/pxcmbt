@@ -5,10 +5,13 @@ from .define import EnumItemRole, EnumWorkDomain
 class AppSetting:
     projectPath = os.path.join(os.getcwd(), 'projects')
     applicationPath = os.path.join(os.getcwd(), 'application')
+    applicationThirdPartyPath = os.path.join(applicationPath, 'thirdparty')
+    applicationTempPath = os.path.join(applicationPath, 'temp')
     applicationDataPath = os.path.join(applicationPath, 'data')
-    applicationHtmlTemplatePath = os.path.join(applicationDataPath, 'html_template')
-    applicationMaskStateDotGraphHtmlTemplatePath = os.path.join(applicationHtmlTemplatePath, 'masked_state_dot_graph')
     featureLibsPath = os.path.join(applicationDataPath, 'feature_libs')
+    graphvizBinPath = os.path.join(applicationThirdPartyPath, 'graphviz-2.48.0\\Graphviz\\bin')
+    graphvizTempPath = os.path.join(applicationTempPath, 'graphviz')
+    graphvizTempDefaultPNGPath = os.path.join(graphvizTempPath, 'default.png')
     evtFileExt = '.evt'
     stateFileExt = '.stc'
     resolverFileExt = '.rsv'

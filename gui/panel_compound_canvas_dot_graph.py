@@ -1,16 +1,20 @@
 import wx
-import wx.html2
+import wx.lib.scrolledpanel as sp
 from application.class_dot_graph_generator import GvGen
-from application.class_app_file_io import DotGraphHtmlFileIO
+from application.class_app_file_io import DotGraphImageFileIO
+from application.class_app_file_io import DotGraphStringIO
 
 
-class CompoundCanvasDotGraphViewPanel(wx.Panel):
-    def __init__(self, parent, wx_id=wx.ID_ANY):
-        wx.Panel.__init__(self, parent, wx_id)
+class CompoundCanvasDotGraphViewPanel(sp.ScrolledPanel):
+    def __init__(self, parent, name, image_path=None):
+        sp.ScrolledPanel.__init__(self, parent, wx.ID_ANY)
+        self.SetupScrolling()
+        self.name = name
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-        wx.html2.WebView.MSWSetEmulationLevel(wx.html2.WEBVIEWIE_EMU_IE10)
-        self.browser = wx.html2.WebView.New(self)
-        self.mainSizer.Add(self.browser, 1, wx.EXPAND)
+        self.imagePath = image_path
+        self.image = wx.Image(1, 1)
+        self.imageCtrl = wx.StaticBitmap(self, wx.ID_ANY, wx.Bitmap(self.image))
+        self.mainSizer.Add(self.imageCtrl, 1, wx.EXPAND)
         self.SetSizer(self.mainSizer)
         self.Layout()
 
@@ -46,7 +50,7 @@ class CompoundCanvasDotGraphViewPanel(wx.Panel):
                 if _src_node is not None and _dst_node is not None:
                     _link = _gv_graph.newLink(_src_node, _dst_node)
                     _gv_graph.propertyAppend(_link, "label", x['text'])
-                    #_gv_graph.propertyAppend(_link, "tooltip", x['text'])
+                    # _gv_graph.propertyAppend(_link, "tooltip", x['text'])
         if _wires2 is not None:
             for x in _wires2:
                 _src_node = _node_2_map.get(x['srcNodeUUID'])
@@ -57,17 +61,16 @@ class CompoundCanvasDotGraphViewPanel(wx.Panel):
         _gv_graph.dot(string_io)
 
     def show_graph(self, a_stc_file_io, b_stc_file_io, a_name='A', b_name='B'):
-        _file_io = DotGraphHtmlFileIO()
-        _file_io.read()
-        self.merge_canvas2dot(a_stc_file_io, b_stc_file_io, _file_io.dotGraphStringIO, a_name, b_name)
-        _html_path = _file_io.update_dot_graph()
-        self.show_html_from_file(_html_path)
+        _file_io = DotGraphImageFileIO(self.name)
+        _dot_graph_string_io = DotGraphStringIO()
+        self.merge_canvas2dot(a_stc_file_io, b_stc_file_io, _dot_graph_string_io, a_name, b_name)
+        _image_path = _file_io.write(_dot_graph_string_io.content)
+        self.load_image(_image_path)
 
-    def show_html(self, html):
-        self.browser.SetPage(html, '')
-
-    def show_html_from_url(self, url):
-        self.browser.LoadURL(url)
-
-    def show_html_from_file(self, file_path):
-        self.browser.LoadURL(wx.FileSystem.FileNameToURL(file_path))
+    def load_image(self, path):
+        _img = wx.Image(path, wx.BITMAP_TYPE_ANY)
+        # scale the image, preserving the aspect ratio
+        _w = _img.GetWidth()
+        _h = _img.GetHeight()
+        self.imageCtrl.SetBitmap(wx.Bitmap(_img))
+        self.Refresh()

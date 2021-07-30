@@ -247,6 +247,7 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_MENU, self.on_about, id=wx.ID_ABOUT)
         # bind event update UI, multi allowed
         pub.subscribe(self.on_ext_sig_project_item_dclicked, EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value)
+        pub.subscribe(self.on_ext_sig_project_item_select_change, EnumAppSignals.sigV2VProjectItemSelectChanged.value)
         pub.subscribe(self.on_ext_sig_canvas_node_dclicked, EnumAppSignals.sigV2VCanvasNodeDClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_node_note_dclicked, EnumAppSignals.sigV2VCanvasNodeNoteDClicked.value)
         pub.subscribe(self.on_ext_sig_canvas_transition_dclicked, EnumAppSignals.sigV2VCanvasTransitionDClicked.value)
@@ -534,7 +535,18 @@ class FrameMain(wx.Frame):
             self._currentProject.create_new_project()
 
     def on_menu_new_file_clicked(self, evt):
-        wx.MessageBox(' fail to create file, since not implemented', 'Fail')
+        wx.MessageBox(' fail to create file, see you next version', 'Fail')
+
+    def on_ext_sig_project_item_select_change(self, item_data: StandardItemData):
+        # todo: next version show the props of project items
+        if hasattr(item_data, 'role'):
+            _role = item_data.role
+            if _role == EnumItemRole.DEV_FEATURE:
+                pass
+            elif _role == EnumItemRole.USER_FEATURE:
+                pass
+            else:
+                pass
 
     def on_ext_sig_project_item_dclicked(self, uuid):
         _removed_cache = None
@@ -546,6 +558,8 @@ class FrameMain(wx.Frame):
             _panel = self._panelCache.get(uuid)
             self._auiMgr.DetachPane(_panel)
             self._panelCache.pop(_removed_cache)
+            self._auiMgr.Update()
+            del _removed_cache
         _path = self._panelProjectMgr.contentPanel.get_item_path_by_uuid(uuid)
         _role = self._panelProjectMgr.contentPanel.get_item_role_by_uuid(uuid)
         _exist = self._auiMgr.GetPaneByName(uuid)
@@ -570,6 +584,7 @@ class FrameMain(wx.Frame):
                 _uf_name = self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_state_uuid)
                 _root_name = self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_uuid)
                 _panel = FeatureResolverPanel(self, _uf_stc_file_io, _root_stc_file_io)
+                _panel.compoundCanvasDotGraphView.name = uuid
                 _panel.set_graph_cluster_name(_uf_name, _root_name)
                 _panel.show_graph()
                 if _exist_in_proj is not None:
