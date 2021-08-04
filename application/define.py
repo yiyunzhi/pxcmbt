@@ -14,7 +14,7 @@ class StandardItemData:
         self.uuid = kwargs.get('uuid')
         self.role = kwargs.get('role')
         self.flag = kwargs.get('flag')
-        self.labelReadonly = kwargs.get('labelReadonly',True)
+        self.labelReadonly = kwargs.get('labelReadonly', True)
         self.tooltip = kwargs.get('tooltip')
         self.slotPath = kwargs.get('slotPath')
         self.parentUUID = kwargs.get('parentUUID')
@@ -37,6 +37,7 @@ class EnumItemRole(enum.IntEnum):
     DEV_FEATURE = 2
     DEV_FEATURE_STATE = 3
     DEV_FEATURE_EVENT = 4
+    DEV_FEATURE_OBO = 5
     SESSIONS = 20
     SCRIPTS = 21
     SESSION = 22
@@ -67,7 +68,9 @@ class EnumAppSignals(enum.Enum):
     sigV2VProjectAddUserFeature = 'sigV2VProjectAddUserFeature'
     sigV2VProjectDelUserFeature = 'sigV2VProjectDelUserFeature'
     sigV2VProjectNewUserFeature = 'sigV2VProjectNewUserFeature'
+    sigV2VProjectConfigObservableObject = 'sigV2VProjectConfigObservableObject'
     sigV2VProjectSaveUserFeatureAsLib = 'sigV2VProjectSaveUserFeatureAsLib'
+    sigV2VProjectSaveRootFeatureAsLib = 'sigV2VProjectSaveRootFeatureAsLib'
     sigV2VProjectAddRootFeature = 'sigV2VProjectAddRootFeature'
     sigV2VProjectEmptyRootFeature = 'sigV2VProjectEmptyRootFeature'
 
@@ -83,3 +86,19 @@ class EnumMBTEventDataType(enum.Enum):
     STRING = 'string'
     FLOAT = 'float'
     ALL = ['integer', 'string', 'float']
+
+
+class EnumOBOType(enum.Enum):
+    LED = 'LED'
+    DIAGNOSIS = 'Diagnosis'
+    PD = 'ProcessData'
+    FHOST_SB = 'FHostSb'
+    FDEVICE_SB = 'FDeviceSb'
+    ALL_VALUES = ['LED', 'Diagnosis', 'ProcessData', 'FHostSb', 'FDeviceSb']
+
+
+class EnumOBODataType(enum.Enum):
+    INTEGER = 'integer'
+    STRING = 'string'
+    HEX = 'hex'
+    ALL = ['integer', 'string', 'hex']

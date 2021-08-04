@@ -3,6 +3,8 @@ import yaml
 from .class_app_setting import APP_SETTING
 from .class_app_file_io import *
 from .class_builtin_features import BuiltInFeature
+from .class_dot_canvas import DotCanvas
+from .class_graphviz import Graphviz
 
 
 class Project:
@@ -13,21 +15,47 @@ class Project:
         self.modelPath = os.path.join(self.path, 'model')
         self.rackPath = os.path.join(self.path, 'rack')
         self.modelRootUuid = '00000000000000000000000000000000'
+        self.evtlFileName = 'evtl.evtl'
+        self.obolFileName = 'obol.obol'
         self._evtFileExt = APP_SETTING.evtFileExt
         self._projFileExt = APP_SETTING.projFileExt
         self.projectEntryFilePath = os.path.join(self.path, self.name + self._projFileExt)
-        self.builtInFeaturesMap = dict()
+        self.builtInUserFeaturesMap = dict()
+        self.builtInRootFeaturesMap = dict()
+        self.builtInEvents = dict()
+        self.builtInObos = dict()
         self.update_built_in_features()
+        self.update_built_in_root_features()
+        self.update_built_in_evtl()
+        self.update_built_in_obol()
         self.savedState = False
 
+    def update_built_in_evtl(self):
+        self.builtInEvents.clear()
+        _file_io = ApplicationEvtlFileIO(APP_SETTING.applicationDataBasePath, self.evtlFileName)
+        _file_io.read()
+        if _file_io.body is None:
+            return
+        if _file_io.body.events is not None:
+            self.builtInEvents.update(_file_io.body.events)
+
+    def update_built_in_obol(self):
+        self.builtInObos.clear()
+        _file_io = ApplicationObolFileIO(APP_SETTING.applicationDataBasePath, self.obolFileName)
+        _file_io.read()
+        if _file_io.body is None:
+            return
+        if _file_io.body.obos is not None:
+            self.builtInObos.update(_file_io.body.obos)
+
     def update_built_in_features(self):
-        self.builtInFeaturesMap.clear()
+        self.builtInUserFeaturesMap.clear()
         for root, dirs, files in os.walk(APP_SETTING.featureLibsPath):
             if files:
                 _name = root.split(os.sep)[-1]
-                if _name not in self.builtInFeaturesMap:
-                    self.builtInFeaturesMap.update({_name: BuiltInFeature(_name)})
-                _feature = self.builtInFeaturesMap.get(_name)
+                if _name not in self.builtInUserFeaturesMap:
+                    self.builtInUserFeaturesMap.update({_name: BuiltInFeature(_name)})
+                _feature = self.builtInUserFeaturesMap.get(_name)
                 for file in files:
                     _file_path = os.path.join(root, file)
                     if file.endswith(APP_SETTING.infoFileExt):
@@ -36,9 +64,44 @@ class Project:
                         _feature.evtFile = _file_path
                     elif file.endswith(APP_SETTING.stateFileExt):
                         _feature.stcFile = _file_path
+                    elif file.endswith('.png'):
+                        _feature.overviewImage = _file_path
 
-    def is_feature_lib_exist(self, name):
-        return name in self.builtInFeaturesMap
+    def update_built_in_root_features(self):
+        self.builtInRootFeaturesMap.clear()
+        for root, dirs, files in os.walk(APP_SETTING.rootFeatureLibsPath):
+            if files:
+                _name = root.split(os.sep)[-1]
+                if _name not in self.builtInRootFeaturesMap:
+                    self.builtInRootFeaturesMap.update({_name: BuiltInFeature(_name)})
+                _feature = self.builtInRootFeaturesMap.get(_name)
+                for file in files:
+                    _file_path = os.path.join(root, file)
+                    if file.endswith(APP_SETTING.infoFileExt):
+                        _feature.infFile = _file_path
+                    elif file.endswith(APP_SETTING.evtFileExt):
+                        _feature.evtFile = _file_path
+                    elif file.endswith(APP_SETTING.stateFileExt):
+                        _feature.stcFile = _file_path
+                    elif file.endswith(APP_SETTING.observableFileExt):
+                        _feature.oboFile = _file_path
+                    elif file.endswith('.png'):
+                        _feature.overviewImage = _file_path
+
+    def is_user_feature_lib_exist(self, name):
+        return name in self.builtInUserFeaturesMap
+
+    def is_root_feature_lib_exist(self, name):
+        return name in self.builtInRootFeaturesMap
+
+    def generate_state_chart_overview_image(self, path, file_name):
+        if util_is_dir_exist(os.path.join(path, file_name + APP_SETTING.stateFileExt)):
+            _file_io = ApplicationStcFileIO(path, file_name + APP_SETTING.stateFileExt)
+            _file_io.read()
+            _dc = DotCanvas(file_name)
+            _dot_str = _dc.canvas2dot(_file_io)
+            _gv = Graphviz(APP_SETTING.graphvizBinPath, os.path.join(path, file_name + '.png'))
+            _gv.render_dot_string_to_file(_dot_str)
 
     def create_feature_lib(self, name, desc, copy_state_uuid=None, copy_event_uuid=None):
         # fixme: first check given file if copyable
@@ -60,7 +123,36 @@ class Project:
         else:
             _copy_state_from_path = os.path.join(self.modelPath, copy_state_uuid + APP_SETTING.stateFileExt)
             shutil.copyfile(_copy_state_from_path, os.path.join(_lib_path, name + APP_SETTING.stateFileExt))
+        self.generate_state_chart_overview_image(_lib_path, name)
         self.update_built_in_features()
+
+    def create_root_feature_lib(self, name, desc, copy_state_uuid=None, copy_event_uuid=None, copy_obo_uuid=None):
+        _lib_path = os.path.join(APP_SETTING.rootFeatureLibsPath, name)
+        os.makedirs(_lib_path)
+        _inf_file_io = ApplicationInfFileIO(_lib_path, 'lib')
+        _inf_file_io.headerDescription = desc
+        _inf_file_io.headerLibName = 'Feature %s' % name
+        _inf_file_io.write({'state': '%s.stc' % name, 'event': '%s.evt' % name, 'obo': '%s.obo' % name})
+        if copy_event_uuid is None:
+            _file_io = ApplicationEvtFileIO(_lib_path, name)
+            _file_io.write(None)
+        else:
+            _copy_event_from_path = os.path.join(self.modelPath, copy_event_uuid + APP_SETTING.evtFileExt)
+            shutil.copyfile(_copy_event_from_path, os.path.join(_lib_path, name + APP_SETTING.evtFileExt))
+        if copy_state_uuid is None:
+            _file_io = ApplicationStcFileIO(_lib_path, name)
+            _file_io.write(None)
+        else:
+            _copy_state_from_path = os.path.join(self.modelPath, copy_state_uuid + APP_SETTING.stateFileExt)
+            shutil.copyfile(_copy_state_from_path, os.path.join(_lib_path, name + APP_SETTING.stateFileExt))
+        if copy_obo_uuid is None:
+            _file_io = ApplicationOboFileIO(_lib_path, name)
+            _file_io.write(None)
+        else:
+            _copy_obo_from_path = os.path.join(self.modelPath, copy_obo_uuid + APP_SETTING.observableFileExt)
+            shutil.copyfile(_copy_obo_from_path, os.path.join(_lib_path, name + APP_SETTING.observableFileExt))
+        self.generate_state_chart_overview_image(_lib_path, name)
+        self.update_built_in_root_features()
 
     def set_project_workspace_path(self, path):
         self.path = os.path.join(path, self.name)
@@ -94,25 +186,21 @@ class Project:
             pass
         return _f
 
-    # def get_user_feature_transitions(self, uuid):
-    #     _file_io = self.get_file_io(uuid, EnumItemRole.USER_FEATURE_STATE)
-    #     if _file_io is not None:
-    #         _file_io.read()
-    #         return _file_io.body.wires
-    #     return None
-    #
-    # def get_root_feature_transitions(self, uuid):
-    #     _file_io = self.get_file_io(uuid, EnumItemRole.DEV_FEATURE_STATE)
-    #     if _file_io is not None:
-    #         _file_io.read()
-    #         return _file_io.body.wires
-    #     return None
-
     def get_event_data(self, uuid):
         _guess_file_path = os.path.join(self.modelPath, uuid + APP_SETTING.evtFileExt)
         _exist = util_is_dir_exist(_guess_file_path)
         if _exist:
             _file_io = ApplicationEvtFileIO(self.modelPath, uuid + APP_SETTING.evtFileExt)
+            _file_io.read()
+            return _file_io
+        else:
+            return None
+
+    def get_obo_data(self, uuid):
+        _guess_file_path = os.path.join(self.modelPath, uuid + APP_SETTING.observableFileExt)
+        _exist = util_is_dir_exist(_guess_file_path)
+        if _exist:
+            _file_io = ApplicationEvtFileIO(self.modelPath, uuid + APP_SETTING.observableFileExt)
             _file_io.read()
             return _file_io
         else:
@@ -130,6 +218,13 @@ class Project:
         _uuid = panel.uuid
         _role = panel.role
         _file_io = ApplicationRsvFileIO(self.modelPath, _uuid)
+        _file_io.write(_d)
+
+    def save_obo(self, panel):
+        _d = panel.serialize()
+        _uuid = panel.uuid
+        _role = panel.role
+        _file_io = ApplicationOboFileIO(self.modelPath, _uuid)
         _file_io.write(_d)
 
     def save_canvas(self, canvas):
@@ -169,6 +264,8 @@ class Project:
             return ApplicationInfFileIO
         elif extend == APP_SETTING.resolverFileExt:
             return ApplicationRsvFileIO
+        elif extend == APP_SETTING.observableFileExt:
+            return ApplicationOboFileIO
         else:
             return None
 
@@ -212,7 +309,7 @@ class Project:
             x['dstNodeUUID'] = _new_dst_node_uuid
 
     def add_user_feature_state(self, feature_name, rename):
-        _feature = self.builtInFeaturesMap.get(feature_name)
+        _feature = self.builtInUserFeaturesMap.get(feature_name)
         if _feature is not None:
             _dst_path = os.path.join(self.modelPath, rename + APP_SETTING.stateFileExt)
             # copy from data to project and rename it
@@ -224,19 +321,25 @@ class Project:
             _file_io.write()
 
     def add_user_feature_event(self, feature_name, rename):
-        _feature = self.builtInFeaturesMap.get(feature_name)
+        _feature = self.builtInUserFeaturesMap.get(feature_name)
         if _feature is not None:
             # copy from data to project and rename it
             shutil.copyfile(_feature.evtFile, os.path.join(self.modelPath, rename + APP_SETTING.evtFileExt))
 
     def add_root_feature_event(self, feature_name, rename):
-        _feature = self.builtInFeaturesMap.get(feature_name)
+        _feature = self.builtInRootFeaturesMap.get(feature_name)
         if _feature is not None:
             # copy from data to project and rename it
             shutil.copyfile(_feature.evtFile, os.path.join(self.modelPath, rename + APP_SETTING.evtFileExt))
 
+    def add_root_feature_obo(self, feature_name, rename):
+        _feature = self.builtInRootFeaturesMap.get(feature_name)
+        if _feature is not None:
+            # copy from data to project and rename it
+            shutil.copyfile(_feature.oboFile, os.path.join(self.modelPath, rename + APP_SETTING.observableFileExt))
+
     def add_root_feature_state(self, feature_name, rename):
-        _feature = self.builtInFeaturesMap.get(feature_name)
+        _feature = self.builtInRootFeaturesMap.get(feature_name)
         if _feature is not None:
             _dst_path = os.path.join(self.modelPath, rename + APP_SETTING.stateFileExt)
             # copy from data to project and rename it

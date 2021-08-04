@@ -42,8 +42,8 @@ class FeatureDetailPanel(wx.Panel):
         self.pgDesc.SetValue(data.description)
 
 
-class UserPanelSelectorPanel(wx.Panel):
-    def __init__(self, project, parent):
+class FeatureSelectorPanel(wx.Panel):
+    def __init__(self, project, parent, group='USER'):
         wx.Panel.__init__(self, parent, wx.ID_ANY)
         self.uuid = None
         self.role = 'EnumPaneRole.PANE_EVENT'
@@ -53,6 +53,9 @@ class UserPanelSelectorPanel(wx.Panel):
         self.featureLstSizer = wx.BoxSizer(wx.VERTICAL)
         self.featureDetailSizer = wx.BoxSizer(wx.VERTICAL)
         self.featureLstToolsSizer = wx.BoxSizer(wx.HORIZONTAL)
+        # image show stc
+        self.image = wx.Image(1, 1)
+        self.imageCtrl = wx.StaticBitmap(self, wx.ID_ANY, wx.Bitmap(self.image))
         # evt list tools
         self.ctrlSearch = wx.SearchCtrl(self, size=(160, -1), style=wx.TE_PROCESS_ENTER)
         self.ctrlSearch.ShowCancelButton(True)
@@ -67,8 +70,11 @@ class UserPanelSelectorPanel(wx.Panel):
         self.dvlc.SetFont(wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.dvlc.AppendTextColumn('Name', width=140)
         self.dvlc.SetMaxSize((160, -1))
-
-        for name, evt in self.project.builtInFeaturesMap.items():
+        if group == 'ROOT':
+            self._builtIn = self.project.builtInRootFeaturesMap
+        else:
+            self._builtIn = self.project.builtInUserFeaturesMap
+        for name, evt in self._builtIn.items():
             self.dvlc.AppendItem((name,))
 
         self.dvlc.Bind(dv.EVT_DATAVIEW_ITEM_ACTIVATED, self.on_dv_item_activated)
@@ -79,6 +85,7 @@ class UserPanelSelectorPanel(wx.Panel):
         self.featureLstSizer.Add(self.dvlc, 1, wx.EXPAND)
         self.mainSizer.AddSpacer(5)
         self.featureDetailSizer.Add(self.detailPanel, 1, wx.EXPAND)
+        self.featureDetailSizer.Add(self.imageCtrl, 1, wx.EXPAND)
         self.mainSizer.Add(self.featureLstSizer, 0, wx.EXPAND)
         self.mainSizer.Add(self.featureDetailSizer, 1, wx.EXPAND)
         self.SetSizer(self.mainSizer)
@@ -89,5 +96,12 @@ class UserPanelSelectorPanel(wx.Panel):
         _selected_row = self.dvlc.GetSelectedRow()
         _selected_fe_name = self.dvlc.GetTextValue(_selected_row, 0)
         self.currentFeature = _selected_fe_name
-        _data = self.project.builtInFeaturesMap[_selected_fe_name].get_inf_file_content()
+        _feature=self._builtIn[_selected_fe_name]
+        _data = _feature.get_inf_file_content()
         self.detailPanel.set_data(_selected_fe_name, _data.header)
+        _img = wx.Image(_feature.overviewImage, wx.BITMAP_TYPE_ANY)
+        # scale the image, preserving the aspect ratio
+        _w = _img.GetWidth()
+        _h = _img.GetHeight()
+        self.imageCtrl.SetBitmap(wx.Bitmap(_img))
+        self.Refresh()

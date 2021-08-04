@@ -8,6 +8,8 @@ class BuiltInFeature:
         self.infFile = None
         self.evtFile = None
         self.stcFile = None
+        self.oboFile = None
+        self.overviewImage = None
 
     def get_path_file_name(self, file_path):
         _path, _base_name = os.path.split(file_path)
@@ -28,5 +30,11 @@ class BuiltInFeature:
     def get_stc_file_content(self):
         if self.stcFile is not None:
             _io = ApplicationStcFileIO(*self.get_path_file_name(self.stcFile))
+            _io.read()
+            return _io
+
+    def get_obo_file_content(self):
+        if self.oboFile is not None:
+            _io = ApplicationOboFileIO(*self.get_path_file_name(self.oboFile))
             _io.read()
             return _io

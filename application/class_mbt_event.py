@@ -72,6 +72,9 @@ class MBTEventManager:
     def get_events_names(self):
         return list(self._events.keys())
 
+    def get_events_names_by_type(self, type_lst):
+        return [v.name for k,v in self._events.items() if v.type in type_lst]
+
     def get_all_events(self):
         return self._events
 
@@ -85,10 +88,10 @@ class MBTEventManager:
     def deserialize(self, data):
         if data is None:
             return
-        if not hasattr(data,'body'):
+        if not hasattr(data, 'body'):
             return
-        _evts=data.body.events
-        for k,v in _evts.items():
+        _evts = data.body.events
+        for k, v in _evts.items():
             self.register_event(v)
 
     def serialize(self):

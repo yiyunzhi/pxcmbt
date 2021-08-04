@@ -99,13 +99,17 @@ class ComboboxRenderer(dv.DataViewCustomRenderer):
 
 
 class EventEditorPanel(wx.Panel):
-    def __init__(self, parent, event_data=None):
+    SRC_EVT_MGR = 0
+    SRC_EVT_BUILTIN = 1
+
+    def __init__(self, parent, event_data=None, built_in_event_data=None):
         wx.Panel.__init__(self, parent, wx.ID_ANY)
         self.uuid = None
         self.role = 'EnumPaneRole.PANE_EVENT'
         self.shouldSave = False
         self.newEventName = '*NewEvent'
         self.processedEvt = None
+        self.builtInEvtData = built_in_event_data
         self.eventMgr = MBTEventManager()
         self.eventMgr.deserialize(event_data)
         self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -118,7 +122,9 @@ class EventEditorPanel(wx.Panel):
         self.ctrlSearch.ShowCancelButton(True)
         _srch_w, _srch_h = self.ctrlSearch.GetSize()
         self.evtAddBtn = wx.Button(self, wx.ID_ANY, '+', size=(_srch_h, _srch_h))
+        self.evtAddBtn.SetToolTip('Add a new event')
         self.evtRemoveBtn = wx.Button(self, wx.ID_ANY, '-', size=(_srch_h, _srch_h))
+        self.evtRemoveBtn.SetToolTip('Remove a new event')
         self.btnApplyChange = wx.Button(self, wx.ID_ANY, 'ApplyChange')
         # self.Bind(wx.EVT_SEARCHCTRL_SEARCH_BTN, self.OnSearch, self.search)
         # self.Bind(wx.EVT_SEARCHCTRL_CANCEL_BTN, self.OnCancel, self.search)
@@ -129,6 +135,7 @@ class EventEditorPanel(wx.Panel):
         # Create a dataview control
         self.dvlc = dv.DataViewListCtrl(self, style=wx.LC_REPORT | dv.DV_NO_HEADER | dv.DV_ROW_LINES)
         self.dvlc.SetRowHeight(16)
+
         self.dvlc.SetFont(wx.Font(8, wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         self.dvlc.AppendBitmapColumn('Direction', 0, width=18)
         self.dvlc.AppendTextColumn('Name', width=120)
@@ -136,7 +143,9 @@ class EventEditorPanel(wx.Panel):
         _outgoing_icon = wx.ArtProvider.GetBitmap(wx.ART_GO_FORWARD, wx.ART_TOOLBAR, (10, 10))
         for name, evt in self.eventMgr.get_all_events().items():
             if evt.visible:
-                self._add_event(evt)
+                self._add_event(evt, self.SRC_EVT_MGR)
+        if self.builtInEvtData is not None:
+            [self._add_event(evt, self.SRC_EVT_BUILTIN) for name, evt in self.builtInEvtData.items() if evt.visible]
         # bind events
         self.evtAddBtn.Bind(wx.EVT_BUTTON, self.on_add_event)
         self.evtRemoveBtn.Bind(wx.EVT_BUTTON, self.on_remove_event)
@@ -161,9 +170,9 @@ class EventEditorPanel(wx.Panel):
         self.Layout()
         self.Fit()
 
-    def _add_event(self, evt, select=True):
+    def _add_event(self, evt, data=SRC_EVT_MGR, select=True):
         _icon = self._get_event_icon(evt)
-        self.dvlc.AppendItem((_icon, evt.name))
+        self.dvlc.AppendItem((_icon, evt.name), data)
         if select:
             self.dvlc.Select(self.dvlc.RowToItem(self.dvlc.GetItemCount() - 1))
 
@@ -193,6 +202,8 @@ class EventEditorPanel(wx.Panel):
 
     def on_dv_item_select_changed(self, evt: dv.DataViewEvent):
         _selected_row = self.dvlc.GetSelectedRow()
+        _item = self.dvlc.RowToItem(_selected_row)
+        _item_data = self.dvlc.GetItemData(_item)
         if _selected_row == -1:
             self.detailPanel.clear()
             return
@@ -201,9 +212,22 @@ class EventEditorPanel(wx.Panel):
             if _selected_evt_name != self.processedEvt.name:
                 self._handle_unsaved_event()
         if self.processedEvt is None:
-            _evt = self.eventMgr.get_event(_selected_evt_name)
-            self.detailPanel.set_data(_evt)
-            self.processedEvt = _evt
+            if _item_data == self.SRC_EVT_MGR:
+                _evt = self.eventMgr.get_event(_selected_evt_name)
+            elif _item_data == self.SRC_EVT_BUILTIN:
+                _evt = self.builtInEvtData.get(_selected_evt_name)
+            else:
+                _evt = None
+            if _evt is not None:
+                self.detailPanel.set_data(_evt)
+                if _item_data == self.SRC_EVT_MGR:
+                    self.processedEvt = _evt
+                if _evt.readonly:
+                    self.detailPanel.Disable()
+                    self.evtRemoveBtn.Disable()
+                else:
+                    self.detailPanel.Enable()
+                    self.evtRemoveBtn.Enable()
 
     def _save_processed_event(self):
         if self.processedEvt is not None:
@@ -234,15 +258,18 @@ class EventEditorPanel(wx.Panel):
         if self.processedEvt is None:
             self.processedEvt = MBTEvent(name=self.newEventName, description='Event Description')
             self.processedEvt.readonly = False
-            self._add_event(self.processedEvt)
+            self._add_event(self.processedEvt, self.SRC_EVT_MGR)
             self.detailPanel.set_data(self.processedEvt)
 
     def on_remove_event(self, evt):
         _selected = self.dvlc.GetSelectedRow()
+        _item = self.dvlc.RowToItem(_selected)
+        _item_data = self.dvlc.GetItemData(_item)
         if _selected != -1:
             _evt_name = self.dvlc.GetTextValue(_selected, 0)
-            self.eventMgr.unregister_event(_evt_name)
-            self.dvlc.DeleteItem(_selected)
+            if _item_data == self.SRC_EVT_MGR:
+                self.eventMgr.unregister_event(_evt_name)
+                self.dvlc.DeleteItem(_selected)
         self.processedEvt = None
 
     def deserialize(self, data):

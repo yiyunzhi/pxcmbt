@@ -1,0 +1,108 @@
+BODY:
+  EVT_PowerOnDev: !MBTEvent
+    name: EVT_PowerOnDev
+    type: outgoing
+    readonly: true
+    description: power on Device
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_PowerOffDev: !MBTEvent
+    name: EVT_PowerOffDev
+    type: outgoing
+    readonly: true
+    description: power off Device
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_RePowerDev: !MBTEvent
+    name: EVT_RePowerDev
+    type: outgoing
+    readonly: true
+    description: repower the Device
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_ParaDev: !MBTEvent
+    name: EVT_ParaDev
+    type: outgoing
+    readonly: true
+    description: Parametrize Device
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_AckDevDiagOnce: !MBTEvent
+    name: EVT_AckDevDiagOnce
+    type: outgoing
+    readonly: true
+    description: Set the acknowledg Dignose active
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_AckDevDiagMoreTimes: !MBTEvent
+    name: EVT_AckDevDiagMoreTimes
+    type: outgoing
+    readonly: true
+    description: Set the acknowledg Dignose active more times, use data to set the times
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_AssertDevDiag: !MBTEvent
+    name: EVT_AssertDevDiag
+    type: outgoing
+    readonly: true
+    description: check if Device has Diagnose
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_AssertDevNoDiag: !MBTEvent
+    name: EVT_AssertDevNoDiag
+    type: outgoing
+    readonly: true
+    description: check if Device has not Diagnose
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_StartDevSafeComm: !MBTEvent
+    name: EVT_StartDevSafeComm
+    type: outgoing
+    readonly: true
+    description: Device SafeCommunication started
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_StopDevSafeComm: !MBTEvent
+    name: EVT_StopDevSafeComm
+    type: outgoing
+    readonly: true
+    description: Device SafeCommunication stopped
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - [ ]
+  EVT_DevToFS: !MBTEvent
+    name: EVT_DevToFS
+    type: outgoing
+    readonly: true
+    description: Device go into FailureState
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - NewData
+          - !MBTEventData
+            name: NewData
+            dataType: string
+            default: '0'
+        - - NewData2
+          - !MBTEventData
+            name: NewData2
+            dataType: float
+            default: '5.0'
+        - - NewData3
+          - !MBTEventData
+            name: NewData3
+            dataType: integer
+            default: '1255'
+HEADER:
+  author: LIU
+  date: 07/23 14:58:56.801
+  type: MBT_EVTL
+  version: 2.0.1

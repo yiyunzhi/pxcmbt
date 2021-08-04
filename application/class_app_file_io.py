@@ -219,6 +219,65 @@ class ApplicationRsvFileIO(ApplicationFileIO):
         super(ApplicationRsvFileIO, self).write(_data)
 
 
+class ApplicationOboFileHeader(ApplicationFileHeader):
+    def __init__(self, **kwargs):
+        ApplicationFileHeader.__init__(self, **kwargs)
+
+    def persist(self):
+        _d = {'version': APP_VERSION,
+              'author': util_get_computer_name(),
+              'date': util_date_now(),
+              'type': 'MBT_OBOL'}
+        return _d
+
+
+class ApplicationOboFileBody(ApplicationFileBody):
+    def __init__(self, **kwargs):
+        ApplicationFileBody.__init__(self, **kwargs)
+
+
+class ApplicationOboFileIO(ApplicationFileIO):
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, header_cls=ApplicationOboFileHeader,
+                                   body_cls=ApplicationOboFileBody)
+        self.extend = '.obo'
+
+    def write(self, data):
+        _hdr = self.headerCls()
+        _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
+        super(ApplicationOboFileIO, self).write(_data)
+
+
+class ApplicationObolFileHeader(ApplicationFileHeader):
+    def __init__(self, **kwargs):
+        ApplicationFileHeader.__init__(self, **kwargs)
+
+    def persist(self):
+        _d = {'version': APP_VERSION,
+              'author': util_get_computer_name(),
+              'date': util_date_now(),
+              'type': 'MBT_OBOL'}
+        return _d
+
+
+class ApplicationObolFileBody(ApplicationFileBody):
+    def __init__(self, **kwargs):
+        ApplicationFileBody.__init__(self, **kwargs)
+        self.obos=kwargs
+
+
+class ApplicationObolFileIO(ApplicationFileIO):
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, header_cls=ApplicationObolFileHeader,
+                                   body_cls=ApplicationObolFileBody)
+        self.extend = '.obol'
+
+    def write(self, data):
+        _hdr = self.headerCls()
+        _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
+        super(ApplicationObolFileIO, self).write(_data)
+
+
 class ApplicationEvtFileBody(ApplicationFileBody):
     def __init__(self, **kwargs):
         ApplicationFileBody.__init__(self, **kwargs)
@@ -247,6 +306,36 @@ class ApplicationEvtFileIO(ApplicationFileIO):
         _hdr = self.headerCls()
         _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
         super(ApplicationEvtFileIO, self).write(_data)
+
+
+class ApplicationEvtlFileBody(ApplicationFileBody):
+    def __init__(self, **kwargs):
+        ApplicationFileBody.__init__(self, **kwargs)
+        self.events = kwargs
+
+
+class ApplicationEvtlFileHeader(ApplicationFileHeader):
+    def __init__(self, **kwargs):
+        ApplicationFileHeader.__init__(self, **kwargs)
+
+    def persist(self):
+        _d = {'version': APP_VERSION,
+              'author': util_get_computer_name(),
+              'date': util_date_now(),
+              'type': 'MBT_EVTL'}
+        return _d
+
+
+class ApplicationEvtlFileIO(ApplicationFileIO):
+    def __init__(self, file_path, file_name):
+        ApplicationFileIO.__init__(self, file_path, file_name, header_cls=ApplicationEvtlFileHeader,
+                                   body_cls=ApplicationEvtlFileBody)
+        self.extend = '.evtl'
+
+    def write(self, data):
+        _hdr = self.headerCls()
+        _data = dict({self.HEADER_K: _hdr.persist(), self.BODY_K: data})
+        super(ApplicationEvtlFileIO, self).write(_data)
 
 
 class ApplicationProjFileBody(ApplicationFileBody):

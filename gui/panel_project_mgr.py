@@ -23,7 +23,6 @@ import wx
 from pubsub import pub
 from .ctrl_tree import GenericTreeCtrl
 from application.define import StandardItemData, EnumItemRole, EnumAppSignals
-from .define_gui import PATH_GUI_IMAGES
 from application.utils_helper import util_get_uuid_string, util_wx_tree_walk_branches
 from .menu_context_menu import (GuiModelContextMenu,
                                 GuiDeviceFeatureContextMenu,
@@ -33,117 +32,7 @@ from .menu_context_menu import (GuiModelContextMenu,
                                 GuiUserFeatureEvtContextMenu,
                                 GuiDeviceFeatureEvtContextMenu,
                                 GuiDeviceFeatureStateContextMenu)
-
-
-class ProjectPanelIconRepo:
-    def __init__(self):
-        self._icon_size = (16, 16)
-        self._image_list = wx.ImageList(*self._icon_size)
-        self.fileIcon = self._image_list.Add(
-            wx.ArtProvider.GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, self._icon_size))
-        self.invalidIcon = self._image_list.Add(
-            wx.ArtProvider.GetBitmap(wx.ART_MISSING_IMAGE, wx.ART_OTHER, self._icon_size))
-        self.signalsIcon = self._image_list.Add(
-            wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_OTHER, self._icon_size))
-        self.cubeIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_cube.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.rackIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_rack.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.exclamationIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_exclamation.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.featureIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_feature.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.stateIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_state.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.eventIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_char_e.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.modelIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_model.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.keyIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_key.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.variableIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_variable.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.funcsIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_function.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.libIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_library.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionsIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_session.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.scriptIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_variable.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.funcsIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_function.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionDDIIconDefault = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_ddi_default.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionDDIIconActive = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_ddi_active.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionPNIconDefault = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_pn_default.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionPNIconActive = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_pn_active.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionTCPIconDefault = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_tcp_default.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionTCPIconActive = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_tcp_active.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionVisaIconDefault = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_visa_default.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.sessionVisaIconActive = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_visa_active.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotIBIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_ib_slot.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotIBFSIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_ib_fs_slot.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotAXIOIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_axio_slot.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotAXIOFSIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_axio_fs_slot.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotEPDiagIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_epdiag.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotEPInfoIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_epinfo.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotEPFComIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_epfcom.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotEPIOIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_epio.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-        self.slotEPParamIcon = self._image_list.Add(
-            wx.Image(PATH_GUI_IMAGES + '\\icon_epparam.png', wx.BITMAP_TYPE_PNG).Scale(
-                *self._icon_size).ConvertToBitmap())
-
-    def get_icon_size(self):
-        return self._icon_size
-
-    def get_image_list(self):
-        return self._image_list
+from .util_icon_repo import UtilIconRepo
 
 
 class GuiProjectManagerContainerPanel(wx.Panel):
@@ -178,7 +67,7 @@ class GuiProjectManagerPanel(wx.Panel):
                                     # | wx.TR_HIDE_ROOT
                                     )
         self._itemMap = dict()
-        self._iconRepo = ProjectPanelIconRepo()
+        self._iconRepo = UtilIconRepo()
         self._icon_size = (16, 16)
 
         # style
@@ -271,6 +160,15 @@ class GuiProjectManagerPanel(wx.Panel):
         self.tree.SetItemImage(self._deviceEvtItem, self._iconRepo.eventIcon, wx.TreeItemIcon_Normal)
         self._itemMap.update({self._deviceEvtItemData.uuid: self._deviceEvtItem})
 
+        self._deviceOboItem = self.tree.AppendItem(self._rootFeatureItem, "Observables")
+        self._deviceOboItemData = StandardItemData()
+        self._deviceOboItemData.role = EnumItemRole.DEV_FEATURE_OBO
+        self._deviceOboItemData.uuid = util_get_uuid_string()
+        self._deviceOboItemData.labelReadonly = True
+        self.tree.SetItemData(self._deviceOboItem, self._deviceOboItemData)
+        self.tree.SetItemImage(self._deviceOboItem, self._iconRepo.eyeIcon, wx.TreeItemIcon_Normal)
+        self._itemMap.update({self._deviceOboItemData.uuid: self._deviceOboItem})
+
         self._userFeatureItem = self.tree.AppendItem(self._modelItem, "User")
         self.userFeatureItemData = StandardItemData()
         self.userFeatureItemData.role = EnumItemRole.USER_FEATURE
@@ -307,7 +205,9 @@ class GuiProjectManagerPanel(wx.Panel):
                        {'root': {'data': self.deviceItemData,
                                  'text': self.tree.GetItemText(self._rootFeatureItem),
                                  'state': self.deviceStateItemData,
-                                 'event': self._deviceEvtItemData},
+                                 'event': self._deviceEvtItemData,
+                                 'obo': self._deviceOboItemData,
+                                 },
                         'user': {'data': self.userFeatureItemData,
                                  'text': self.tree.GetItemText(self._userFeatureItem),
                                  'children': list()}},
@@ -341,17 +241,21 @@ class GuiProjectManagerPanel(wx.Panel):
             _root_item_data = _root['data']
             _root_state_data = _root['state']
             _root_evt_data = _root['event']
+            _root_obo_data = _root['obo']
             self.tree.SetItemText(self._rootFeatureItem, _root['text'])
             self.tree.SetItemData(self._rootFeatureItem, _root_item_data)
             self.tree.SetItemData(self._deviceStateItem, _root_state_data)
             self.tree.SetItemData(self._deviceEvtItem, _root_evt_data)
+            self.tree.SetItemData(self._deviceOboItem, _root_obo_data)
             self.deviceItemData = _root_item_data
             self.deviceStateItemData = _root_state_data
             self._deviceEvtItemData = _root_evt_data
+            self._deviceOboItemData = _root_obo_data
 
             self._itemMap.update({_root_item_data.uuid: self._rootFeatureItem})
             self._itemMap.update({_root_state_data.uuid: self._deviceStateItem})
             self._itemMap.update({_root_evt_data.uuid: self._deviceEvtItem})
+            self._itemMap.update({_root_obo_data.uuid: self._deviceOboItem})
             # handling the user feature
             self.tree.SetItemText(self._userFeatureItem, _user['text'])
             self.tree.SetItemData(self._userFeatureItem, _user['data'])
@@ -495,6 +399,13 @@ class GuiProjectManagerPanel(wx.Panel):
     def get_root_event_uuid(self):
         return self._deviceEvtItemData.uuid
 
+    def on_cm_config_observable_object(self, evt):
+        _item = self.tree.GetSelection()
+        if _item is not None:
+            _data = self.tree.GetItemData(_item)
+            if _data.role == EnumItemRole.DEV_FEATURE:
+                pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value, uuid=self._deviceOboItemData.uuid)
+
     def on_cm_new_user_feature(self, evt):
         pub.sendMessage(EnumAppSignals.sigV2VProjectNewUserFeature.value)
 
@@ -540,6 +451,17 @@ class GuiProjectManagerPanel(wx.Panel):
             _evt_uuid = self.tree.GetItemData(_evt_item).uuid
             pub.sendMessage(EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value, state_uuid=_state_uuid,
                             event_uuid=_evt_uuid)
+
+    def on_cm_save_root_feature_as_lib(self, evt):
+        _item = self.tree.GetSelection()
+        if _item is not None:
+            _uuid = self.tree.GetItemData(_item).uuid
+            _state_item, _evt_item, _obo_item = self.get_user_feature_children(_item)
+            _state_uuid = self.tree.GetItemData(_state_item).uuid
+            _evt_uuid = self.tree.GetItemData(_evt_item).uuid
+            _obo_uuid = self.tree.GetItemData(_obo_item).uuid
+            pub.sendMessage(EnumAppSignals.sigV2VProjectSaveRootFeatureAsLib.value, state_uuid=_state_uuid,
+                            event_uuid=_evt_uuid, obo_uuid=_obo_uuid)
 
     def get_user_feature_children(self, item):
         _state_item, _ = self.tree.GetFirstChild(item)

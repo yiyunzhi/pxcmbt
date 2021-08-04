@@ -36,11 +36,12 @@ from .panel_console import ConsolePanel
 from .panel_event_editor import EventEditorPanel
 from .panel_prop_content import CanvasNodePropContentPanel
 from .panel_resolver import FeatureResolverPanel
+from .panel_obo_editor import OBOEditorPanel
 from .define_gui import _, EnumCanvasToolbarMode
 from .dialog_node_editor import NodeEditorDialog, NodeNoteEditorDialog
 from .dialog_transition_editor import TransitionEditorDialog
 from .dialog_new_project import NewProjectDialog
-from .dialog_select_user_feature import SelectUserFeatureDialog
+from .dialog_select_feature import SelectFeatureDialog
 from .dialog_user_featrue import PromptUserFeatureNameDialog, PromptUserFeatureAsLibDialog
 from application.utils_helper import *
 from application.class_yaml_tag import *
@@ -256,17 +257,41 @@ class FrameMain(wx.Frame):
         pub.subscribe(self.on_ext_sig_project_new_user_feature, EnumAppSignals.sigV2VProjectNewUserFeature.value)
         pub.subscribe(self.on_ext_sig_project_save_user_feature_as_lib,
                       EnumAppSignals.sigV2VProjectSaveUserFeatureAsLib.value)
+        pub.subscribe(self.on_ext_sig_project_save_root_feature_as_lib,
+                      EnumAppSignals.sigV2VProjectSaveRootFeatureAsLib.value)
         pub.subscribe(self.on_ext_sig_project_del_user_feature, EnumAppSignals.sigV2VProjectDelUserFeature.value)
         pub.subscribe(self.on_ext_sig_project_add_root_feature, EnumAppSignals.sigV2VProjectAddRootFeature.value)
         pub.subscribe(self.on_ext_sig_project_empty_root_feature, EnumAppSignals.sigV2VProjectEmptyRootFeature.value)
 
+    def _show_success_msgbox(self, msg=None):
+        _ret = wx.MessageBox('Operation successful executed' if msg is None else msg, 'Success')
+
+    def _show_failed_msgbox(self, msg=None):
+        _ret = wx.MessageBox('Operation failed executed' if msg is None else msg, 'Failed')
+
+    def on_ext_sig_project_save_root_feature_as_lib(self, state_uuid, event_uuid, obo_uuid):
+        try:
+            _dlg = PromptUserFeatureAsLibDialog(self._currentProject.is_root_feature_lib_exist, self)
+            _ret = _dlg.ShowModal()
+            if _ret == wx.ID_OK:
+                _name = _dlg.ufNameTextEdit.GetValue()
+                _desc = _dlg.ufDescTextEdit.GetValue()
+                self._currentProject.create_root_feature_lib(_name, _desc, state_uuid, event_uuid, obo_uuid)
+                self._show_success_msgbox()
+        except Exception as e:
+            self._show_failed_msgbox('%s' % e)
+
     def on_ext_sig_project_save_user_feature_as_lib(self, state_uuid, event_uuid):
-        _dlg = PromptUserFeatureAsLibDialog(self._currentProject.is_feature_lib_exist, self)
-        _ret = _dlg.ShowModal()
-        if _ret == wx.ID_OK:
-            _name = _dlg.ufNameTextEdit.GetValue()
-            _desc = _dlg.ufDescTextEdit.GetValue()
-            self._currentProject.create_feature_lib(_name, _desc, state_uuid, event_uuid)
+        try:
+            _dlg = PromptUserFeatureAsLibDialog(self._currentProject.is_user_feature_lib_exist, self)
+            _ret = _dlg.ShowModal()
+            if _ret == wx.ID_OK:
+                _name = _dlg.ufNameTextEdit.GetValue()
+                _desc = _dlg.ufDescTextEdit.GetValue()
+                self._currentProject.create_feature_lib(_name, _desc, state_uuid, event_uuid)
+                self._show_success_msgbox()
+        except Exception as e:
+            self._show_failed_msgbox('%s' % e)
 
     def on_ext_sig_project_del_user_feature(self, state_uuid, event_uuid, resolver_uuid):
         if state_uuid:
@@ -275,27 +300,6 @@ class FrameMain(wx.Frame):
             self._currentProject.remove_evt_file(event_uuid)
         if resolver_uuid:
             self._currentProject.remove_rsv_file(resolver_uuid)
-
-    # def on_cm_mask_on_root(self, evt):
-    #     _item = self.tree.GetSelection()
-    #     if _item is not None:
-    #         _uuid = self.tree.GetItemData(_item).uuid
-    #         _state_item, _evt_item = self.get_user_feature_children(_item)
-    #         _state_uuid = self.tree.GetItemData(_state_item[0]).uuid
-    #         _evt_uuid = self.tree.GetItemData(_evt_item).uuid
-    #         pub.sendMessage(EnumAppSignals.sigV2VMaskUserFeatureOnRoot.value, state_uuid=_state_uuid,
-    #                         event_uuid=_evt_uuid)
-    # def on_ext_sig_mask_user_feature_on_root(self, state_uuid, event_uuid):
-    #     # todo: first get the root transitions
-    #     if self._currentProject:
-    #         _root_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
-    #         _root_stc_file_io = self._currentProject.get_file_io(_root_uuid, EnumItemRole.DEV_FEATURE_STATE)
-    #         _uf_stc_file_io = self._currentProject.get_file_io(state_uuid, EnumItemRole.USER_FEATURE_STATE)
-    #         _uf_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(state_uuid)
-    #         _root_name=self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_uuid)
-    #         _dlg = TransitionMatrixDialog(self,_uf_stc_file_io,_root_stc_file_io)
-    #         _dlg.set_graph_cluster_name(_uf_name,_root_name)
-    #         _ret = _dlg.ShowModal()
 
     def on_ext_sig_project_new_user_feature(self):
         _dlg = PromptUserFeatureNameDialog(self._panelProjectMgr.contentPanel.is_uf_name_is_exist, self)
@@ -309,7 +313,7 @@ class FrameMain(wx.Frame):
             self._currentProject.create_new_rsv_file(_resolver_name)
 
     def on_ext_sig_project_add_user_feature(self):
-        _dlg = SelectUserFeatureDialog(self._currentProject, self)
+        _dlg = SelectFeatureDialog(self._currentProject, self)
         _ret = _dlg.ShowModal()
         if _ret == wx.ID_OK:
             _selected_feature_name = _dlg.get_selected_feature()
@@ -324,7 +328,7 @@ class FrameMain(wx.Frame):
     def on_ext_sig_project_add_root_feature(self):
         _ret = wx.MessageBox('Current data of root item will be deleted!', 'Info', style=wx.YES_NO)
         if _ret == wx.YES:
-            _dlg = SelectUserFeatureDialog(self._currentProject, self)
+            _dlg = SelectFeatureDialog(self._currentProject, self, group='ROOT')
             _ret = _dlg.ShowModal()
             if _ret == wx.ID_OK:
                 _selected_feature_name = _dlg.get_selected_feature()
@@ -447,6 +451,7 @@ class FrameMain(wx.Frame):
     def on_menu_save_clicked(self, evt):
         if self._currentProject:
             # save all cached pane
+            # fixme: next version, frame_app send the data to project only not the instance
             for n_uuid, panel in self._panelCache.items():
                 if isinstance(panel, StateChartCanvasViewPanel):
                     self._currentProject.save_canvas(panel)
@@ -454,6 +459,8 @@ class FrameMain(wx.Frame):
                     self._currentProject.save_event(panel)
                 elif isinstance(panel, FeatureResolverPanel):
                     self._currentProject.save_resolver(panel)
+                elif isinstance(panel, OBOEditorPanel):
+                    self._currentProject.save_obo(panel)
             if self._panelProjectMgr.contentPanel is not None:
                 self._currentProject.save_project(self._panelProjectMgr.contentPanel)
             pass
@@ -545,6 +552,8 @@ class FrameMain(wx.Frame):
                 pass
             elif _role == EnumItemRole.USER_FEATURE:
                 pass
+            elif _role == EnumItemRole.DEV_FEATURE_OBO:
+                pass
             else:
                 pass
 
@@ -573,9 +582,14 @@ class FrameMain(wx.Frame):
                     _panel.deserialize(_exist_in_proj.body)
             elif _role == EnumItemRole.DEV_FEATURE_EVENT or _role == EnumItemRole.USER_FEATURE_EVENT:
                 _evt_data = self._currentProject.get_event_data(uuid)
-                _panel = EventEditorPanel(self, _evt_data)
+                _panel = EventEditorPanel(self, _evt_data,self._currentProject.builtInEvents)
                 if _exist_in_proj is not None:
                     _panel.deserialize(_evt_data)
+            elif _role == EnumItemRole.DEV_FEATURE_OBO:
+                _obo_data = self._currentProject.get_obo_data(uuid)
+                _panel = OBOEditorPanel(self, _obo_data,self._currentProject.builtInObos)
+                if _exist_in_proj is not None:
+                    _panel.deserialize(_obo_data)
             elif _role == EnumItemRole.USER_FEATURE_RESOLVER:
                 _root_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
                 _root_stc_file_io = self._currentProject.get_file_io(_root_uuid, EnumItemRole.DEV_FEATURE_STATE)
@@ -592,7 +606,7 @@ class FrameMain(wx.Frame):
             else:
                 return
             if uuid in self._panelCache:
-                raise ValueError('----->already exist')
+                raise ValueError('panel already exist in cache')
             _panel.uuid = uuid
             _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
                 DestroyOnClose(False).Center().Snappable().Dockable(). \

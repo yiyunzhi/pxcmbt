@@ -27,6 +27,7 @@ class App(wx.App, wx.lib.mixins.inspection.InspectionMixin):
         # can see the SplashScreen effect.
         # _splash = GuiSplashScreen()
         # _splash.Show()
+
         _main_frm = FrameMain(None)
         _main_frm.Show()
         return True

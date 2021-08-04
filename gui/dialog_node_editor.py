@@ -20,10 +20,10 @@ class GuiNodeEditorPanel(wx.Panel):
             wx.StaticBox(self, -1, 'General'),
             wx.VERTICAL)
         self._enterEvtBoxSizer = wx.StaticBoxSizer(
-            wx.StaticBox(self, -1, 'Enter Events'),
+            wx.StaticBox(self, -1, 'Emitted Events by Enter'),
             wx.VERTICAL)
         self._exitEvtBoxSizer = wx.StaticBoxSizer(
-            wx.StaticBox(self, -1, 'Exit Events'),
+            wx.StaticBox(self, -1, 'Emitted Events by Exit'),
             wx.VERTICAL)
         self.ctrlNameLabel = wx.StaticText(self, wx.ID_ANY, 'Name:')
         self.ctrlNameEdit = wx.TextCtrl(self, wx.ID_ANY, self.item.nameText)

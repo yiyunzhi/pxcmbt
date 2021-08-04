@@ -1,6 +1,7 @@
 import wx
 from application.class_mbt_event import MBTEventManager
 from .panel_event_selector import EventSelectorPanel
+from application.define import EnumMBTEventType
 
 
 class GuiTransitionEditorPanel(wx.Panel):
@@ -20,11 +21,11 @@ class GuiTransitionEditorPanel(wx.Panel):
             wx.StaticBox(self, -1, 'General'),
             wx.VERTICAL)
         self._evtBoxSizer = wx.StaticBoxSizer(
-            wx.StaticBox(self, -1, 'Trigger Events'),
+            wx.StaticBox(self, -1, 'Emitted Events'),
             wx.VERTICAL)
         self.ctrlNameLabel = wx.StaticText(self, wx.ID_ANY, 'Name:')
         self.ctrlNameEdit = wx.TextCtrl(self, wx.ID_ANY, self.item.text)
-        self.ctrlEventsTriggerEdit = EventSelectorPanel(self.evtMgr, self)
+        self.ctrlEventsTriggerEdit = EventSelectorPanel(self.evtMgr, self, evt_filter=[EnumMBTEventType.OUTGOING.value])
         _enter_event_model = self.item.triggerEventModel
         self.ctrlEventsTriggerEdit.set_selected_events(_enter_event_model.events)
         self._generalBagSizer.Add(self.ctrlNameLabel, (0, 0), flag=wx.TOP, border=4)

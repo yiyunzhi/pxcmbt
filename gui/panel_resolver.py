@@ -1,7 +1,7 @@
 import wx
 import wx.grid as gridlib
 from application.define import *
-from .panel_compound_canvas_dot_graph import CompoundCanvasDotGraphViewPanel
+from .panel_canvas_dot_graph import CompoundCanvasDotGraphViewPanel
 from .panel_header import HeaderPanel
 
 

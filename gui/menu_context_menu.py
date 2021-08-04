@@ -79,13 +79,20 @@ class GuiModelContextMenu(GuiContextMenu):
 class GuiDeviceFeatureContextMenu(GuiContextMenu):
     def __init__(self, parent):
         super(GuiDeviceFeatureContextMenu, self).__init__(name='cmDeviceFeature', parent=parent)
+        self.popupSaveAsLib = wx.NewIdRef()
         self.popupEmptyFeature = wx.NewIdRef()
         self.popupPickUpFeature = wx.NewIdRef()
+        self.popupCfgObsbObject = wx.NewIdRef()
 
         self.parent.Bind(wx.EVT_MENU, self.parent.on_empty_root_feature,
                          id=self.popupEmptyFeature)
         self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_add_root_feature,
                          id=self.popupPickUpFeature)
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_config_observable_object,
+                         id=self.popupCfgObsbObject)
+
+        self.parent.Bind(wx.EVT_MENU, self.parent.on_cm_save_root_feature_as_lib,
+                         id=self.popupSaveAsLib)
 
     def show(self):
         # make a menu
@@ -96,9 +103,11 @@ class GuiDeviceFeatureContextMenu(GuiContextMenu):
         # item.SetBitmap(bmp)
         # _menu.Append(_item)
         # add some other items
+        _menu.Append(self.popupSaveAsLib, "SaveAsLib")
         _menu.Append(self.popupPickUpFeature, "ReplaceWith")
         _menu.Append(self.popupEmptyFeature, "Empty")
         _menu.AppendSeparator()
+        _menu.Append(self.popupCfgObsbObject, "ConfigObservableObject")
         # _menu.AppendSeparator()
         # _menu.Append(self.popupStartSessions, "Start All")
         # _menu.Append(self.popupStopSessions, "Stop All")
@@ -135,9 +144,9 @@ class GuiDeviceFeatureStateContextMenu(GuiContextMenu):
         # item.SetBitmap(bmp)
         # _menu.Append(_item)
         # add some other items
-        #_menu.Append(self.popupAddUserFeature, "Add User Feature")
-        #_menu.Append(self.popupPickUpFeature, "Pick Up User Feature")
-        #_menu.AppendSeparator()
+        # _menu.Append(self.popupAddUserFeature, "Add User Feature")
+        # _menu.Append(self.popupPickUpFeature, "Pick Up User Feature")
+        # _menu.AppendSeparator()
         # _menu.AppendSeparator()
         # _menu.Append(self.popupStartSessions, "Start All")
         # _menu.Append(self.popupStopSessions, "Stop All")

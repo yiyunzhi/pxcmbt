@@ -5,13 +5,17 @@ from application.class_mbt_event import MBTEventManager
 
 
 class EventSelectorPanel(wx.Panel):
-    def __init__(self, event_mgr: MBTEventManager, parent):
+    def __init__(self, event_mgr: MBTEventManager, parent, evt_filter=None):
         wx.Panel.__init__(self, parent, wx.ID_ANY)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.evtList = dv.DataViewListCtrl(self, wx.ID_ANY, style=dv.DV_ROW_LINES | dv.DV_VERT_RULES)
-        self.evtList.SetMinSize((-1,96))
+        self.evtList.SetMinSize((-1, 96))
         self.eventMgr = event_mgr
-        self._col_event_render = dv.DataViewChoiceRenderer(event_mgr.get_events_names())
+        if evt_filter is None:
+            _events = event_mgr.get_events_names()
+        else:
+            _events = event_mgr.get_events_names_by_type(evt_filter)
+        self._col_event_render = dv.DataViewChoiceRenderer(_events)
         _col_event = dv.DataViewColumn('Event', self._col_event_render, 0, width=120)
         self.evtList.AppendColumn(_col_event)
         self.evtList.AppendTextColumn('EventData', mode=dv.DATAVIEW_CELL_EDITABLE)
