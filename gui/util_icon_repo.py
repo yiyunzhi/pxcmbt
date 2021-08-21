@@ -35,6 +35,24 @@ class UtilIconRepo:
             wx.ArtProvider.GetBitmap(wx.ART_MISSING_IMAGE, wx.ART_OTHER, self._icon_size))
         self.signalsIcon = self._image_list.Add(
             wx.ArtProvider.GetBitmap(wx.ART_LIST_VIEW, wx.ART_OTHER, self._icon_size))
+        self.folderIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_folder.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
+        self.successIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_success.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
+        self.errorIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_error.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
+        self.warningIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_warning.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
+        self.sandglassIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_sandglass.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
+        self.pinIcon = self._image_list.Add(
+            wx.Image(PATH_GUI_IMAGES + '\\icon_pin.png', wx.BITMAP_TYPE_PNG).Scale(
+                *self._icon_size).ConvertToBitmap())
         self.cubeIcon = self._image_list.Add(
             wx.Image(PATH_GUI_IMAGES + '\\icon_cube.png', wx.BITMAP_TYPE_PNG).Scale(
                 *self._icon_size).ConvertToBitmap())

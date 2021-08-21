@@ -73,6 +73,9 @@ class EnumAppSignals(enum.Enum):
     sigV2VProjectSaveRootFeatureAsLib = 'sigV2VProjectSaveRootFeatureAsLib'
     sigV2VProjectAddRootFeature = 'sigV2VProjectAddRootFeature'
     sigV2VProjectEmptyRootFeature = 'sigV2VProjectEmptyRootFeature'
+    sigV2VCurrentTCChanged = 'sigV2VCurrentTCChanged'
+    sigV2VCurrentTCStatusChanged = 'sigV2VCurrentTCStatusChanged'
+    sigV2VTCCtrlStateChanged = 'sigV2VTCCtrlStateChanged'
 
 
 class EnumMBTEventType(enum.Enum):
@@ -102,3 +105,12 @@ class EnumOBODataType(enum.Enum):
     STRING = 'string'
     HEX = 'hex'
     ALL = ['integer', 'string', 'hex']
+
+
+class EnumTCStatus:
+    INITED = 0
+    EXECUTING = 1
+    PASSED = 2
+    FAILED = 3
+    ERROR = 4
+    UNKNOWN = 255

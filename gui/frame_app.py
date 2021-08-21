@@ -29,6 +29,7 @@ from application.define import EnumAppSignals, EnumPanelRole, EnumItemRole
 from application.class_app_setting import APP_SETTING
 from application.class_project import Project
 from .assets_images import *
+from .util_icon_repo import UtilIconRepo
 from .panel_canvas import StateChartCanvasViewPanel
 from .panel_project_mgr import GuiProjectManagerPanel, GuiProjectManagerContainerPanel
 from .panel_props_container import PropContainerPanel
@@ -43,12 +44,13 @@ from .dialog_transition_editor import TransitionEditorDialog
 from .dialog_new_project import NewProjectDialog
 from .dialog_select_feature import SelectFeatureDialog
 from .dialog_user_featrue import PromptUserFeatureNameDialog, PromptUserFeatureAsLibDialog
+from .dialog_tc import TCDialog
 from application.utils_helper import *
 from application.class_yaml_tag import *
 
 
-# todo: in built in feature implement a preview of the state
-# todo: event editor add event
+# fixme: default project close occure a error. No such file or directory: 'C:\\Users\\LiuZhang\\PycharmProjects\\pxcmbt\\projects\\default\\ui.pepc'
+
 
 class WxLog:
     def WriteText(self, text):
@@ -72,6 +74,7 @@ class FrameMain(wx.Frame):
         super(FrameMain, self).__init__(parent, wx_id, title, pos, size, style)
         self._auiMgr = aui.AuiManager(agwFlags=aui.AUI_MGR_DEFAULT | aui.AUI_MGR_ALLOW_ACTIVE_PANE)
         self._icon_size = (16, 16)
+        self._iconRepo = UtilIconRepo()
         self._childWinCount = 0
         # tell AuiManager to manage this frame
         self._auiMgr.SetManagedWindow(self)
@@ -180,6 +183,7 @@ class FrameMain(wx.Frame):
         return ctrl
 
     def create_tool_bar(self):
+        _img_lst = self._iconRepo.get_image_list()
         _tb_icon_size = wx.Size(16, 16)
         _tb = aui.AuiToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize,
                              agwStyle=aui.AUI_TB_DEFAULT_STYLE | aui.AUI_TB_OVERFLOW)
@@ -189,11 +193,20 @@ class FrameMain(wx.Frame):
         _save_bmp = wx.ArtProvider.GetBitmap(wx.ART_FILE_SAVE, wx.ART_TOOLBAR, _tb_icon_size)
         _copy_bmp = wx.ArtProvider.GetBitmap(wx.ART_COPY, wx.ART_TOOLBAR, _tb_icon_size)
         _paste_bmp = wx.ArtProvider.GetBitmap(wx.ART_PASTE, wx.ART_TOOLBAR, _tb_icon_size)
-        _pane_save_id = wx.NewIdRef()
-        _tb.AddSimpleTool(_pane_save_id, 'Save', _save_bmp, 'Save')
+        _pane_proj_new_id = wx.NewIdRef()
+        _pane_proj_save_id = wx.NewIdRef()
+        _pane_proj_open_id = wx.NewIdRef()
+        _pane_diag_tc_id = wx.NewIdRef()
+        _tb.AddSimpleTool(_pane_proj_new_id, 'NewProject', _new_bmp, 'NewProject')
+        _tb.AddSimpleTool(_pane_proj_save_id, 'Save', _save_bmp, 'Save')
+        _tb.AddSimpleTool(_pane_proj_open_id, 'Open', _open_bmp, 'Open')
         _tb.AddSeparator()
+        _tb.AddSimpleTool(_pane_diag_tc_id, 'TC', _img_lst.GetBitmap(self._iconRepo.folderIcon), 'TC')
         _tb.Realize()
-        self.Bind(wx.EVT_TOOL, self.on_tb_pane_save, _pane_save_id)
+        self.Bind(wx.EVT_TOOL, self.on_tb_pane_save, _pane_proj_save_id)
+        self.Bind(wx.EVT_TOOL, self.on_menu_new_project_clicked, _pane_proj_new_id)
+        self.Bind(wx.EVT_TOOL, self.on_menu_open_clicked, _pane_proj_open_id)
+        self.Bind(wx.EVT_TOOL, self.on_menu_open_tc_diag, _pane_diag_tc_id)
         self._toolbar = _tb
         self._auiMgr.AddPane(_tb, aui.AuiPaneInfo().Name("CanvasTool").Caption("General Tools").
                              ToolbarPane().Top().Layer(1).Position(0).BestSize((-1, 24)))
@@ -416,6 +429,11 @@ class FrameMain(wx.Frame):
         _win = evt.GetWindow()
         evt.Skip()
 
+    def on_menu_open_tc_diag(self, evt):
+        # todo: first generate the TCS
+        _dlg = TCDialog([], self)
+        _ret = _dlg.ShowModal()
+
     def on_tb_pane_save(self, evt):
         # todo: ctrl+s acc-table
         if self._currentPane is not None:
@@ -451,7 +469,7 @@ class FrameMain(wx.Frame):
     def on_menu_save_clicked(self, evt):
         if self._currentProject:
             # save all cached pane
-            # fixme: next version, frame_app send the data to project only not the instance
+            # fixme: next version, frame_app send the data to project only, not the instance
             for n_uuid, panel in self._panelCache.items():
                 if isinstance(panel, StateChartCanvasViewPanel):
                     self._currentProject.save_canvas(panel)
@@ -582,12 +600,12 @@ class FrameMain(wx.Frame):
                     _panel.deserialize(_exist_in_proj.body)
             elif _role == EnumItemRole.DEV_FEATURE_EVENT or _role == EnumItemRole.USER_FEATURE_EVENT:
                 _evt_data = self._currentProject.get_event_data(uuid)
-                _panel = EventEditorPanel(self, _evt_data,self._currentProject.builtInEvents)
+                _panel = EventEditorPanel(self, _evt_data, self._currentProject.builtInEvents)
                 if _exist_in_proj is not None:
                     _panel.deserialize(_evt_data)
             elif _role == EnumItemRole.DEV_FEATURE_OBO:
                 _obo_data = self._currentProject.get_obo_data(uuid)
-                _panel = OBOEditorPanel(self, _obo_data,self._currentProject.builtInObos)
+                _panel = OBOEditorPanel(self, _obo_data, self._currentProject.builtInObos)
                 if _exist_in_proj is not None:
                     _panel.deserialize(_obo_data)
             elif _role == EnumItemRole.USER_FEATURE_RESOLVER:
@@ -672,14 +690,11 @@ class FrameMain(wx.Frame):
         event.Skip()
 
     def on_about(self, event: wx.Event):
-        _msg = "This Is The About Dialog Of The Pure Python Version Of AUI.\n\n" + \
-               "Author: Andrea Gavana @ 23 Dec 2005\n\n" + \
-               "Please Report Any Bug/Requests Of Improvements\n" + \
-               "To Me At The Following Addresses:\n\n" + \
-               "andrea.gavana@maerskoil.com\n" + "andrea.gavana@gmail.com\n\n" + \
+        _msg = "This Is The About Dialog Of MBT.\n\n" + \
+               "Author: Gaofeng Zhang @ 19 Sep 2020\n\n" +\
                "Welcome To wxPython " + wx.VERSION_STRING + "!!"
 
-        _dlg = wx.MessageDialog(self, _msg, "About",
+        _dlg = wx.MessageDialog(self, _msg, "About MBT",
                                 wx.OK | wx.ICON_INFORMATION)
 
         if wx.Platform != '__WXMAC__':
