@@ -1,0 +1,10 @@
+BODY:
+  event: PWR_UI.evt
+  state: PWR_UI.stc
+HEADER:
+  author: PXCE-N0819
+  date: 08/03 14:16:40.324
+  description: power user feature
+  libName: Feature PWR_UI
+  type: MBT_FEATURE_LIB
+  version: 2.0.1

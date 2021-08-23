@@ -1,0 +1,1182 @@
+BODY:
+  canvas:
+    setting:
+      mDebug: true
+      mFMaxScale: 4.0
+      mFMinScale: 0.4
+      mFScale: 1.0
+      mGridSize: !!python/object/apply:wx._core.Size
+      - 50
+      - 50
+      mMode: 0
+      mStyle: 1015
+  nodes:
+  - bbox: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - &id001 !!python/name:wxgraph.util_bbox.BBox ''
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+        - 2
+      - &id002 !!python/object/apply:numpy.dtype
+        args:
+        - f8
+        - false
+        - true
+        state: !!python/tuple
+        - 3
+        - <
+        - null
+        - null
+        - null
+        - -1
+        - -1
+        - 0
+      - false
+      - !!binary |
+        AAAAAAAocMAAAAAAAAAlQAAAAAAAkGDAAAAAAACgUUA=
+    class: StateNodeShape
+    connectionStyle: 1
+    enterEventModel: !NodeEventModel []
+    exitEventModel: !NodeEventModel []
+    isVisible: true
+    nameText: sNO_PARED
+    position: !!python/tuple
+    - -256.5
+    - 68.5
+    role: !EnumItemRole 'ITEM_STATE'
+    uuid: 797b4fd44638459d9ac5c1bc8d0aa38d
+  - class: InitStateNodeShape
+    connectionStyle: 1
+    isVisible: true
+    nameText: INIT
+    position: !!python/tuple
+    - -192.5
+    - 249.5
+    role: !EnumItemRole 'ITEM_STATE'
+    uuid: d27f69b9a07f445d9673c4360abb78ce
+  - bbox: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAADwb8AAAAAAAOBbwAAAAAAAMGDAAAAAAADAScA=
+    class: StateNodeShape
+    connectionStyle: 1
+    enterEventModel: !NodeEventModel []
+    exitEventModel: !NodeEventModel []
+    isVisible: true
+    nameText: sPARED
+    position: !!python/tuple
+    - -253.5
+    - -53.5
+    role: !EnumItemRole 'ITEM_STATE'
+    uuid: a206ade2ea894840b791cef4d9b53047
+  - bbox: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAA8L8AAAAAAEBcwAAAAAAAQF9AAAAAAACASsA=
+    class: StateNodeShape
+    connectionStyle: 1
+    enterEventModel: !NodeEventModel []
+    exitEventModel: !NodeEventModel []
+    isVisible: true
+    nameText: sRUN
+    position: !!python/tuple
+    - 1.0
+    - -55.0
+    role: !EnumItemRole 'ITEM_STATE'
+    uuid: 66585773aad04bdd81ff8654b1a85c31
+  - bbox: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABgWkAAAAAAAADgPwAAAAAA8GxAAAAAAABATkA=
+    class: StateNodeShape
+    connectionStyle: 1
+    enterEventModel: !NodeEventModel []
+    exitEventModel: !NodeEventModel []
+    isVisible: true
+    nameText: sDIAG
+    position: !!python/tuple
+    - 107.5
+    - 58.5
+    role: !EnumItemRole 'ITEM_STATE'
+    uuid: e9bec034a6cd4d32acee050888bf76cf
+  - bbox: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACAaEAAAAAAAMBfQAAAAAAAIHRAAAAAAABgZ0A=
+    class: StateNodeShape
+    connectionStyle: 1
+    enterEventModel: !NodeEventModel []
+    exitEventModel: !NodeEventModel []
+    isVisible: true
+    nameText: sFS
+    position: !!python/tuple
+    - 198.0
+    - 185.0
+    role: !EnumItemRole 'ITEM_STATE'
+    uuid: ad0b57243b524e97be9be8c480152ac2
+  - bbox: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAwcMAAAAAAAIBfQAAAAAAAoGDAAAAAAABAZ0A=
+    class: StateNodeShape
+    connectionStyle: 1
+    enterEventModel: !NodeEventModel []
+    exitEventModel: !NodeEventModel []
+    isVisible: true
+    nameText: sPOWERED
+    position: !!python/tuple
+    - -257.0
+    - 184.0
+    role: !EnumItemRole 'ITEM_STATE'
+    uuid: d16450e15cb64a8a9a922afe9f2ecab2
+  wires:
+  - arrowAngle: 30.0
+    arrowDirection: -180.0
+    class: TransitionWireShape
+    dstNodeUUID: d16450e15cb64a8a9a922afe9f2ecab2
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - &id003 !!python/name:numpy.ndarray ''
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACAaMAAAAAAAEBnQA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevPower
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: d27f69b9a07f445d9673c4360abb78ce
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACwZ8AAAAAAADBuQA==
+    text: t2Init
+    uuid: 6e7dd64c41a844b895480ee7fad15dfc
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACwZ8AAAAAAABBsQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAYaMAAAAAAALhqQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACAaMAAAAAAAGBpQA==
+  - arrowAngle: 30.0
+    arrowDirection: -180.0
+    class: TransitionWireShape
+    dstNodeUUID: 797b4fd44638459d9ac5c1bc8d0aa38d
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABwaMAAAAAAAKBRQA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevPowerIsOK
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: d16450e15cb64a8a9a922afe9f2ecab2
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACAaMAAAAAAAIBfQA==
+    text: t2PowerOK
+    uuid: 30e9b9f3168b4732b2e2b0c36802dc8b
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACAaMAAAAAAAEBbQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAB4aMAAAAAAAJBYQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABwaMAAAAAAAOBVQA==
+  - arrowAngle: 30.0
+    arrowDirection: -180.0
+    class: TransitionWireShape
+    dstNodeUUID: a206ade2ea894840b791cef4d9b53047
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQaMAAAAAAAMBJwA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevParemetrize
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: 797b4fd44638459d9ac5c1bc8d0aa38d
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABwaMAAAAAAAAAlQA==
+    text: t2Parameterize
+    uuid: a756f459746c46d9b6d4f4e5c28493f9
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABwaMAAAAAAAAAawA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABAaMAAAAAAAIA0wA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQaMAAAAAAAEBBwA==
+  - arrowAngle: 30.0
+    arrowDirection: -270.0
+    class: TransitionWireShape
+    dstNodeUUID: 66585773aad04bdd81ff8654b1a85c31
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAA8L8AAAAAAMBUwA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevSafeCommStart
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: a206ade2ea894840b791cef4d9b53047
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAwYMAAAAAAAGBUwA==
+    text: t2StartSafeComm
+    uuid: 9303e78336534619aa7b38b3f0acd6bc
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAgXMAAAAAAAGBUwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABQUMAAAAAAAJBUwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAAMsAAAAAAAMBUwA==
+  - arrowAngle: 30.0
+    arrowDirection: -0.0
+    class: TransitionWireShape
+    dstNodeUUID: e9bec034a6cd4d32acee050888bf76cf
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQZUAAAAAAAADgPw==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevHasDiagnose
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: 66585773aad04bdd81ff8654b1a85c31
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABAX0AAAAAAAMBUwA==
+    text: t2HasDiag
+    uuid: 1da3231d9ba84825927ec58fa3fa0c3f
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAADAYUAAAAAAAMBUwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABoY0AAAAAAAOBIwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQZUAAAAAAAIAwwA==
+  - arrowAngle: 30.0
+    arrowDirection: -180.0
+    class: TransitionWireShape
+    dstNodeUUID: 66585773aad04bdd81ff8654b1a85c31
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAAT0AAAAAAAIBKwA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevDiagnoseAcked
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: e9bec034a6cd4d32acee050888bf76cf
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABgWkAAAAAAAIA+QA==
+    text: t2DiagAcked
+    uuid: 2399083d2a6c44048a64a202fae45c3c
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAgVkAAAAAAAIA+QA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAADQUkAAAAAAAAAGwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAAT0AAAAAAAABCwA==
+  - arrowAngle: 30.0
+    arrowDirection: -0.0
+    class: TransitionWireShape
+    dstNodeUUID: ad0b57243b524e97be9be8c480152ac2
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAwcEAAAAAAAMBfQA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevToFS
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: 66585773aad04bdd81ff8654b1a85c31
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABAWEAAAAAAAEBcwA==
+    text: t2FS
+    uuid: bd783f1280ad463bb9a0a366f459b005
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABAWEAAAAAAAEBgwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAocEAAAAAAAOBfwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAwcEAAAAAAAIBbQA==
+  - arrowAngle: 30.0
+    arrowDirection: -270.0
+    class: TransitionWireShape
+    dstNodeUUID: ad0b57243b524e97be9be8c480152ac2
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACAaEAAAAAAAKBjQA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevToFS
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: e9bec034a6cd4d32acee050888bf76cf
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQZUAAAAAAAEBOQA==
+    text: t2FS
+    uuid: 2c9b35fea83742a382888525500d400d
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQZUAAAAAAAGBTQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAC4ZUAAAAAAAFBdQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABgZkAAAAAAAKBjQA==
+  - arrowAngle: 30.0
+    arrowDirection: -90.0
+    class: TransitionWireShape
+    dstNodeUUID: d16450e15cb64a8a9a922afe9f2ecab2
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACgYMAAAAAAAIBjQA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_Repower
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: ad0b57243b524e97be9be8c480152ac2
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAwcEAAAAAAAGBnQA==
+    text: t2Repower
+    uuid: 373b07c8ab9340018dc792d70e560c84
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAwcEAAAAAAAIBpQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAARMAAAAAAAPBoQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAAXcAAAAAAAIBjQA==
+  - arrowAngle: 30.0
+    arrowDirection: -0.0
+    class: TransitionWireShape
+    dstNodeUUID: a206ade2ea894840b791cef4d9b53047
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQaMAAAAAAAOBbwA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevSafeCommStop
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: 66585773aad04bdd81ff8654b1a85c31
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAAO0AAAAAAAEBcwA==
+    text: t2StopSafeComm
+    uuid: 764d3c1184d340cdaeed1c6b6dace060
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAAO0AAAAAAAEBgwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACwVMAAAAAAAChgwA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAAAQaMAAAAAAABBgwA==
+  - arrowAngle: 30.0
+    arrowDirection: -180.0
+    class: TransitionWireShape
+    dstNodeUUID: e9bec034a6cd4d32acee050888bf76cf
+    dstPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACwYEAAAAAAAEBOQA==
+    eventModel: !NodeEventModel
+    - !!python/tuple
+      - DE_DevParFail
+      - ''
+    isVisible: true
+    role: !EnumItemRole 'ITEM_TRANSITION'
+    srcNodeUUID: 797b4fd44638459d9ac5c1bc8d0aa38d
+    srcPosition: !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACQYMAAAAAAAEBEQA==
+    text: t2ParFailed
+    uuid: f3305d0d51cb404ebe178f14327bb347
+    wayPoint:
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAADgXMAAAAAAAEBEQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id001
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAABATcAAAAAAAOBSQA==
+    - !!python/object/apply:numpy.core.multiarray._reconstruct
+      args:
+      - *id003
+      - !!python/tuple
+        - 0
+      - !!binary |
+        Yg==
+      state: !!python/tuple
+      - 1
+      - !!python/tuple
+        - 2
+      - *id002
+      - false
+      - !!binary |
+        AAAAAACwYEAAAAAAAGBTQA==
+HEADER:
+  author: PXCE-N0819
+  date: 08/03 14:14:37.181
+  type: MBT_STC
+  version: 2.0.1

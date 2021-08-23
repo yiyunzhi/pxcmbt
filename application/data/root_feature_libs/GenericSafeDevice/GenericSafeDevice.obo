@@ -1,0 +1,63 @@
+BODY:
+  '*Diagnosis': !MBTObo
+    name: '*Diagnosis'
+    type: Diagnosis
+    readonly: false
+    description: Observable Description
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+    - - - code
+        - !MBTOboData
+          name: code
+          dataType: integer
+          default: '0'
+      - - priority
+        - !MBTOboData
+          name: priority
+          dataType: integer
+          default: '0'
+      - - location
+        - !MBTOboData
+          name: location
+          dataType: integer
+          default: '0'
+      - - addValue
+        - !MBTOboData
+          name: addValue
+          dataType: integer
+          default: '0'
+  '*LED': !MBTObo
+    name: '*LED'
+    type: LED
+    readonly: false
+    description: Observable Description
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+    - - - state
+        - !MBTOboData
+          name: state
+          dataType: integer
+          default: '0'
+      - - color
+        - !MBTOboData
+          name: color
+          dataType: integer
+          default: '0'
+      - - flash
+        - !MBTOboData
+          name: flash
+          dataType: integer
+          default: '0'
+  '*ProcessData': !MBTObo
+    name: '*ProcessData'
+    type: ProcessData
+    readonly: false
+    description: Observable Description
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+    - []
+HEADER:
+  author: PXCE-N0819
+  date: 08/03 12:37:05.235
+  type: MBT_RSV
+  version: 2.0.1
