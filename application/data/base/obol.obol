@@ -1,0 +1,650 @@
+BODY:
+  OBO_LED_UI_RED_ON: !MBTObo
+    uuid: fffffffffffffffe0000000000000001
+    name: OBO_LED_UI_RED_ON
+    type: LED
+    readonly: true
+    description: observable object LED UI in red
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'UI'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 1
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0xff0000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_UI_OFF: !MBTObo
+    uuid: fffffffffffffffe0000000000000002
+    name: OBO_LED_UI_OFF
+    type: LED
+    readonly: true
+    description: observable object LED UI off
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'UI'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x000000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_UI_GRN_BLINK: !MBTObo
+    uuid: fffffffffffffffe0000000000000003
+    name: OBO_LED_UI_GRN_BLINK
+    type: LED
+    readonly: true
+    description: observable object blinked LED UI in green
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'UI'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 2
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x00ff00
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x000003E8
+  OBO_LED_E1_OFF: !MBTObo
+    uuid: fffffffffffffffe0000000000000004
+    name: OBO_LED_E1_OFF
+    type: LED
+    readonly: true
+    description: observable object LED E1 off
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'E1'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x000000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_E2_OFF: !MBTObo
+    uuid: fffffffffffffffe0000000000000005
+    name: OBO_LED_E2_OFF
+    type: LED
+    readonly: true
+    description: observable object LED E2 off
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'E2'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x000000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_E1_RD_ON: !MBTObo
+    uuid: fffffffffffffffe0000000000000006
+    name: OBO_LED_E1_RD_ON
+    type: LED
+    readonly: true
+    description: observable object LED E1 in red
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'E1'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 1
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0xFF0000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_E2_RD_ON: !MBTObo
+    uuid: fffffffffffffffe0000000000000007
+    name: OBO_LED_E2_RD_ON
+    type: LED
+    readonly: true
+    description: observable object LED E2 in red
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'E2'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0xFF0000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_FS_RD_ON: !MBTObo
+    uuid: fffffffffffffffe0000000000000008
+    name: OBO_LED_FS_RD_ON
+    type: LED
+    readonly: true
+    description: observable object LED FS in red
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'FS'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 1
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0xFF0000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_FS_RD_BLINK: !MBTObo
+    uuid: fffffffffffffffe0000000000000009
+    name: OBO_LED_FS_RD_BLINK
+    type: LED
+    readonly: true
+    description: observable object LED FS in red blinked
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'FS'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0xFF0000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x000003E8
+  OBO_LED_FS_OFF: !MBTObo
+    uuid: fffffffffffffffe000000000000000a
+    name: OBO_LED_FS
+    type: LED
+    readonly: true
+    description: observable object LED FS
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'FS'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0xFF0000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_P_GRN_ON: !MBTObo
+    uuid: fffffffffffffffe000000000000000b
+    name: OBO_LED_P_GRN_ON
+    type: LED
+    readonly: true
+    description: observable object LED P in green
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'P'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 1
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x00FF00
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_P_GRN_BLINK: !MBTObo
+    uuid: fffffffffffffffe000000000000000c
+    name: OBO_LED_P_GRN_BLINK
+    type: LED
+    readonly: true
+    description: observable object LED p in green blinked
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'P'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 2
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x00FF00
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x000003E8
+  OBO_LED_P_OFF: !MBTObo
+    uuid: fffffffffffffffe000000000000000d
+    name: OBO_LED_P_OFF
+    type: LED
+    readonly: true
+    description: observable object LED P
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'P'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x000000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_D_OFF: !MBTObo
+    uuid: fffffffffffffffe000000000000000e
+    name: OBO_LED_D_OFF
+    type: LED
+    readonly: true
+    description: observable object LED D
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'D'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 0
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0x000000
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_LED_D_YE: !MBTObo
+    uuid: fffffffffffffffe000000000000000f
+    name: OBO_LED_D_YE
+    type: LED
+    readonly: true
+    description: observable object LED D in yellow
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - label
+          - !MBTOboData
+            name: label
+            dataType: string
+            default: 'D'
+        - - state
+          - !MBTOboData
+            name: state
+            dataType: integer
+            default: 1
+        - - color
+          - !MBTOboData
+            name: color
+            dataType: integer
+            default: 0xFFFF00
+        - - flash
+          - !MBTOboData
+            name: flash
+            dataType: integer
+            default: 0x00000000
+  OBO_FHOST_SB_OK: !MBTObo
+    uuid: fffffffffffffffe0000000000000010
+    name: OBO_FHOST_SB_OK
+    type: FHostSb
+    readonly: true
+    description: observable object statusbyte of fhost
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - offset
+          - !MBTOboData
+            name: offset
+            dataType: integer
+            default: 0
+        - - bitLength
+          - !MBTOboData
+            name: bitLength
+            dataType: integer
+            default: 8
+        - - mask
+          - !MBTOboData
+            name: mask
+            dataType: integer
+            default: 0xEF
+        - - value
+          - !MBTOboData
+            name: value
+            dataType: integer
+            default: 0x00
+  OBO_PD_BYTE_ALL_1: !MBTObo
+    uuid: fffffffffffffffe0000000000000011
+    name: OBO_PD_ALL_1
+    type: ProcessData
+    readonly: true
+    description: observable object processdata all one
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - offset
+          - !MBTOboData
+            name: offset
+            dataType: integer
+            default: 0
+        - - bitLength
+          - !MBTOboData
+            name: bitLength
+            dataType: integer
+            default: 8
+        - - mask
+          - !MBTOboData
+            name: mask
+            dataType: integer
+            default: 0xFF
+        - - value
+          - !MBTOboData
+            name: value
+            dataType: integer
+            default: 0xFF
+  OBO_PD_BYTE_ALL_0: !MBTObo
+    uuid: fffffffffffffffe0000000000000012
+    name: OBO_PD_BYTE_ALL_0
+    type: ProcessData
+    readonly: true
+    description: observable object processdata all zero
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - offset
+          - !MBTOboData
+            name: offset
+            dataType: integer
+            default: 0
+        - - bitLength
+          - !MBTOboData
+            name: bitLength
+            dataType: integer
+            default: 8
+        - - mask
+          - !MBTOboData
+            name: mask
+            dataType: integer
+            default: 0xFF
+        - - value
+          - !MBTOboData
+            name: value
+            dataType: integer
+            default: 0x00
+  OBO_DIAG_UNDER_V: !MBTObo
+    uuid: fffffffffffffffe0000000000000013
+    name: OBO_DIAG_UNDER_V
+    type: Diagnosis
+    readonly: true
+    description: observable object diagnose under voltage
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - code
+          - !MBTOboData
+            name: code
+            dataType: integer
+            default: 0x3411
+        - - priority
+          - !MBTOboData
+            name: priority
+            dataType: integer
+            default: 0x02
+        - - location
+          - !MBTOboData
+            name: location
+            dataType: integer
+            default: 0xFF
+        - - addValue
+          - !MBTOboData
+            name: addValue
+            dataType: integer
+            default: 0x0000
+  OBO_DIAG_1CH_SYMM_LOC0: !MBTObo
+    uuid: fffffffffffffffe0000000000000014
+    name: OBO_DIAG_1CH_SYMM_LOC0
+    type: Diagnosis
+    readonly: true
+    description: observable object diagnose 1 channel input with symmtrie monition
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - code
+          - !MBTOboData
+            name: code
+            dataType: integer
+            default: 0x6320
+        - - priority
+          - !MBTOboData
+            name: priority
+            dataType: integer
+            default: 0x01
+        - - location
+          - !MBTOboData
+            name: location
+            dataType: integer
+            default: 0x00
+        - - addValue
+          - !MBTOboData
+            name: addValue
+            dataType: integer
+            default: 0x0340
+  OBO_DIAG_1CH_SYMM_LOC2: !MBTObo
+    uuid: fffffffffffffffe0000000000000015
+    name: OBO_DIAG_1CH_SYMM_LOC1
+    type: Diagnosis
+    readonly: true
+    description: observable object diagnose 1 channel input with symmtrie monition
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - code
+          - !MBTOboData
+            name: code
+            dataType: integer
+            default: 0x6320
+        - - priority
+          - !MBTOboData
+            name: priority
+            dataType: integer
+            default: 0x01
+        - - location
+          - !MBTOboData
+            name: location
+            dataType: integer
+            default: 0x02
+        - - addValue
+          - !MBTOboData
+            name: addValue
+            dataType: integer
+            default: 0x0341
+  OBO_DIAG_1CH_SYMM_LOC4: !MBTObo
+    uuid: fffffffffffffffe0000000000000014
+    name: OBO_DIAG_1CH_SYMM_LOC0
+    type: Diagnosis
+    readonly: true
+    description: observable object diagnose 1 channel input with symmtrie monition
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - code
+          - !MBTOboData
+            name: code
+            dataType: integer
+            default: 0x6320
+        - - priority
+          - !MBTOboData
+            name: priority
+            dataType: integer
+            default: 0x01
+        - - location
+          - !MBTOboData
+            name: location
+            dataType: integer
+            default: 0x04
+        - - addValue
+          - !MBTOboData
+            name: addValue
+            dataType: integer
+            default: 0x0342
+  OBO_DIAG_1CH_SYMM_LOC6: !MBTObo
+    uuid: fffffffffffffffe0000000000000014
+    name: OBO_DIAG_1CH_SYMM_LOC6
+    type: Diagnosis
+    readonly: true
+    description: observable object diagnose 1 channel input with symmtrie monition
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+      - - - code
+          - !MBTOboData
+            name: code
+            dataType: integer
+            default: 0x6320
+        - - priority
+          - !MBTOboData
+            name: priority
+            dataType: integer
+            default: 0x01
+        - - location
+          - !MBTOboData
+            name: location
+            dataType: integer
+            default: 0x06
+        - - addValue
+          - !MBTOboData
+            name: addValue
+            dataType: integer
+            default: 0x0343
+HEADER:
+  author: LIU
+  date: 07/23 14:58:56.801
+  type: MBT_EVTL
+  version: 2.0.1

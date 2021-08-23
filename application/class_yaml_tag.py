@@ -46,6 +46,7 @@ class MBTEventTag(yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper: yaml.Dumper, data):
         _mapping = [('name', data.name),
+                    ('uuid', data.uuid),
                     ('type', data.type),
                     ('readonly', data.readonly),
                     ('description', data.description),
@@ -113,6 +114,7 @@ class MBTOboTag(yaml.YAMLObject):
     @classmethod
     def to_yaml(cls, dumper: yaml.Dumper, data):
         _mapping = [('name', data.name),
+                    ('uuid', data.uuid),
                     ('type', data.type),
                     ('readonly', data.readonly),
                     ('description', data.description),

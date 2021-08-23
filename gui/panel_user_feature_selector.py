@@ -85,7 +85,7 @@ class FeatureSelectorPanel(wx.Panel):
         self.featureLstSizer.Add(self.dvlc, 1, wx.EXPAND)
         self.mainSizer.AddSpacer(5)
         self.featureDetailSizer.Add(self.detailPanel, 1, wx.EXPAND)
-        self.featureDetailSizer.Add(self.imageCtrl, 1, wx.EXPAND)
+        self.featureDetailSizer.Add(self.imageCtrl, 1, wx.EXPAND | wx.TOP, 5)
         self.mainSizer.Add(self.featureLstSizer, 0, wx.EXPAND)
         self.mainSizer.Add(self.featureDetailSizer, 1, wx.EXPAND)
         self.SetSizer(self.mainSizer)
@@ -96,7 +96,7 @@ class FeatureSelectorPanel(wx.Panel):
         _selected_row = self.dvlc.GetSelectedRow()
         _selected_fe_name = self.dvlc.GetTextValue(_selected_row, 0)
         self.currentFeature = _selected_fe_name
-        _feature=self._builtIn[_selected_fe_name]
+        _feature = self._builtIn[_selected_fe_name]
         _data = _feature.get_inf_file_content()
         self.detailPanel.set_data(_selected_fe_name, _data.header)
         _img = wx.Image(_feature.overviewImage, wx.BITMAP_TYPE_ANY)

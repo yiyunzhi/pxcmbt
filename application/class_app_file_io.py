@@ -158,7 +158,7 @@ class ApplicationStcFileBody(ApplicationFileBody):
     def get_dict(self):
         return {'canvas': self.canvas, 'nodes': self.nodes, 'wires': self.wires}
 
-    def get_transitions_list(self):
+    def get_transition_text_list(self):
         if self.wires is not None:
             return [x['text'] for x in self.wires]
         return []
@@ -234,6 +234,7 @@ class ApplicationOboFileHeader(ApplicationFileHeader):
 class ApplicationOboFileBody(ApplicationFileBody):
     def __init__(self, **kwargs):
         ApplicationFileBody.__init__(self, **kwargs)
+        self.obos = kwargs
 
 
 class ApplicationOboFileIO(ApplicationFileIO):
@@ -263,7 +264,7 @@ class ApplicationObolFileHeader(ApplicationFileHeader):
 class ApplicationObolFileBody(ApplicationFileBody):
     def __init__(self, **kwargs):
         ApplicationFileBody.__init__(self, **kwargs)
-        self.obos=kwargs
+        self.obos = kwargs
 
 
 class ApplicationObolFileIO(ApplicationFileIO):

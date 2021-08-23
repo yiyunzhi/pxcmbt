@@ -17,6 +17,7 @@ class OBODetailPanel(wx.Panel):
         self.ctrlEvtTypLabel = wx.StaticText(self, wx.ID_ANY, 'Type:')
         self.ctrlEvtTypEdit = wx.ComboBox(self, wx.ID_ANY, value=EnumOBOType.LED.value,
                                           choices=EnumOBOType.ALL_VALUES.value)
+        self.ctrlEvtTypEdit.Disable()
         self.ctrlEvtPermissionLabel = wx.StaticText(self, wx.ID_ANY, 'Permission:')
         self.ctrlEvtPermissionEdit = wx.StaticText(self, wx.ID_ANY, 'R')
         self.ctrlEvtDescLabel = wx.StaticText(self, wx.ID_ANY, 'Description:')

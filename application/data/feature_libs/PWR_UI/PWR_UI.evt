@@ -1,5 +1,6 @@
 BODY:
   evt_pwr_ok: !MBTEvent
+    uuid:
     name: evt_pwr_ok
     type: outgoing
     readonly: false
@@ -8,6 +9,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
     - []
   evt_pwr_over: !MBTEvent
+    uuid:
     name: evt_pwr_over
     type: outgoing
     readonly: false
@@ -16,6 +18,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
     - []
   evt_pwr_under: !MBTEvent
+    uuid:
     name: evt_pwr_under
     type: outgoing
     readonly: false

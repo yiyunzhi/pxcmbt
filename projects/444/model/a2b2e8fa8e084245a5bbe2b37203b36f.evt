@@ -6,7 +6,7 @@ BODY:
     description: Device Dignose is acknowledged
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevHasDiagnose: !MBTEvent
     name: DE_DevHasDiagnose
     type: outgoing
@@ -14,7 +14,7 @@ BODY:
     description: Device has Diagnose
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevParFail: !MBTEvent
     name: DE_DevParFail
     type: outgoing
@@ -22,7 +22,7 @@ BODY:
     description: Device Parametrize failed
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevParemetrize: !MBTEvent
     name: DE_DevParemetrize
     type: outgoing
@@ -30,7 +30,7 @@ BODY:
     description: Device is parametrized (Transition from sNO_PARED->sPARED)
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevPower: !MBTEvent
     name: DE_DevPower
     type: outgoing
@@ -38,7 +38,7 @@ BODY:
     description: DeviceInit (Transition from INIT->sPOWERED)
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevPowerIsOK: !MBTEvent
     name: DE_DevPowerIsOK
     type: outgoing
@@ -46,7 +46,7 @@ BODY:
     description: Device is power ok (Transition from sPOWERED->sNO_PARED)
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevSafeCommStart: !MBTEvent
     name: DE_DevSafeCommStart
     type: outgoing
@@ -54,7 +54,7 @@ BODY:
     description: Device SafeCommunication started
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevSafeCommStop: !MBTEvent
     name: DE_DevSafeCommStop
     type: outgoing
@@ -62,7 +62,7 @@ BODY:
     description: Device SafeCommunication stopped
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
   DE_DevToFS: !MBTEvent
     name: DE_DevToFS
     type: outgoing
@@ -70,21 +70,7 @@ BODY:
     description: Device go into FailureState
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - - - NewData
-          - !MBTEventData
-            name: NewData
-            dataType: string
-            default: '0'
-        - - NewData2
-          - !MBTEventData
-            name: NewData2
-            dataType: float
-            default: '5.0'
-        - - NewData3
-          - !MBTEventData
-            name: NewData3
-            dataType: integer
-            default: '1255'
+    - []
   DE_Repower: !MBTEvent
     name: DE_Repower
     type: outgoing
@@ -92,9 +78,9 @@ BODY:
     description: Device is repowered
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-      - [ ]
+    - []
 HEADER:
-  author: PXCE-N0819
-  date: 08/04 14:29:22.821
+  author: LIU
+  date: 07/23 14:58:56.801
   type: MBT_EVT
   version: 2.0.1

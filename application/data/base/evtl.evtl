@@ -1,5 +1,6 @@
 BODY:
   EVT_PowerOnDev: !MBTEvent
+    uuid: ffffffffffffffff0000000000000001
     name: EVT_PowerOnDev
     type: outgoing
     readonly: true
@@ -8,6 +9,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_PowerOffDev: !MBTEvent
+    uuid: ffffffffffffffff0000000000000002
     name: EVT_PowerOffDev
     type: outgoing
     readonly: true
@@ -16,6 +18,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_RePowerDev: !MBTEvent
+    uuid: ffffffffffffffff0000000000000003
     name: EVT_RePowerDev
     type: outgoing
     readonly: true
@@ -24,6 +27,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_ParaDev: !MBTEvent
+    uuid: ffffffffffffffff0000000000000004
     name: EVT_ParaDev
     type: outgoing
     readonly: true
@@ -32,6 +36,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_AckDevDiagOnce: !MBTEvent
+    uuid: ffffffffffffffff0000000000000005
     name: EVT_AckDevDiagOnce
     type: outgoing
     readonly: true
@@ -40,6 +45,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_AckDevDiagMoreTimes: !MBTEvent
+    uuid: ffffffffffffffff0000000000000006
     name: EVT_AckDevDiagMoreTimes
     type: outgoing
     readonly: true
@@ -48,6 +54,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_AssertDevDiag: !MBTEvent
+    uuid: ffffffffffffffff0000000000000007
     name: EVT_AssertDevDiag
     type: outgoing
     readonly: true
@@ -56,6 +63,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_AssertDevNoDiag: !MBTEvent
+    uuid: ffffffffffffffff0000000000000008
     name: EVT_AssertDevNoDiag
     type: outgoing
     readonly: true
@@ -64,6 +72,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_StartDevSafeComm: !MBTEvent
+    uuid: ffffffffffffffff0000000000000009
     name: EVT_StartDevSafeComm
     type: outgoing
     readonly: true
@@ -72,6 +81,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_StopDevSafeComm: !MBTEvent
+    uuid: ffffffffffffffff000000000000000a
     name: EVT_StopDevSafeComm
     type: outgoing
     readonly: true
@@ -80,6 +90,7 @@ BODY:
     data: !!python/object/apply:collections.OrderedDict
       - [ ]
   EVT_DevToFS: !MBTEvent
+    uuid: ffffffffffffffff000000000000000b
     name: EVT_DevToFS
     type: outgoing
     readonly: true

@@ -15,6 +15,7 @@ class MBTEvent:
 
     def __eq__(self, other):
         return (other.name == self.name
+                and self.uuid == other.uuid
                 and self.type == other.type
                 and self.visible == other.visible
                 and self.readonly == other.readonly
@@ -22,6 +23,7 @@ class MBTEvent:
                 and self.data == other.data)
 
     def update(self, **kwargs):
+        self.uuid = kwargs.get('uuid', 'None')
         self.name = kwargs.get('name', 'None')
         self.type = kwargs.get('type', EnumMBTEventType.OUTGOING.value)
         self.description = kwargs.get('description', '')
@@ -38,10 +40,10 @@ class MBTEvent:
                 _mbt_data = MBTEventData(**x)
                 self.add_data(_mbt_data)
 
-    def has_data(self, name):
-        if name is None:
+    def has_data(self, data_name):
+        if data_name is None:
             return False
-        return name in self.data
+        return data_name in self.data
 
     def add_data(self, data: MBTEventData):
         if not self.has_data(data.name):
@@ -61,16 +63,17 @@ class MBTEventManager:
         self.lastLoadPath = None
 
     def update(self, event):
-        _evt = self._events.get(event.name)
-        _evt.name = event.name
-        _evt.type = event.type
-        _evt.description = event.description
-        _evt.visible = event.visible
-        _evt.readonly = event.readonly
-        _evt.data = event.data
+        _evt = self._events.get(event.uuid)
+        if _evt is not None:
+            _evt.name = event.name
+            _evt.type = event.type
+            _evt.description = event.description
+            _evt.visible = event.visible
+            _evt.readonly = event.readonly
+            _evt.data = event.data
 
     def get_events_names(self):
-        return list(self._events.keys())
+        return [v.name for k,v in self._events.items()]
 
     def get_events_names_by_type(self, type_lst):
         return [v.name for k,v in self._events.items() if v.type in type_lst]
@@ -78,11 +81,11 @@ class MBTEventManager:
     def get_all_events(self):
         return self._events
 
-    def get_event(self, name):
-        return self._events.get(name)
+    def get_event(self, uuid):
+        return self._events.get(uuid)
 
     def is_event_changed(self, event):
-        _evt = self._events.get(event.name)
+        _evt = self._events.get(event.uuid)
         return _evt != event
 
     def deserialize(self, data):
@@ -104,15 +107,15 @@ class MBTEventManager:
         return list(filter(lambda x: x.type == EnumMBTEventType.OUTGOING, self._events))
 
     def register_event(self, event: MBTEvent):
-        if event.name not in self._events:
-            self._events.update({event.name: event})
+        if event.uuid not in self._events:
+            self._events.update({event.uuid: event})
 
-    def unregister_event(self, evt_name):
-        if evt_name in self._events:
-            self._events.pop(evt_name)
+    def unregister_event(self, evt_uuid):
+        if evt_uuid in self._events:
+            self._events.pop(evt_uuid)
 
-    def has_event(self, evt_name):
-        return evt_name in self._events
+    def has_event(self, evt_uuid):
+        return evt_uuid in self._events
 
 
 class NodeEvtModel:

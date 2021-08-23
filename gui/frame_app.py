@@ -87,7 +87,7 @@ class FrameMain(wx.Frame):
             DestroyOnClose(False).Center().Snappable().Dockable(). \
             MinimizeButton(True).MaximizeButton(True).Floatable(False)
         # Attributes
-        # fixme: here use a dummy project
+        # here use a dummy project
         self._currentProject = Project('default')
         self._currentPane = None
         self._panelCache = dict()
@@ -126,11 +126,6 @@ class FrameMain(wx.Frame):
         self.Center()
         wx.CallAfter(self.SendSizeEvent)
         self._consolePane.write_info_content('---App Initial finished---')
-
-    def _set_canvas_toolbar_mode(self, mode: EnumCanvasToolbarMode):
-        _tool = self._toolbar.FindToolByIndex(mode)
-        if _tool is not None:
-            self._toolbar.ToggleTool(_tool.GetId(), True)
 
     def except_hook(self, etype, value, tb):
         """
@@ -626,20 +621,28 @@ class FrameMain(wx.Frame):
             if uuid in self._panelCache:
                 raise ValueError('panel already exist in cache')
             _panel.uuid = uuid
-            _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize((300, 300)).Caption(_caption).Name(uuid). \
+            _panel.Fit()
+            _bestSize = _panel.GetBestSize()
+            _centerDefaultAuiInfo = aui.AuiPaneInfo().BestSize(*_bestSize).Caption(_caption).Name(uuid). \
                 DestroyOnClose(False).Center().Snappable().Dockable(). \
                 MinimizeButton(True).MaximizeButton(True)
+            self._centerTargetAuiInfo.BestSize(_bestSize)
             self._auiMgr.AddPane(_panel, _centerDefaultAuiInfo, target=self._centerTargetAuiInfo)
             self._auiMgr.Update()
             self._panelCache.update({uuid: _panel})
         else:
             # if exist
             _panel = self._panelCache.get(uuid)
-
             if _panel.IsShown():
                 self._auiMgr.RequestUserAttention(_panel)
             else:
                 self._auiMgr.ShowPane(_panel, True)
+
+        _w, _h = self.GetClientSize()
+        _pw, _ph = _panel.GetBestSize()
+        _w = max(_w, _pw+240)
+        _h = max(_h, _ph)
+        self.SetClientSize(_w, _h)
         _panel.SetFocus()
 
     def on_ext_sig_prop_show_required(self, sender, uuid):
@@ -691,7 +694,7 @@ class FrameMain(wx.Frame):
 
     def on_about(self, event: wx.Event):
         _msg = "This Is The About Dialog Of MBT.\n\n" + \
-               "Author: Gaofeng Zhang @ 19 Sep 2020\n\n" +\
+               "Author: Gaofeng Zhang @ 19 Sep 2020\n\n" + \
                "Welcome To wxPython " + wx.VERSION_STRING + "!!"
 
         _dlg = wx.MessageDialog(self, _msg, "About MBT",

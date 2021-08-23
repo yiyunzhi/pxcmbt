@@ -25,7 +25,11 @@ class TransMatrixGrid(gridlib.Grid):
         self.SetColLabelAlignment(wx.ALIGN_LEFT, wx.ALIGN_BOTTOM)
         self.SetRowLabelAlignment(wx.ALIGN_LEFT, wx.ALIGN_BOTTOM)
         self.SetRowLabelSize(gridlib.GRID_AUTOSIZE)
+        self.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
         self.AutoSize()
+
+    def on_cell_changed(self, evt):
+        print('...---> cell changed',evt.GetCol(),evt.GetRow())
 
 
 class FeatureResolverPanel(wx.Panel):
@@ -58,7 +62,7 @@ class FeatureResolverPanel(wx.Panel):
         # _btn_ok.Bind(wx.EVT_BUTTON, self.on_ok_clicked)
         # _btn_update.Bind(wx.EVT_BUTTON, self.on_update_clicked)
         # layout
-        self.mainSizer.Add(HeaderPanel('TransitionMatrix', 'TransitionMatrix', parent=self), 0,
+        self.mainSizer.Add(HeaderPanel('Resolver', 'Resolver with TransitionMatrix', parent=self), 0,
                            wx.EXPAND | wx.ALL, 5)
         self.mainSizer.Add(self.matrixTab, 1, wx.EXPAND | wx.ALL, 5)
         self.mainSizer.Add(self.compoundCanvasDotGraphView, 1, wx.EXPAND | wx.ALL, 5)
@@ -86,10 +90,10 @@ class FeatureResolverPanel(wx.Panel):
         _col_labels, _row_labels = list(), list()
         if self.aSTCFileIO is not None and self.bSTCFileIO is not None:
             # first add column, root feature
-            for x in self.bSTCFileIO.body.get_transitions_list():
+            for x in self.bSTCFileIO.body.get_transition_text_list():
                 _col_labels.append(x)
             # then append rows
-            for x in self.aSTCFileIO.body.get_transitions_list():
+            for x in self.aSTCFileIO.body.get_transition_text_list():
                 _row_labels.append(x)
         _tab = TransMatrixGrid(self, _col_labels, _row_labels, transitions)
         return _tab

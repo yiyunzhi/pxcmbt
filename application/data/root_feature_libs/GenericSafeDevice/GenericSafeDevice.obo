@@ -1,5 +1,6 @@
 BODY:
   '*Diagnosis': !MBTObo
+    uuid:
     name: '*Diagnosis'
     type: Diagnosis
     readonly: false
@@ -27,13 +28,19 @@ BODY:
           dataType: integer
           default: '0'
   '*LED': !MBTObo
+    uuid:
     name: '*LED'
     type: LED
     readonly: false
     description: Observable Description
     visible: true
     data: !!python/object/apply:collections.OrderedDict
-    - - - state
+    - - - label
+        - !MBTOboData
+        name: label
+        dataType: integer
+        default: '0'
+      - - state
         - !MBTOboData
           name: state
           dataType: integer
@@ -49,6 +56,7 @@ BODY:
           dataType: integer
           default: '0'
   '*ProcessData': !MBTObo
+    uuid:
     name: '*ProcessData'
     type: ProcessData
     readonly: false
