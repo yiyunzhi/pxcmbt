@@ -1,0 +1,77 @@
+BODY:
+  model:
+    root:
+      data: !StandardItemData
+        uuid: 2f52004ef0c746a883f518210c8a9058
+        role: !EnumItemRole 'DEV_FEATURE'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      event: !StandardItemData
+        uuid: 24ce23d8f06744c8afa29e75b9fc15b0
+        role: !EnumItemRole 'DEV_FEATURE_EVENT'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      obo: !StandardItemData
+        uuid: c14fa91bc34748a4a593b04077029a09
+        role: !EnumItemRole 'DEV_FEATURE_OBO'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      state: !StandardItemData
+        uuid: 3248a653cc084d4b8792c3cfecff094f
+        role: !EnumItemRole 'DEV_FEATURE_STATE'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: Root
+    user:
+      children: []
+      data: !StandardItemData
+        uuid: b51025de40cf4202862e3b39dad2427a
+        role: !EnumItemRole 'USER_FEATURE'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: User
+  rack:
+    scripts:
+      children: []
+      data: !StandardItemData
+        uuid: d91e572662fc4f7b836c9652561aaaec
+        role: !EnumItemRole 'SCRIPTS'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: Scripts
+    sessions:
+      children: []
+      data: !StandardItemData
+        uuid: 2631225463b445cfa38c3b750457a591
+        role: !EnumItemRole 'SESSIONS'
+        flag: null
+        labelReadonly: true
+        tooltip: null
+        slotPath: null
+        parentUUID: null
+      text: Sessions
+  role: null
+  uuid: 2e8845a657ac410eaaea298a2edf65af
+HEADER:
+  author: LIU
+  date: 08/23 16:02:58.349
+  type: MBT_PROJ
+  version: 2.0.1

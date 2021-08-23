@@ -1,0 +1,15 @@
+BODY:
+  None: !MBTEvent
+    name: DE_DevDiagnoseAcked
+    uuid: None
+    type: outgoing
+    readonly: false
+    description: Device Dignose is acknowledged
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+    - []
+HEADER:
+  author: LIU
+  date: 08/23 16:02:58.127
+  type: MBT_EVT
+  version: 2.0.1
