@@ -1,2 +1,4 @@
-todo: finish builtin odo
+todo: finish builtin obo
+------------------------------
+todo: finish obo deserialization
 todo: finish matrix of transition
