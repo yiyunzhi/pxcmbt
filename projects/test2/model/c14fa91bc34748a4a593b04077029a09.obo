@@ -1,6 +1,62 @@
-BODY: {}
+BODY:
+  '*FDeviceSb2': !MBTObo
+    name: '*FDeviceSb2'
+    uuid: a6d2889c541e48eaa2c315c71ba95f47
+    type: FDeviceSb
+    readonly: false
+    description: Observable Description
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+    - - - value
+        - !MBTOboData
+          name: value
+          dataType: integer
+          default: '0'
+      - - offset
+        - !MBTOboData
+          name: offset
+          dataType: integer
+          default: '0'
+      - - bitLength
+        - !MBTOboData
+          name: bitLength
+          dataType: integer
+          default: '8'
+      - - mask
+        - !MBTOboData
+          name: mask
+          dataType: integer
+          default: '239'
+  '*LED1': !MBTObo
+    name: '*LED1'
+    uuid: 93a4d2d0b2dc429fad11bbeac17da5ae
+    type: LED
+    readonly: false
+    description: Observable Description
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+    - - - label
+        - !MBTOboData
+          name: label
+          dataType: string
+          default: LED
+      - - state
+        - !MBTOboData
+          name: state
+          dataType: integer
+          default: '0'
+      - - color
+        - !MBTOboData
+          name: color
+          dataType: integer
+          default: '0'
+      - - flash
+        - !MBTOboData
+          name: flash
+          dataType: integer
+          default: '0'
 HEADER:
   author: LIU
-  date: 08/23 16:02:58.124
+  date: 08/24 10:18:50.183
   type: MBT_OBOL
   version: 2.0.1

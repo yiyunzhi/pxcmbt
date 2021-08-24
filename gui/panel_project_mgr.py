@@ -395,7 +395,8 @@ class GuiProjectManagerPanel(wx.Panel):
 
     def get_root_state_uuid(self):
         return self.deviceStateItemData.uuid
-
+    def get_root_obo_uuid(self):
+        return self._deviceOboItemData.uuid
     def get_root_event_uuid(self):
         return self._deviceEvtItemData.uuid
 

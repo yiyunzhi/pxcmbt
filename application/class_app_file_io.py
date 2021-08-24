@@ -160,12 +160,12 @@ class ApplicationStcFileBody(ApplicationFileBody):
 
     def get_transition_text_list(self):
         if self.wires is not None:
-            return [x['text'] for x in self.wires]
+            return [(x['uuid'], x['text']) for x in self.wires]
         return []
 
     def get_states_list(self):
         if self.nodes is not None:
-            return [x['nameText'] for x in self.nodes]
+            return [(x['uuid'],x['nameText']) for x in self.nodes]
         return []
 
     def get_init_state_name(self):

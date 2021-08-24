@@ -23,10 +23,10 @@ class MBTEvent:
                 and self.data == other.data)
 
     def update(self, **kwargs):
-        self.uuid = kwargs.get('uuid', 'None')
-        self.name = kwargs.get('name', 'None')
-        self.type = kwargs.get('type', EnumMBTEventType.OUTGOING.value)
-        self.description = kwargs.get('description', '')
+        if kwargs.get('uuid'): self.uuid = kwargs.get('uuid')
+        if kwargs.get('name'): self.name = kwargs.get('name')
+        if kwargs.get('type'): self.type = kwargs.get('type')
+        if kwargs.get('description'): self.description = kwargs.get('description')
         self.readonly = kwargs.get('readonly', False)
         self.visible = kwargs.get('visible', True)
         self.data = OrderedDict()
@@ -73,10 +73,10 @@ class MBTEventManager:
             _evt.data = event.data
 
     def get_events_names(self):
-        return [v.name for k,v in self._events.items()]
+        return [v.name for k, v in self._events.items()]
 
     def get_events_names_by_type(self, type_lst):
-        return [v.name for k,v in self._events.items() if v.type in type_lst]
+        return [v.name for k, v in self._events.items() if v.type in type_lst]
 
     def get_all_events(self):
         return self._events
@@ -109,6 +109,16 @@ class MBTEventManager:
     def register_event(self, event: MBTEvent):
         if event.uuid not in self._events:
             self._events.update({event.uuid: event})
+
+    def register_events(self, events: [dict, list]):
+        if isinstance(events, dict):
+            for k, v in events.items():
+                if isinstance(v, MBTEvent):
+                    self.register_event(v)
+        elif isinstance(events, list):
+            for k in events:
+                if isinstance(k, MBTEvent):
+                    self.register_event(k)
 
     def unregister_event(self, evt_uuid):
         if evt_uuid in self._events:

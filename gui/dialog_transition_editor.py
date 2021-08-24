@@ -45,7 +45,7 @@ class TransitionEditorDialog(wx.Dialog):
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.mainSizer)
         self.evtMgr = MBTEventManager()
-        self.evtMgr.deserialize(evt_data)
+        self.evtMgr.register_events(evt_data)
         self._editorPanel = GuiTransitionEditorPanel(self.evtMgr, item, self)
         # layout
         self._btnSizer = wx.StdDialogButtonSizer()

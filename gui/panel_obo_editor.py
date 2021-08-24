@@ -42,7 +42,7 @@ class OBOLstMixin:
             if _ret == wx.YES:
                 self._save_processed_obo()
             elif _ret == wx.NO:
-                _exist = self.oboMgr.has_obo(self.processedObo.name)
+                _exist = self.oboMgr.has_obo(self.processedObo.uuid)
                 if not _exist:
                     self.dvlc.DeleteItem(_selected_row)
             self.processedObo = None

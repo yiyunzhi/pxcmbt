@@ -26,9 +26,12 @@ class HeaderPanel(wx.Panel):
 
     def set_title(self, title):
         self.title = title
+        self.ctrlTitle.SetLabelText(title)
 
     def set_sub_title(self, text):
         self.subTitle = text
+        self.ctrlSubTitle.SetLabelText(text)
 
     def set_description(self, text):
         self.description = text
+        self.ctrlDesc.SetLabelText(text)

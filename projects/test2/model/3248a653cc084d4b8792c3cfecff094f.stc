@@ -1120,7 +1120,7 @@ BODY:
         AAAAAACwYEAAAAAAAEBOQA==
     eventModel: !NodeEventModel
     - !!python/tuple
-      - DE_DevParFail
+      - EVT_ParaDev
       - ''
     isVisible: true
     role: !EnumItemRole 'ITEM_TRANSITION'
@@ -1190,6 +1190,6 @@ BODY:
         AAAAAACwYEAAAAAAAGBTQA==
 HEADER:
   author: LIU
-  date: 08/23 16:02:58.132
+  date: 08/24 10:37:16.879
   type: MBT_STC
   version: 2.0.1

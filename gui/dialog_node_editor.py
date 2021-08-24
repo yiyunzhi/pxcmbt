@@ -20,10 +20,10 @@ class GuiNodeEditorPanel(wx.Panel):
             wx.StaticBox(self, -1, 'General'),
             wx.VERTICAL)
         self._enterEvtBoxSizer = wx.StaticBoxSizer(
-            wx.StaticBox(self, -1, 'Emitted Events by Enter'),
+            wx.StaticBox(self, -1, 'Emitted Events on Enter'),
             wx.VERTICAL)
         self._exitEvtBoxSizer = wx.StaticBoxSizer(
-            wx.StaticBox(self, -1, 'Emitted Events by Exit'),
+            wx.StaticBox(self, -1, 'Emitted Events on Exit'),
             wx.VERTICAL)
         self.ctrlNameLabel = wx.StaticText(self, wx.ID_ANY, 'Name:')
         self.ctrlNameEdit = wx.TextCtrl(self, wx.ID_ANY, self.item.nameText)
@@ -52,7 +52,7 @@ class NodeEditorDialog(wx.Dialog):
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.mainSizer)
         self.evtMgr = MBTEventManager()
-        self.evtMgr.deserialize(evt_data)
+        self.evtMgr.register_events(evt_data)
         self._editorPanel = GuiNodeEditorPanel(self.evtMgr, item, self)
         # layout
         self._btnSizer = wx.StdDialogButtonSizer()

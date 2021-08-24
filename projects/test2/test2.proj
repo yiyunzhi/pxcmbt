@@ -35,9 +35,42 @@ BODY:
         parentUUID: null
       text: Root
     user:
-      children: []
+      children:
+      - data: !StandardItemData
+          uuid: 0e33a9e8298548f794fb657884b25ff5
+          role: !EnumItemRole 'USER_FEATURE_ITEM'
+          flag: null
+          labelReadonly: false
+          tooltip: null
+          slotPath: null
+          parentUUID: null
+        event: !StandardItemData
+          uuid: fb0c7799f8bd4b6184dcac2d640d2751
+          role: !EnumItemRole 'USER_FEATURE_EVENT'
+          flag: null
+          labelReadonly: true
+          tooltip: null
+          slotPath: null
+          parentUUID: null
+        resolver: !StandardItemData
+          uuid: 022cbe3b9d5544febf92981bf1813079
+          role: !EnumItemRole 'USER_FEATURE_RESOLVER'
+          flag: null
+          labelReadonly: true
+          tooltip: null
+          slotPath: null
+          parentUUID: null
+        state: !StandardItemData
+          uuid: a8d04449c8934bcbb61c906b6443c002
+          role: !EnumItemRole 'USER_FEATURE_STATE'
+          flag: null
+          labelReadonly: true
+          tooltip: null
+          slotPath: null
+          parentUUID: null
+        text: PWR_UA
       data: !StandardItemData
-        uuid: b51025de40cf4202862e3b39dad2427a
+        uuid: 2a326558b2044587b5fd9df82f7687a6
         role: !EnumItemRole 'USER_FEATURE'
         flag: null
         labelReadonly: true
@@ -49,7 +82,7 @@ BODY:
     scripts:
       children: []
       data: !StandardItemData
-        uuid: d91e572662fc4f7b836c9652561aaaec
+        uuid: 2684b92dba414d788e8f29a8c2b78238
         role: !EnumItemRole 'SCRIPTS'
         flag: null
         labelReadonly: true
@@ -60,7 +93,7 @@ BODY:
     sessions:
       children: []
       data: !StandardItemData
-        uuid: 2631225463b445cfa38c3b750457a591
+        uuid: 0e59f6b7bfc34f3ca1eafaaf906a257d
         role: !EnumItemRole 'SESSIONS'
         flag: null
         labelReadonly: true
@@ -69,9 +102,9 @@ BODY:
         parentUUID: null
       text: Sessions
   role: null
-  uuid: 2e8845a657ac410eaaea298a2edf65af
+  uuid: 8168b0e9c33340798cc55597397dc36b
 HEADER:
   author: LIU
-  date: 08/23 16:02:58.349
+  date: 08/24 10:45:17.980
   type: MBT_PROJ
   version: 2.0.1

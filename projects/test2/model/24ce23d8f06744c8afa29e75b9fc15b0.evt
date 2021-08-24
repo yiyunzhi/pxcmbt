@@ -1,15 +1,24 @@
 BODY:
-  None: !MBTEvent
-    name: DE_DevDiagnoseAcked
-    uuid: None
+  '*incoming2': !MBTEvent
+    name: '*incoming2'
+    uuid: e7b03c03176f4348a06634f31dffcfc3
+    type: incoming
+    readonly: false
+    description: Event Description2
+    visible: true
+    data: !!python/object/apply:collections.OrderedDict
+    - []
+  '*outgoing1': !MBTEvent
+    name: '*outgoing1'
+    uuid: 36676a5a87614391832f8e195d8878a3
     type: outgoing
     readonly: false
-    description: Device Dignose is acknowledged
+    description: Event Description1
     visible: true
     data: !!python/object/apply:collections.OrderedDict
     - []
 HEADER:
   author: LIU
-  date: 08/23 16:02:58.127
+  date: 08/24 10:11:24.059
   type: MBT_EVT
   version: 2.0.1

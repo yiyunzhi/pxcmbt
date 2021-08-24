@@ -186,7 +186,16 @@ class Project:
             pass
         return _f
 
-    def get_event_data(self, uuid):
+    def get_event_data(self, uuid, include_builtin=False):
+        _io = self.get_event_data_io(uuid)
+        if _io is not None:
+            _evt_in_io=_io.body.events
+            if include_builtin:
+                return dict(self.builtInEvents,**_evt_in_io)
+            else:
+                return _evt_in_io
+
+    def get_event_data_io(self, uuid):
         _guess_file_path = os.path.join(self.modelPath, uuid + APP_SETTING.evtFileExt)
         _exist = util_is_dir_exist(_guess_file_path)
         if _exist:
@@ -196,11 +205,20 @@ class Project:
         else:
             return None
 
-    def get_obo_data(self, uuid):
+    def get_obo_data(self, uuid,include_builtin=False):
+        _io = self.get_obo_data_io(uuid)
+        if _io is not None:
+            _obo_in_io = _io.body.obos
+            if include_builtin:
+                return dict(self.builtInObos, **_obo_in_io)
+            else:
+                return _obo_in_io
+
+    def get_obo_data_io(self, uuid):
         _guess_file_path = os.path.join(self.modelPath, uuid + APP_SETTING.observableFileExt)
         _exist = util_is_dir_exist(_guess_file_path)
         if _exist:
-            _file_io = ApplicationEvtFileIO(self.modelPath, uuid + APP_SETTING.observableFileExt)
+            _file_io = ApplicationOboFileIO(self.modelPath, uuid + APP_SETTING.observableFileExt)
             _file_io.read()
             return _file_io
         else:

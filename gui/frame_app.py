@@ -398,13 +398,13 @@ class FrameMain(wx.Frame):
 
     def on_ext_sig_canvas_node_dclicked(self, uuid, role, item):
         _evt_uuid = self.get_associated_event_uuid(uuid)
-        _evt_data = self._currentProject.get_event_data(_evt_uuid)
+        _evt_data = self._currentProject.get_event_data(_evt_uuid, True)
         _dlg = NodeEditorDialog(_evt_data, item, self)
         _ret = _dlg.ShowModal()
 
     def on_ext_sig_canvas_transition_dclicked(self, uuid, role, item):
         _evt_uuid = self.get_associated_event_uuid(uuid)
-        _evt_data = self._currentProject.get_event_data(_evt_uuid)
+        _evt_data = self._currentProject.get_event_data(_evt_uuid, True)
         _dlg = TransitionEditorDialog(_evt_data, item, self)
         _ret = _dlg.ShowModal()
 
@@ -604,16 +604,17 @@ class FrameMain(wx.Frame):
                 if _exist_in_proj is not None:
                     _panel.deserialize(_obo_data)
             elif _role == EnumItemRole.USER_FEATURE_RESOLVER:
-                _root_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
-                _root_stc_file_io = self._currentProject.get_file_io(_root_uuid, EnumItemRole.DEV_FEATURE_STATE)
+                _root_state_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
+                _root_obo_uuid = self._panelProjectMgr.contentPanel.get_root_obo_uuid()
+                _obo_data = self._currentProject.get_obo_data(_root_obo_uuid,True)
+                _root_stc_file_io = self._currentProject.get_file_io(_root_state_uuid, EnumItemRole.DEV_FEATURE_STATE)
                 _state_uuid = self.get_associated_state_uuid(uuid)
                 _uf_stc_file_io = self._currentProject.get_file_io(_state_uuid, EnumItemRole.USER_FEATURE_STATE)
                 _uf_name = self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_state_uuid)
-                _root_name = self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_uuid)
-                _panel = FeatureResolverPanel(self, _uf_stc_file_io, _root_stc_file_io)
-                _panel.compoundCanvasDotGraphView.name = uuid
+                _root_name = self._panelProjectMgr.contentPanel.get_feature_text_by_uuid(_root_state_uuid)
+                _panel = FeatureResolverPanel(_obo_data, self, _uf_stc_file_io, _root_stc_file_io)
+                _panel.set_uuid(uuid)
                 _panel.set_graph_cluster_name(_uf_name, _root_name)
-                _panel.show_graph()
                 if _exist_in_proj is not None:
                     _panel.deserialize(_exist_in_proj.body)
             else:
@@ -640,7 +641,7 @@ class FrameMain(wx.Frame):
 
         _w, _h = self.GetClientSize()
         _pw, _ph = _panel.GetBestSize()
-        _w = max(_w, _pw+240)
+        _w = max(_w, _pw + 240)
         _h = max(_h, _ph)
         self.SetClientSize(_w, _h)
         _panel.SetFocus()

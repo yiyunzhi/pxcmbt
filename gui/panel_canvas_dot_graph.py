@@ -1,4 +1,4 @@
-import wx
+import os, wx, shutil
 import wx.lib.scrolledpanel as sp
 from application.class_dot_graph_generator import GvGen
 from application.class_app_file_io import DotGraphImageFileIO
@@ -18,9 +18,9 @@ class SingleCanvasDotGraphViewPanel(sp.ScrolledPanel):
         self.SetSizer(self.mainSizer)
         self.Layout()
 
-    def canvas2dot(self,stc_file_io, string_io, name=None):
+    def canvas2dot(self, stc_file_io, string_io, name=None):
         if name is None:
-            name=self.name
+            name = self.name
         if stc_file_io is None:
             _gv_graph = GvGen()
             _gv_graph.dot(string_io)
@@ -71,9 +71,37 @@ class CompoundCanvasDotGraphViewPanel(sp.ScrolledPanel):
         self.imagePath = image_path
         self.image = wx.Image(1, 1)
         self.imageCtrl = wx.StaticBitmap(self, wx.ID_ANY, wx.Bitmap(self.image))
+        # bind events
+        self.imageCtrl.Bind(wx.EVT_CONTEXT_MENU, self.on_image_context_menu)
+        # layout
         self.mainSizer.Add(self.imageCtrl, 1, wx.EXPAND)
         self.SetSizer(self.mainSizer)
         self.Layout()
+
+    def on_image_context_menu(self, evt):
+        _menu = wx.Menu()
+        _save_as_img_id = wx.NewIdRef()
+        _menu.Append(_save_as_img_id, "SaveAsImage")
+        # Popup the menu.  If an item is selected then its handler
+        # will be called before PopupMenu returns.
+        self.Bind(wx.EVT_MENU, self.on_cm_save_as_image, id=_save_as_img_id)
+        self.PopupMenu(_menu)
+        _menu.Destroy()
+
+    def on_cm_save_as_image(self, evt):
+        _dlg = wx.FileDialog(
+            self, message="Save file as ...", defaultDir=os.getcwd(),
+            defaultFile="", wildcard="PNG files (*.png)|*.png", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT
+        )
+        # This sets the default filter that the user will initially see. Otherwise,
+        # the first filter in the list will be used by default.
+        _dlg.SetFilterIndex(2)
+
+        # Show the dialog and retrieve the user response. If it is the OK response,
+        # process the data.
+        if _dlg.ShowModal() == wx.ID_OK:
+            _path = _dlg.GetPath()
+            shutil.copyfile(self.imagePath, _path)
 
     def merge_canvas2dot(self, canvas1_file_io, canvas2_file_io, string_io, a_name='A', b_name='B'):
         if canvas1_file_io is None or canvas2_file_io is None:
@@ -122,6 +150,7 @@ class CompoundCanvasDotGraphViewPanel(sp.ScrolledPanel):
         _dot_graph_string_io = DotGraphStringIO()
         self.merge_canvas2dot(a_stc_file_io, b_stc_file_io, _dot_graph_string_io, a_name, b_name)
         _image_path = _file_io.write(_dot_graph_string_io.content)
+        self.imagePath = _image_path
         self.load_image(_image_path)
 
     def load_image(self, path):
@@ -130,4 +159,5 @@ class CompoundCanvasDotGraphViewPanel(sp.ScrolledPanel):
         _w = _img.GetWidth()
         _h = _img.GetHeight()
         self.imageCtrl.SetBitmap(wx.Bitmap(_img))
+        self.SetSize(_w, _h)
         self.Refresh()

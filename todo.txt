@@ -1,4 +1,9 @@
-todo: finish builtin obo
-------------------------------
+todo: finish obo editor
+todo: finish event editor
+todo: finish evt deserialization
 todo: finish obo deserialization
+todo: finish builtin event in statechart not valid
+------------------------------
 todo: finish matrix of transition
+todo: in feature selector UI add PropGrid to show the contents Event
+todo: add editor for the folder application/data, show in the project manager

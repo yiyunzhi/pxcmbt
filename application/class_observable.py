@@ -29,6 +29,22 @@ class ObservableData:
         self.dataType = kwargs.get('dataType', 'string')
         self.defaultVal = kwargs.get('default', '')
 
+    def to_string(self):
+        if self.dataType == EnumOBODataType.INTEGER.value:
+            return '%d' % self.defaultVal
+        elif self.dataType == EnumOBODataType.HEX.value:
+            return '0x%X' % self.defaultVal
+        else:
+            return self.defaultVal
+
+    def from_string(self, data):
+        if self.dataType == EnumOBODataType.INTEGER.value:
+            self.dataType = int(data)
+        elif self.dataType == EnumOBODataType.HEX.value:
+            self.defaultVal = int(data)
+        else:
+            self.defaultVal = data
+
 
 class Observable:
     def __init__(self, **kwargs):
@@ -113,6 +129,15 @@ class Observable:
     def get_data_types(self, with_name=False):
         return [v.dataType if not with_name else (v.name, v.dataType) for k, v in self.data.items()]
 
+    def get_data_in_string(self):
+        if self.data is not None:
+            return ','.join([v.in_string() for k, v in self.data.items()])
+        else:
+            return ''
+
+    def set_data_from_string(self, string):
+        pass
+
 
 class MBTOBOManager:
     def __init__(self):
@@ -127,8 +152,11 @@ class MBTOBOManager:
             _obo.readonly = obo.readonly
             _obo.data = obo.data
 
-    def get_events_names(self):
+    def get_obos_names(self):
         return [v.name for k, v in self._obos.items()]
+
+    def get_obos_names_by_type(self, type_lst):
+        return [v.name for k, v in self._obos.items() if v.type in type_lst]
 
     def get_all_obos(self):
         return self._obos
