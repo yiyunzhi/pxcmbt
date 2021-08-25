@@ -1,33 +1,56 @@
 import wx
 import wx.dataview as dv
-from .widgets import AutocompleteComboBox
+from .panel_props_container import PropContainerPanel
+from .panel_prop_content import OBOPropsContentPanel
 from application.class_observable import MBTOBOManager
 
 
+class ResolverOboPropContainer(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent, wx.ID_ANY)
+        self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.oboPropPanel = PropContainerPanel(parent=self)
+        self.oboPropPanel.SetMinSize((360, 96))
+        self.mainSizer.Add(self.oboPropPanel, 1, wx.EXPAND | wx.ALL, 0)
+        self.SetSizerAndFit(self.mainSizer)
+
+
 class OBOSelectorPanel(wx.Panel):
+    # todo: next version oboPropPanelContainer and oboList in sashWindow
     def __init__(self, obo_mgr: MBTOBOManager, parent, obo_filter=None):
         wx.Panel.__init__(self, parent, wx.ID_ANY)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.tableHSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.oboPropPanelContainer = ResolverOboPropContainer(self)
+        self.oboPropPanelContainer.SetMinSize((380, -1))
         self.oboList = dv.DataViewListCtrl(self, wx.ID_ANY, style=dv.DV_ROW_LINES | dv.DV_VERT_RULES)
         self.oboList.SetMinSize((-1, 96))
         self.oboMgr = obo_mgr
+        self._oboUids = list()
+        self._oboNameChoices = list()
         if obo_filter is None:
-            _obos = obo_mgr.get_obos_names()
+            _obos = obo_mgr.get_all_obos()
         else:
-            _obos = obo_mgr.get_obos_names_by_type(obo_filter)
-        self._col_OBO_render = dv.DataViewChoiceRenderer(_obos)
+            _obos = obo_mgr.get_obos_by_type(obo_filter)
+        for k, v in _obos.items():
+            self._oboUids.append(k)
+            self._oboNameChoices.append(v.name)
+        self._col_OBO_render = dv.DataViewChoiceRenderer(self._oboNameChoices)
         _col_obo = dv.DataViewColumn('OBO', self._col_OBO_render, 0, width=120)
         self.oboList.AppendColumn(_col_obo)
         self.oboList.AppendTextColumn('OBOData', mode=dv.DATAVIEW_CELL_EDITABLE)
-        _col_obo_uuid =self.oboList.AppendTextColumn('UUID', mode=dv.DATAVIEW_CELL_INERT)
+        _col_obo_uuid = self.oboList.AppendTextColumn('UUID', mode=dv.DATAVIEW_CELL_INERT)
         _col_obo_uuid.SetHidden(True)
         # bind events
         self.oboList.Bind(dv.EVT_DATAVIEW_ITEM_ACTIVATED, self.on_item_activated)
         self.oboList.Bind(dv.EVT_DATAVIEW_ITEM_CONTEXT_MENU, self.on_item_cm)
+        self.oboList.Bind(dv.EVT_DATAVIEW_SELECTION_CHANGED, self.on_item_selected)
         # layouts
         self.evtDataStructLabel = wx.StaticText(self, wx.ID_ANY)
+        self.tableHSizer.Add(self.oboList, 1, wx.EXPAND | wx.ALL, 2)
+        self.tableHSizer.Add(self.oboPropPanelContainer, 0, wx.EXPAND | wx.ALL, 2)
         self.mainSizer.Add(self.evtDataStructLabel, 0, wx.EXPAND | wx.ALL, 2)
-        self.mainSizer.Add(self.oboList, 1, wx.EXPAND | wx.ALL, 2)
+        self.mainSizer.Add(self.tableHSizer, 1, wx.EXPAND | wx.ALL, 2)
         self.SetSizer(self.mainSizer)
         self.Layout()
         self.Fit()
@@ -61,6 +84,18 @@ class OBOSelectorPanel(wx.Panel):
             _typ_str = ' , '.join(['%s<%s>' % (x, y) for x, y in _obo.get_data_types(with_name=True)])
             self.evtDataStructLabel.SetLabelText('OBOData: ' + _typ_str)
 
+    def on_item_selected(self, evt):
+        _selected_row = self.oboList.GetSelectedRow()
+        if _selected_row != -1:
+            _name = self.oboList.GetTextValue(_selected_row, 0)
+            _obo = self.oboMgr.get_obo_by_name(_name)
+            if _obo is not None:
+                self.show_obo_props(_obo)
+
+    def show_obo_props(self, obo):
+        _content = OBOPropsContentPanel(obo, parent=self.oboPropPanelContainer.oboPropPanel)
+        self.oboPropPanelContainer.oboPropPanel.set_content(_content)
+
     def on_item_cm(self, evt: dv.DataViewEvent):
         _selected_row = self.oboList.GetSelectedRow()
         _menu = wx.Menu()
@@ -92,7 +127,7 @@ class OBOSelectorPanel(wx.Panel):
         _menu.Destroy()
 
     def add_empty_row(self):
-        self.oboList.AppendItem(('NULL', '', ''))
+        self.oboList.AppendItem(('SelectHere', '', ''))
         self.oboList.Update()
 
     def on_cm_add(self, evt):

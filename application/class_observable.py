@@ -161,8 +161,16 @@ class MBTOBOManager:
     def get_all_obos(self):
         return self._obos
 
+    def get_obos_by_type(self, type_lst):
+        return [v for k, v in self._obos.items() if v.type in type_lst]
+
     def get_obo(self, uuid):
         return self._obos.get(uuid)
+
+    def get_obo_by_name(self, name):
+        for k, v in self._obos.items():
+            if v.name == name:
+                return v
 
     def is_obo_changed(self, _obo):
         _obo = self._obos.get(_obo.uuid)

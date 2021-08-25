@@ -1,6 +1,5 @@
 import wx
 import wx.grid as gridlib
-import wx.propgrid as wxpg
 from application.define import *
 from application.class_observable import MBTOBOManager
 from .panel_resolver_obo_editor import ResolverOBOEditPanel
@@ -72,37 +71,6 @@ class FeatureResolverBLPanel(wx.Panel):
         self.mainSizer.Add(self.btnApply, 0, wx.EXPAND | wx.ALL, 15)
         # self.mainSizer.Add(self.btnStcPreview, 0, wx.EXPAND | wx.ALL, 5)
         self.SetSizerAndFit(self.mainSizer)
-
-
-class ResolverOBOPropPanel(wx.Panel):
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, wx.ID_ANY)
-        self.mainSizer = wx.BoxSizer(wx.HORIZONTAL)
-        _pg_main = wxpg.PropertyGridManager(self, wx.ID_ANY,
-                                            style=wxpg.PG_SPLITTER_AUTO_CENTER | wxpg.PG_BOLD_MODIFIED)
-        _pg_uuid = wxpg.StringProperty("uuid", 'uuid', value=self.uuid)
-        _pg_main.SetPropertyReadOnly(_pg_uuid)
-        _pg_main.Append(_pg_uuid)
-
-        _pg_role = wxpg.StringProperty("role", 'role', value=EnumItemRole(self.role).name)
-        _pg_main.SetPropertyReadOnly(_pg_role)
-        _pg_main.Append(_pg_role)
-
-        _pg_position = wxpg.StringProperty("position", 'position',
-                                           value='(%s,%s)' % (self.position[0], self.position[1]))
-        _pg_main.SetPropertyReadOnly(_pg_position)
-        _pg_main.Append(_pg_position)
-
-        _pg_name = wxpg.StringProperty("name", 'name',
-                                       value=self.nameText)
-        _pg_main.SetPropertyReadOnly(_pg_name)
-        _pg_main.Append(_pg_name)
-
-        # self.mainSizer.Add(self.btnStcPreview, 0, wx.EXPAND | wx.ALL, 5)
-        self.SetSizerAndFit(self.mainSizer)
-
-    def set_obo(self, obo):
-        pass
 
 
 class ResolverModel:
