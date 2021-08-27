@@ -35,7 +35,7 @@ class ObservableData:
         elif self.dataType == EnumOBODataType.HEX.value:
             return '0x%X' % self.defaultVal
         else:
-            return self.defaultVal
+            return '%s' % self.defaultVal
 
     def from_string(self, data):
         if self.dataType == EnumOBODataType.INTEGER.value:
@@ -131,12 +131,18 @@ class Observable:
 
     def get_data_in_string(self):
         if self.data is not None:
-            return ','.join([v.in_string() for k, v in self.data.items()])
+            return ','.join([v.to_string() for k, v in self.data.items()])
         else:
             return ''
 
     def set_data_from_string(self, string):
-        pass
+        if string != '':
+            _data_str_lst = string.split(',')
+            _data_lst = list(self.data.values())
+            for idx, x in enumerate(_data_str_lst):
+                if idx < len(_data_lst):
+                    _data = _data_lst[idx]
+                    _data.from_string(x)
 
 
 class MBTOBOManager:
@@ -151,6 +157,9 @@ class MBTOBOManager:
             _obo.visible = obo.visible
             _obo.readonly = obo.readonly
             _obo.data = obo.data
+
+    def clear(self):
+        self._obos.clear()
 
     def get_obos_names(self):
         return [v.name for k, v in self._obos.items()]

@@ -35,7 +35,7 @@ from .panel_project_mgr import GuiProjectManagerPanel, GuiProjectManagerContaine
 from .panel_props_container import PropContainerPanel
 from .panel_console import ConsolePanel
 from .panel_event_editor import EventEditorPanel
-from .panel_prop_content import CanvasNodePropContentPanel
+from .panel_prop_content import CanvasNodePropContentPanel, ResolverCellPropsContentPanel
 from .panel_resolver import FeatureResolverPanel
 from .panel_obo_editor import OBOEditorPanel
 from .define_gui import _, EnumCanvasToolbarMode
@@ -67,6 +67,7 @@ _log = get_logger('app')
 
 class FrameMain(wx.Frame):
     PANE_PROPS_CONTAINER_NAME = 'PropertiesContainerPanel'
+    DUMMY_PROJECT_NAME = '*#55rtzdefault'
 
     def __init__(self, parent, wx_id=wx.ID_ANY, title='', pos=wx.DefaultPosition,
                  size=wx.DefaultSize, style=wx.DEFAULT_FRAME_STYLE | wx.SUNKEN_BORDER, log=_default_wx_log):
@@ -88,7 +89,7 @@ class FrameMain(wx.Frame):
             MinimizeButton(True).MaximizeButton(True).Floatable(False)
         # Attributes
         # here use a dummy project
-        self._currentProject = Project('default')
+        self._currentProject = Project(self.DUMMY_PROJECT_NAME)
         self._currentPane = None
         self._panelCache = dict()
         self._toolbar = None
@@ -103,21 +104,10 @@ class FrameMain(wx.Frame):
         self._vetoTree = self._veto_text = False
 
         self.log = log
-        # set the acceleratorTable
-        # _id_F1 = wx.NewId()
-        # _id_F2 = wx.NewId()
-
-        # self.Bind(wx.EVT_MENU, self.on_f1_pressed, id=_id_F1)
-        # self.Bind(wx.EVT_MENU, self.on_f2_pressed, id=_id_F2)
-
-        # accel_tbl = wx.AcceleratorTable([
-        #    (wx.ACCEL_NORMAL, wx.WXK_F1, _id_F1),
-        #    (wx.ACCEL_NORMAL, wx.WXK_F2, _id_F2)
-        # ])
-        # self.SetAcceleratorTable(accel_tbl)
 
         self.CreateStatusBar()
         self.GetStatusBar().SetStatusText("Ready")
+        self.create_acc_table()
         self.create_menu_bar()
         self.create_tool_bar()
         self.build_panes()
@@ -144,6 +134,18 @@ class FrameMain(wx.Frame):
                                 , "Unhandled exception", wx.OK | wx.ICON_ERROR)
         _dlg.ShowModal()
         _dlg.Destroy()
+
+    def create_acc_table(self):
+
+        # set the acceleratorTable
+        _id_ctrl_s = wx.NewId()
+
+        self.Bind(wx.EVT_MENU, self.on_ctrl_s_pressed, id=_id_ctrl_s)
+
+        _accel_tbl = wx.AcceleratorTable([
+            (wx.ACCEL_CTRL, wx.WXK_CONTROL_S, _id_ctrl_s)
+        ])
+        self.SetAcceleratorTable(_accel_tbl)
 
     def build_panes(self):
         self._panelProjectMgr = GuiProjectManagerContainerPanel(self)
@@ -246,7 +248,7 @@ class FrameMain(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.on_window_closed)
         self.Bind(wx.EVT_CHILD_FOCUS, self.on_child_focused)
         self.Bind(aui.EVT_AUI_PANE_ACTIVATED, self.on_aui_pane_activated)
-        self.Bind(aui.EVT_AUI_PANE_CLOSE, self.on_aui_pane_closed)
+        self.Bind(aui.EVT_AUI_PANE_CLOSE, self.on_aui_pane_close)
         # bind menu event
 
         self.Bind(wx.EVT_MENU, self.on_menu_save_clicked, id=wx.ID_SAVE)
@@ -270,12 +272,37 @@ class FrameMain(wx.Frame):
         pub.subscribe(self.on_ext_sig_project_del_user_feature, EnumAppSignals.sigV2VProjectDelUserFeature.value)
         pub.subscribe(self.on_ext_sig_project_add_root_feature, EnumAppSignals.sigV2VProjectAddRootFeature.value)
         pub.subscribe(self.on_ext_sig_project_empty_root_feature, EnumAppSignals.sigV2VProjectEmptyRootFeature.value)
+        pub.subscribe(self.on_ext_sig_resolver_cell_select_changed,
+                      EnumAppSignals.sigV2VResolverCellSelectChanged.value)
 
     def _show_success_msgbox(self, msg=None):
         _ret = wx.MessageBox('Operation successful executed' if msg is None else msg, 'Success')
 
     def _show_failed_msgbox(self, msg=None):
         _ret = wx.MessageBox('Operation failed executed' if msg is None else msg, 'Failed')
+
+    def on_ext_sig_resolver_cell_select_changed(self, row_trans_uid, col_trans_uid, row_stc_file_io, col_stc_file_io):
+        _row_wire, _col_wire = None, None
+        _row_src_node, _col_src_node = None, None
+        _row_dst_node, _col_dst_node = None, None
+        _res = filter(lambda x: x['uuid'] == row_trans_uid, row_stc_file_io.body.wires)
+        if _res: _row_wire = list(_res)[0]
+        _res = filter(lambda x: x['uuid'] == col_trans_uid, col_stc_file_io.body.wires)
+        if _res: _col_wire = list(_res)[0]
+        if _row_wire:
+            _res = filter(lambda x: x['uuid'] == _row_wire['srcNodeUUID'], row_stc_file_io.body.nodes)
+            if _res: _row_src_node = list(_res)[0]
+            _res = filter(lambda x: x['uuid'] == _row_wire['dstNodeUUID'], row_stc_file_io.body.nodes)
+            if _res: _row_dst_node = list(_res)[0]
+        if _col_wire:
+            _res = filter(lambda x: x['uuid'] == _col_wire['srcNodeUUID'], col_stc_file_io.body.nodes)
+            if _res: _col_src_node = list(_res)[0]
+            _res = filter(lambda x: x['uuid'] == _col_wire['dstNodeUUID'], col_stc_file_io.body.nodes)
+            if _res: _col_dst_node = list(_res)[0]
+        _prop_content = ResolverCellPropsContentPanel((_row_wire, _row_src_node, _row_dst_node),
+                                                      (_col_wire, _col_src_node, _col_dst_node),
+                                                      self._propContainerPane)
+        self._propContainerPane.set_content(_prop_content)
 
     def on_ext_sig_project_save_root_feature_as_lib(self, state_uuid, event_uuid, obo_uuid):
         try:
@@ -424,44 +451,62 @@ class FrameMain(wx.Frame):
         _win = evt.GetWindow()
         evt.Skip()
 
+    def on_ctrl_s_pressed(self, evt):
+        self._save_project()
+
     def on_menu_open_tc_diag(self, evt):
         # todo: first generate the TCS
-        _dlg = TCDialog([], self)
-        _ret = _dlg.ShowModal()
+        # check all resolver generated??
+        if self._currentProject.name != self.DUMMY_PROJECT_NAME:
+            _dlg = TCDialog([], self)
+            _ret = _dlg.ShowModal()
+        else:
+            wx.MessageBox('properly you need to open a project firstly', 'Info', wx.OK_DEFAULT)
+
+    def _get_all_user_feature_resolvers(self):
+        _rsv_uids = self._panelProjectMgr.contentPanel.get_all_resolver_uids()
+        for name, uid in _rsv_uids:
+            pass
 
     def on_tb_pane_save(self, evt):
-        # todo: ctrl+s acc-table
-        if self._currentPane is not None:
-            print('save the pane')
-        evt.Skip()
+        self._save_project()
 
-    def on_aui_pane_closed(self, evt):
-        # _pane = evt.GetPane()
-        # _window=_pane.window
-        # if hasattr(_window, 'role'):
-        #     if _window.role == EnumPanelRole.USER_FEATURE_RESOLVER:
-        #         if _window.uuid in self._panelCache:
-        #             self._auiMgr.DetachPane(_pane)
-        #             self._panelCache.pop(_window.uuid)
-        evt.Skip()
+    def on_aui_pane_close(self, evt):
+        _pane = evt.GetPane()
+        _window = _pane.window
+        if hasattr(_window, 'changeFlag'):
+            if _window.changeFlag:
+                _ret = wx.MessageBox('Do you wanna save it?', 'Notice', wx.YES_NO)
+                _save = _ret == wx.YES
+            else:
+                _save = False
+            _window.on_close(_save)
 
     def on_aui_pane_activated(self, evt):
         _pane = evt.GetPane()
         if hasattr(_pane, 'uuid'):
+            # print('pane activated', _pane.uuid)
             if _pane.uuid in self._panelCache:
                 self._panelProjectMgr.contentPanel.highlight_item_by_uuid(_pane.uuid)
             if _pane.role == EnumPanelRole.STATE_CHART_CANVAS:
                 self._currentPane = _pane
                 self._auiMgr.ShowPane(self._toolbar, True)
-        evt.Skip()
+            # elif _pane.role == EnumPanelRole.USER_FEATURE_RESOLVER:
+            #     _exist_in_proj = self._currentProject.get_file_io(_pane.uuid, _pane.role)
+            #     if _exist_in_proj is not None:
+            #         _pane.deserialize(_exist_in_proj.body)
 
     def on_window_closed(self, evt):
-        if self._currentProject is not None:
+        if self._currentProject is not None and util_is_dir_exist(self._currentProject.path):
             _perspective = self._auiMgr.SavePerspective()
             self._currentProject.save_ui_perspective(_perspective)
         evt.Skip()
 
     def on_menu_save_clicked(self, evt):
+        self._save_project()
+
+    def _save_project(self):
+        self.GetStatusBar().SetStatusText("Project Saving...")
         if self._currentProject:
             # save all cached pane
             # fixme: next version, frame_app send the data to project only, not the instance
@@ -479,6 +524,11 @@ class FrameMain(wx.Frame):
             pass
         else:
             pass
+        _panes = self._auiMgr.GetAllPanes()
+        for pane in _panes:
+            if hasattr(pane, 'changeFlag'):
+                pane.changeFlag = False
+        self.GetStatusBar().SetStatusText("Project Saved")
 
     def on_menu_save_as_clicked(self, evt):
         if self._currentProject:
@@ -606,7 +656,7 @@ class FrameMain(wx.Frame):
             elif _role == EnumItemRole.USER_FEATURE_RESOLVER:
                 _root_state_uuid = self._panelProjectMgr.contentPanel.get_root_state_uuid()
                 _root_obo_uuid = self._panelProjectMgr.contentPanel.get_root_obo_uuid()
-                _obo_data = self._currentProject.get_obo_data(_root_obo_uuid,True)
+                _obo_data = self._currentProject.get_obo_data(_root_obo_uuid, True)
                 _root_stc_file_io = self._currentProject.get_file_io(_root_state_uuid, EnumItemRole.DEV_FEATURE_STATE)
                 _state_uuid = self.get_associated_state_uuid(uuid)
                 _uf_stc_file_io = self._currentProject.get_file_io(_state_uuid, EnumItemRole.USER_FEATURE_STATE)
@@ -616,6 +666,7 @@ class FrameMain(wx.Frame):
                 _panel.set_uuid(uuid)
                 _panel.set_graph_cluster_name(_uf_name, _root_name)
                 if _exist_in_proj is not None:
+                    _exist_in_proj.read()
                     _panel.deserialize(_exist_in_proj.body)
             else:
                 return

@@ -38,7 +38,7 @@ class OBOSelectorPanel(wx.Panel):
         self._col_OBO_render = dv.DataViewChoiceRenderer(self._oboNameChoices)
         _col_obo = dv.DataViewColumn('OBO', self._col_OBO_render, 0, width=120)
         self.oboList.AppendColumn(_col_obo)
-        self.oboList.AppendTextColumn('OBOData', mode=dv.DATAVIEW_CELL_EDITABLE)
+        self.oboList.AppendTextColumn('OBOData (leave blank use default)', mode=dv.DATAVIEW_CELL_EDITABLE)
         _col_obo_uuid = self.oboList.AppendTextColumn('UUID', mode=dv.DATAVIEW_CELL_INERT)
         _col_obo_uuid.SetHidden(True)
         # bind events
@@ -78,8 +78,8 @@ class OBOSelectorPanel(wx.Panel):
 
     def update_obo_data_label(self):
         _row = self.oboList.GetSelectedRow()
-        _obo_uuid = self.get_obo_uuid_from_row(_row)
-        _obo = self.oboMgr.get_obo(_obo_uuid)
+        _obo_name = self.get_obo_name_from_row(_row)
+        _obo = self.oboMgr.get_obo_by_name(_obo_name)
         if _obo is not None:
             _typ_str = ' , '.join(['%s<%s>' % (x, y) for x, y in _obo.get_data_types(with_name=True)])
             self.evtDataStructLabel.SetLabelText('OBOData: ' + _typ_str)
@@ -134,7 +134,9 @@ class OBOSelectorPanel(wx.Panel):
         self.add_empty_row()
 
     def on_cm_del(self, evt):
-        pass
+        _selected_row = self.oboList.GetSelectedRow()
+        if _selected_row != -1:
+            self.oboList.DeleteItem(_selected_row)
 
     def on_cm_up(self, evt):
         pass

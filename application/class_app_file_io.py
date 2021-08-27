@@ -175,6 +175,7 @@ class ApplicationStcFileBody(ApplicationFileBody):
 class ApplicationRsvFileBody(ApplicationFileBody):
     def __init__(self, **kwargs):
         ApplicationFileBody.__init__(self, **kwargs)
+        self.rsv=kwargs
 
 
 class ApplicationStcFileIO(ApplicationFileIO):

@@ -76,6 +76,10 @@ class EnumAppSignals(enum.Enum):
     sigV2VCurrentTCChanged = 'sigV2VCurrentTCChanged'
     sigV2VCurrentTCStatusChanged = 'sigV2VCurrentTCStatusChanged'
     sigV2VTCCtrlStateChanged = 'sigV2VTCCtrlStateChanged'
+    sigV2VResolverCellSelectChanged = 'sigV2VResolverCellSelectChanged'
+    sigV2VTCConsoleAddInfoContent = 'sigV2VTCConsoleAddInfoContent'
+    sigV2VTCConsoleAddWarningContent = 'sigV2VTCConsoleAddWarningContent'
+    sigV2VTCConsoleAddErrorContent = 'sigV2VTCConsoleAddErrorContent'
 
 
 class EnumMBTEventType(enum.Enum):

@@ -1,5 +1,6 @@
 import wx
 import wx.grid as gridlib
+from pubsub import pub
 from application.define import *
 from application.class_observable import MBTOBOManager
 from .panel_resolver_obo_editor import ResolverOBOEditPanel
@@ -11,6 +12,7 @@ class TransMatrixGrid(gridlib.Grid):
     IGNORED_BG_COLOR = '#aaa'
     IGNORED_FONT_COLOR = '#ffffff'
     OBSERVABLE_BG_COLOR = '#99CCFF'
+    OBSERVABLE_DATA_BG_COLOR = '#80FF00'
     OBSERVABLE_FONT_COLOR = '#333'
 
     def __init__(self, parent, col_labels: list, row_labels: list, transitions: list = None):
@@ -38,16 +40,24 @@ class TransMatrixGrid(gridlib.Grid):
     def set_cell_ignored_style(self, row, col):
         self.SetCellBackgroundColour(row, col, self.IGNORED_BG_COLOR)
         self.SetCellTextColour(row, col, self.IGNORED_FONT_COLOR)
+        self.Refresh()
 
     def set_cell_observable_style(self, row, col):
         self.SetCellBackgroundColour(row, col, self.OBSERVABLE_BG_COLOR)
         self.SetCellTextColour(row, col, self.OBSERVABLE_FONT_COLOR)
+        self.Refresh()
+
+    def set_cell_observable_data_style(self, row, col):
+        self.SetCellBackgroundColour(row, col, self.OBSERVABLE_DATA_BG_COLOR)
+        self.SetCellTextColour(row, col, self.OBSERVABLE_FONT_COLOR)
+        self.Refresh()
 
     def reset_cell_style(self, row, col):
         _bg_color = self.GetDefaultCellBackgroundColour()
         _font_color = self.GetDefaultCellTextColour()
         self.SetCellBackgroundColour(row, col, _bg_color)
         self.SetCellTextColour(row, col, _font_color)
+        self.Refresh()
 
 
 class FeatureResolverTLPanel(wx.Panel):
@@ -96,6 +106,9 @@ class ResolverModel:
         _fmt_str = self.format_query_string(a, b)
         return self._items.get(_fmt_str)
 
+    def get_all_pairs(self):
+        return self._items
+
 
 class FeatureResolverPanel(wx.Panel):
     def __init__(self, obo_data, parent, a_stc_file_io, b_stc_file_io):
@@ -111,6 +124,8 @@ class FeatureResolverPanel(wx.Panel):
         self.resolverModel = ResolverModel()
         self.rowUids = list()
         self.colUids = list()
+        self.processedPair = None
+        self.changeFlag = False
         self.oboEditorPanel = ResolverOBOEditPanel(self.oboMgr, self)
         self._canvasOVDlg = CanvasDotGraphViewerDialog(self.uuid, self)
         self._canvasOVDlg.headerPanel.set_title('StateChart Overview')
@@ -121,7 +136,6 @@ class FeatureResolverPanel(wx.Panel):
         # bind event
         self.matrixTab.Bind(gridlib.EVT_GRID_CELL_CHANGED, self.on_cell_changed)
         self.matrixTab.Bind(gridlib.EVT_GRID_SELECT_CELL, self.on_cell_selected)
-        self.matrixTab.Bind(wx.EVT_KILL_FOCUS, self.on_matrixtab_kill_focus)
         self.tlPanel.btnStcPreview.Bind(wx.EVT_BUTTON, self.on_stc_preview_clicked)
         self.blPanel.btnApply.Bind(wx.EVT_BUTTON, self.on_bl_apply_clicked)
         # layout
@@ -138,15 +152,62 @@ class FeatureResolverPanel(wx.Panel):
         self.uuid = uuid
 
     def serialize(self):
+        _pairs = self.resolverModel.get_all_pairs()
         _d = dict()
+        for k, v in _pairs.items():
+            _d.update({k: v.get_all_obos()})
         return _d
 
     def deserialize(self, data):
-        pass
+        # first compare the given data and current model
+        # the data read from disk, check if any new transition or modeled transition not in data found.
+        if data:
+            _restored_row_cols = list()
+            for k, v in data.rsv.items():
+                _row_trans_uid, _col_trans_uid = k.split('_')
+                # early saved trans relation not exist
+                if self._stc_has_wire(_row_trans_uid, 'a') and self._stc_has_wire(_col_trans_uid, 'b'):
+                    _obo_mgr = MBTOBOManager()
+                    _obos = list(v.values())
+                    _obo_mgr.register_obos(_obos)
+                    self.resolverModel.register_pair_obo_mgr(_row_trans_uid, _col_trans_uid, _obo_mgr)
+                    _restored_row_cols.append(
+                        (self.rowUids.index(_row_trans_uid), self.colUids.index(_col_trans_uid), len(_obos) > 0))
+            for row, col, has_data in _restored_row_cols:
+                self.matrixTab.SetCellValue(row, col, self.matrixTab.editorChoices[1])
+                if has_data:
+                    self.matrixTab.set_cell_observable_data_style(row, col)
+                else:
+                    self.matrixTab.set_cell_observable_style(row, col)
+
+        # second if has diff, show the Dialog to commit the changes
+        # depends on the use selection determine if the data updated or not.
+
+    def _stc_has_wire(self, wire_uid, a_or_b='a'):
+        _wires = self.aSTCFileIO.body.wires if a_or_b == 'a' else self.bSTCFileIO.body.wires
+        _wire_uids = [x['uuid'] for x in _wires]
+        return wire_uid in _wire_uids
+
+    def on_close(self, save=False):
+        if save:
+            self.changeFlag = False
 
     def on_bl_apply_clicked(self, evt):
-        # todo: first get the associated obo mgr, then update the obomgr
-        pass
+        if self.processedPair is not None:
+            _selected_obos = self.oboEditorPanel.oboSelectorPanel.get_selected_obos()
+            _associated_obo_mgr = self.resolverModel.get_pair_obo_mgr(*self.processedPair)
+            _row = self.rowUids.index(self.processedPair[0])
+            _col = self.colUids.index(self.processedPair[1])
+            if _selected_obos:
+                self.matrixTab.set_cell_observable_data_style(_row, _col)
+                for name, value in _selected_obos:
+                    _obo = self.oboMgr.get_obo_by_name(name)
+                    if _obo is not None:
+                        _obo.set_data_from_string(value.rstrip())
+                        _associated_obo_mgr.register_obo(_obo)
+            else:
+                self.matrixTab.set_cell_observable_style(_row, _col)
+                _associated_obo_mgr.clear()
 
     def on_stc_preview_clicked(self, evt):
         if self._canvasOVDlg.IsShown():
@@ -157,26 +218,29 @@ class FeatureResolverPanel(wx.Panel):
             self._canvasOVDlg.SetSize(self._canvasOVDlg.viewerPanel.GetSize())
             self._canvasOVDlg.Show()
 
-    def on_matrixtab_kill_focus(self, evt):
-        pass
-        # self.oboEditorPanel.oboSelectorPanel.Disable()
-        # self.oboEditorPanel.clear()
-
     def on_cell_selected(self, evt):
         _row = evt.GetRow()
         _col = evt.GetCol()
         _cell_val = self.matrixTab.GetCellValue(_row, _col)
+        _row_uid = self.rowUids[_row]
+        _col_uid = self.colUids[_col]
+        self.oboEditorPanel.clear()
         if _cell_val == self.matrixTab.editorChoices[1]:
-            _row_uid = self.rowUids[_row]
-            _col_uid = self.colUids[_col]
             _obo_lst = self.resolverModel.get_pair_obo_mgr(_row_uid, _col_uid)
+            self.processedPair = (_row_uid, _col_uid)
+            self.oboEditorPanel.Enable()
             if _obo_lst is not None:
                 self.oboEditorPanel.set_data(_obo_lst)
-            else:
-                self.oboEditorPanel.clear()
+        else:
+            self.processedPair = None
+            self.oboEditorPanel.Disable()
+        pub.sendMessage(EnumAppSignals.sigV2VResolverCellSelectChanged.value,
+                        row_trans_uid=_row_uid,
+                        col_trans_uid=_col_uid,
+                        row_stc_file_io=self.aSTCFileIO,
+                        col_stc_file_io=self.bSTCFileIO)
 
     def on_cell_changed(self, evt):
-        # self.oboEditorPanel.oboSelectorPanel.Enable()
         _row = evt.GetRow()
         _col = evt.GetCol()
         _row_uid = self.rowUids[_row]
@@ -191,7 +255,7 @@ class FeatureResolverPanel(wx.Panel):
             self.oboEditorPanel.set_data(_obo_mgr)
         else:
             self.matrixTab.reset_cell_style(_row, _col)
-        # print('...---> cell changed', evt.GetCol(), evt.GetRow())
+        self.changeFlag = True
 
     def set_graph_cluster_name(self, a_name, b_name):
         a_name = a_name if a_name is not None else 'A'
@@ -215,9 +279,3 @@ class FeatureResolverPanel(wx.Panel):
 
     def update(self):
         pass
-
-    def on_ok_clicked(self, evt):
-        evt.Skip()
-
-    def on_update_clicked(self, evt):
-        self.update()

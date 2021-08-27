@@ -27,3 +27,4 @@ class ResolverOBOEditPanel(wx.Panel):
         for k, v in obo_mgr.get_all_obos().items():
             _obos.append((v.name, v.get_data_in_string(), v.uuid))
         self.oboSelectorPanel.set_selected_obos(_obos)
+

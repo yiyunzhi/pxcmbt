@@ -70,7 +70,7 @@ BODY:
           parentUUID: null
         text: PWR_UA
       data: !StandardItemData
-        uuid: 2a326558b2044587b5fd9df82f7687a6
+        uuid: 24cae465c5a74c25aabe45d0ba32791f
         role: !EnumItemRole 'USER_FEATURE'
         flag: null
         labelReadonly: true
@@ -82,7 +82,7 @@ BODY:
     scripts:
       children: []
       data: !StandardItemData
-        uuid: 2684b92dba414d788e8f29a8c2b78238
+        uuid: ada7ae1bbfe846f6a1e5c5a4fbda9190
         role: !EnumItemRole 'SCRIPTS'
         flag: null
         labelReadonly: true
@@ -93,7 +93,7 @@ BODY:
     sessions:
       children: []
       data: !StandardItemData
-        uuid: 0e59f6b7bfc34f3ca1eafaaf906a257d
+        uuid: 6d1132f26f0f4bb782f0241f0eeedf40
         role: !EnumItemRole 'SESSIONS'
         flag: null
         labelReadonly: true
@@ -102,9 +102,9 @@ BODY:
         parentUUID: null
       text: Sessions
   role: null
-  uuid: 8168b0e9c33340798cc55597397dc36b
+  uuid: 32846c31d098445c9ae49f522eb82a0c
 HEADER:
   author: LIU
-  date: 08/24 10:45:17.980
+  date: 08/27 11:01:32.488
   type: MBT_PROJ
   version: 2.0.1

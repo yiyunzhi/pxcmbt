@@ -395,17 +395,29 @@ class GuiProjectManagerPanel(wx.Panel):
 
     def get_root_state_uuid(self):
         return self.deviceStateItemData.uuid
+
     def get_root_obo_uuid(self):
         return self._deviceOboItemData.uuid
+
     def get_root_event_uuid(self):
         return self._deviceEvtItemData.uuid
+
+    def get_all_resolver_uids(self):
+        _res = list()
+        for k, v in self._itemMap.items():
+            _data = self.tree.GetItemData(v)
+            if _data.role == EnumItemRole.USER_FEATURE_RESOLVER:
+                _parent_item = self.tree.GetItemParent(v)
+                _res.append((self.tree.GetItemText(_parent_item), _data.uuid))
+        return _res
 
     def on_cm_config_observable_object(self, evt):
         _item = self.tree.GetSelection()
         if _item is not None:
             _data = self.tree.GetItemData(_item)
             if _data.role == EnumItemRole.DEV_FEATURE:
-                pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value, uuid=self._deviceOboItemData.uuid)
+                pub.sendMessage(EnumAppSignals.sigV2VModelTreeItemDoubleClicked.value,
+                                uuid=self._deviceOboItemData.uuid)
 
     def on_cm_new_user_feature(self, evt):
         pub.sendMessage(EnumAppSignals.sigV2VProjectNewUserFeature.value)
