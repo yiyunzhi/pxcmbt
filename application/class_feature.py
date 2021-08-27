@@ -1,79 +1,84 @@
-# -*- coding: utf-8 -*-
+from .define import EnumItemRole
 
-# ------------------------------------------------------------------------------
-#                                                                            --
-#                PHOENIX CONTACT GmbH & Co., D-32819 Blomberg                --
-#                                                                            --
-# ------------------------------------------------------------------------------
-# Project       : 
-# Sourcefile(s) : class_feature.py
-# ------------------------------------------------------------------------------
-#
-# File          : class_feature.py
-#
-# Author(s)     : Gaofeng Zhang
-#
-# Status        : in work
-#
-# Description   : siehe unten
-#
-#
-# ------------------------------------------------------------------------------
-import urllib.parse
-from .class_transition_matrix import TransitionMatrix
+
+class _PARAOBJ:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 class Feature:
-    def __init__(self, uuid, name, state_model, events=None):
-        self.uuid = uuid
+    def __init__(self, name, project, stc_uid, evt_uid, rsv_uid=None, obo_uid=None):
         self.name = name
-        self.stateModel = state_model
-        self.events = events
-        self.transMatrix = None
-        self.bFeature = None
-
-    def __ilshift__(self, other):
-        assert isinstance(other, Feature)
-        self.bFeature = other
-        if self.stateModel is not None and other.stateModel is not None:
-            self.transMatrix = TransitionMatrix(self.stateModel, other.stateModel)
-        return self
-
-    @property
-    def p_suite_name(self):
-        if self.bFeature is None:
-            return None
-        return '%s_%s' % (self.name, self.bFeature.name)
-
-    @property
-    def p_cases(self):
-        if self.bFeature is None or self.transMatrix is None:
-            return None
-        _cases = list()
-        for x in self.stateModel.states:
-            pass
-        return _cases
-
-    def __iter__(self):
-        if self.transMatrix is not None:
-            _lst_trans_ma = self.transMatrix.matrix
-            # suite=a_pwr&case=a_sok&step=0&feature=a&levent=dd0&leventdata=00&revent=ortrr&reventdata=12&callback=stepdone
-            for a, b in _lst_trans_ma:
-                _left_feature_evts = a.transition.events
-                _step = 0
-                for bb in b:
-                    _step += 1
-                    _right_feature_evts = bb.transition.events
-                    # todo: add leventData,reventdata
-                    _params = {'suite': self.p_suite_name,
-                               'case': '%s_%s' % (a.transition.name, bb.transition.name),
-                               'step': _step,
-                               'stepTotal': len(b),
-                               'feature': self.name,
-                               'levent': _left_feature_evts,
-                               'revent': _right_feature_evts,
-                               'callback': 'stepdone'
-                               }
-                    yield urllib.parse.urlencode(_params, doseq=True)
+        self.project = project
+        self.stcUID = stc_uid
+        self.evtUID = evt_uid
+        self.rsvUID = rsv_uid
+        self.oboUID = obo_uid
+        self.states = dict()
+        self.events = dict()
+        self.transitions = dict()
+        self.resolvers = dict()
+        self.obos = dict()
+        self.stcFileIO = self.project.get_file_io(stc_uid, EnumItemRole.DEV_FEATURE_STATE)
+        if self.stcFileIO is not None:
+            self.stcFileIO.read()
+            self._parse_states()
+            self._parse_transitions()
+        self.evtFileIO = self.project.get_file_io(evt_uid, EnumItemRole.DEV_FEATURE_EVENT)
+        if self.evtFileIO is not None:
+            self.evtFileIO.read()
+            self._parse_events()
+        if rsv_uid is not None:
+            self.rsvFileIO = self.project.get_file_io(rsv_uid, EnumItemRole.USER_FEATURE_RESOLVER)
         else:
-            return None
+            self.rsvFileIO = None
+        if self.rsvFileIO is not None:
+            self.rsvFileIO.read()
+            self._parse_resolvers()
+        if obo_uid is not None:
+            self.oboFileIO = self.project.get_file_io(obo_uid, EnumItemRole.DEV_FEATURE_OBO)
+        else:
+            self.oboFileIO = None
+        if self.oboFileIO is not None:
+            self.oboFileIO.read()
+            self._parse_obos()
+
+    def _parse_states(self):
+        if self.stcFileIO is not None:
+            _nodes = self.stcFileIO.body.nodes
+            if _nodes is not None:
+                for x in _nodes:
+                    _obj = _PARAOBJ(**x)
+                    self.states.update({_obj.uuid: _obj})
+
+    def _parse_transitions(self):
+        if self.stcFileIO is not None:
+            _wires = self.stcFileIO.body.wires
+            if _wires is not None:
+                for x in _wires:
+                    _obj = _PARAOBJ(**x)
+                    self.transitions.update({_obj.uuid: _obj})
+
+    def _parse_events(self):
+        if self.evtFileIO is not None:
+            _events = self.evtFileIO.body.events
+            if _events is not None:
+                for k, v in _events.items():
+                    self.events.update({v.uuid: v})
+
+    def _parse_resolvers(self):
+        if self.rsvFileIO is not None:
+            _rsv = self.rsvFileIO.body.rsv
+            if _rsv is not None:
+                pass
+            # for k,v in _rsv.items():
+            #     _obj = _PARAOBJ(**v)
+            #     self.resolvers.update({_obj.uuid: _obj})
+
+    def _parse_obos(self):
+        if self.oboFileIO is not None:
+            _obos = self.oboFileIO.body.obos
+            if _obos is not None:
+                for k, v in _obos.items():
+                    self.obos.update({v.uuid: v})

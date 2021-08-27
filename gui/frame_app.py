@@ -23,6 +23,7 @@ import traceback
 
 import wx
 import wx.lib.agw.aui as aui
+from wx.lib.agw import pybusyinfo as PBI
 from pubsub import pub
 from application.log_logger import get_logger
 from application.define import EnumAppSignals, EnumPanelRole, EnumItemRole
@@ -47,6 +48,7 @@ from .dialog_user_featrue import PromptUserFeatureNameDialog, PromptUserFeatureA
 from .dialog_tc import TCDialog
 from application.utils_helper import *
 from application.class_yaml_tag import *
+from application.class_feature import Feature
 
 
 # fixme: default project close occure a error. No such file or directory: 'C:\\Users\\LiuZhang\\PycharmProjects\\pxcmbt\\projects\\default\\ui.pepc'
@@ -193,17 +195,18 @@ class FrameMain(wx.Frame):
         _pane_proj_new_id = wx.NewIdRef()
         _pane_proj_save_id = wx.NewIdRef()
         _pane_proj_open_id = wx.NewIdRef()
-        _pane_diag_tc_id = wx.NewIdRef()
+        self._pane_diag_tc_id = wx.NewIdRef()
         _tb.AddSimpleTool(_pane_proj_new_id, 'NewProject', _new_bmp, 'NewProject')
         _tb.AddSimpleTool(_pane_proj_save_id, 'Save', _save_bmp, 'Save')
         _tb.AddSimpleTool(_pane_proj_open_id, 'Open', _open_bmp, 'Open')
         _tb.AddSeparator()
-        _tb.AddSimpleTool(_pane_diag_tc_id, 'TC', _img_lst.GetBitmap(self._iconRepo.folderIcon), 'TC')
+        _tb.AddSimpleTool(self._pane_diag_tc_id, 'TC', _img_lst.GetBitmap(self._iconRepo.folderIcon), 'TC')
+        _tb.EnableTool(self._pane_diag_tc_id, False)
         _tb.Realize()
         self.Bind(wx.EVT_TOOL, self.on_tb_pane_save, _pane_proj_save_id)
         self.Bind(wx.EVT_TOOL, self.on_menu_new_project_clicked, _pane_proj_new_id)
         self.Bind(wx.EVT_TOOL, self.on_menu_open_clicked, _pane_proj_open_id)
-        self.Bind(wx.EVT_TOOL, self.on_menu_open_tc_diag, _pane_diag_tc_id)
+        self.Bind(wx.EVT_TOOL, self.on_menu_open_tc_diag, self._pane_diag_tc_id)
         self._toolbar = _tb
         self._auiMgr.AddPane(_tb, aui.AuiPaneInfo().Name("CanvasTool").Caption("General Tools").
                              ToolbarPane().Top().Layer(1).Position(0).BestSize((-1, 24)))
@@ -455,18 +458,27 @@ class FrameMain(wx.Frame):
         self._save_project()
 
     def on_menu_open_tc_diag(self, evt):
-        # todo: first generate the TCS
-        # check all resolver generated??
         if self._currentProject.name != self.DUMMY_PROJECT_NAME:
+            _busy = PBI.PyBusyInfo('Processing...', parent=None, title="ProcessInfo")
+            wx.Yield()
+            _root_feature = Feature('Root',
+                                    self._currentProject,
+                                    self._panelProjectMgr.contentPanel.get_root_state_uuid(),
+                                    self._panelProjectMgr.contentPanel.get_root_event_uuid(),
+                                    )
+            _user_features = self._get_all_user_feature()
+            del _busy
             _dlg = TCDialog([], self)
             _ret = _dlg.ShowModal()
         else:
             wx.MessageBox('properly you need to open a project firstly', 'Info', wx.OK_DEFAULT)
 
-    def _get_all_user_feature_resolvers(self):
-        _rsv_uids = self._panelProjectMgr.contentPanel.get_all_resolver_uids()
-        for name, uid in _rsv_uids:
-            pass
+    def _get_all_user_feature(self):
+        _res = list()
+        _rsv_uids = self._panelProjectMgr.contentPanel.get_all_user_features()
+        for name, stc_uid, evt_uid, rsv_uid in _rsv_uids:
+            _res.append(Feature(name, self._currentProject, stc_uid, evt_uid, rsv_uid))
+        return _res
 
     def on_tb_pane_save(self, evt):
         self._save_project()
@@ -504,6 +516,10 @@ class FrameMain(wx.Frame):
 
     def on_menu_save_clicked(self, evt):
         self._save_project()
+
+    def _enable_tb_tc(self, state=True):
+        self._toolbar.EnableTool(self._pane_diag_tc_id, state)
+        self._toolbar.Refresh()
 
     def _save_project(self):
         self.GetStatusBar().SetStatusText("Project Saving...")
@@ -559,6 +575,7 @@ class FrameMain(wx.Frame):
             _ui_pesp = self._currentProject.load_ui_perspective()
             if _ui_pesp is not None:
                 self._auiMgr.LoadPerspective(self._currentProject.load_ui_perspective())
+            self._enable_tb_tc()
 
     def remove_cached_pane(self):
         for k, v in self._panelCache.items():
@@ -584,6 +601,7 @@ class FrameMain(wx.Frame):
             self._currentProject.create_new_stc_file(_root_stc_uuid)
             self._currentProject.create_new_evt_file(_root_evt_uuid)
             self.remove_cached_pane()
+            self._enable_tb_tc()
 
     def _create_new_project(self):
         self._currentProject = None

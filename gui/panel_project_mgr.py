@@ -411,6 +411,18 @@ class GuiProjectManagerPanel(wx.Panel):
                 _res.append((self.tree.GetItemText(_parent_item), _data.uuid))
         return _res
 
+    def get_all_user_features(self):
+        _res = list()
+        for k, v in self._itemMap.items():
+            _data = self.tree.GetItemData(v)
+            if _data.role == EnumItemRole.USER_FEATURE_ITEM:
+                _a, _b, _c = self.get_user_feature_children(v)
+                _stc_uid = self.tree.GetItemData(_a).uuid
+                _evt_uid = self.tree.GetItemData(_b).uuid
+                _rsv_uid = self.tree.GetItemData(_c).uuid
+                _res.append((self.get_text_by_uuid(_data.uuid), _stc_uid, _evt_uid, _rsv_uid))
+        return _res
+
     def on_cm_config_observable_object(self, evt):
         _item = self.tree.GetSelection()
         if _item is not None:
