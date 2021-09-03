@@ -21,6 +21,8 @@
 # ------------------------------------------------------------------------------
 import threading
 from xmlrpc.server import SimpleXMLRPCServer
+from pubsub import pub
+from .define import EnumAppSignals
 
 
 class MBTOnlineTestServer:
@@ -33,8 +35,9 @@ class MBTOnlineTestServer:
         self.rpcServer = None
 
     def _run(self):
-        print("MBTTestServer Listening on port 8180...")
-        self.rpcServer = SimpleXMLRPCServer(("localhost", 8180))
+        pub.sendMessage(EnumAppSignals.sigV2VTCConsoleAddInfoContent.value,
+                        content="MBTXmlRpcTestServer Listening on %s:%s..." % (self.address, self.port))
+        self.rpcServer = SimpleXMLRPCServer(("localhost", 8180),allow_none=True,use_builtin_types=True)
         self.rpcServer.register_instance(self.runner, True)
         self.rpcServer.serve_forever()
 
@@ -48,3 +51,6 @@ class MBTOnlineTestServer:
             if self.rpcServer is not None:
                 self.rpcServer.shutdown()
             self.isRunning = False
+            self.rpcServerThread = threading.Thread(target=self._run)
+            pub.sendMessage(EnumAppSignals.sigV2VTCConsoleAddInfoContent.value,
+                            content="MBTXmlRpcTestServer stopped")

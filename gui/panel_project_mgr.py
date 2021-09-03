@@ -420,7 +420,7 @@ class GuiProjectManagerPanel(wx.Panel):
                 _stc_uid = self.tree.GetItemData(_a).uuid
                 _evt_uid = self.tree.GetItemData(_b).uuid
                 _rsv_uid = self.tree.GetItemData(_c).uuid
-                _res.append((self.get_text_by_uuid(_data.uuid), _stc_uid, _evt_uid, _rsv_uid))
+                _res.append((self.get_text_by_uuid(_data.uuid),_data.uuid, _stc_uid, _evt_uid, _rsv_uid))
         return _res
 
     def on_cm_config_observable_object(self, evt):

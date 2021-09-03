@@ -41,13 +41,12 @@ class TestPanel(wx.Panel):
 
 
 class TCViewerPanel(wx.Panel):
-    def __init__(self, parent, tcs):
+    def __init__(self, parent, tcs_runner):
         wx.Panel.__init__(self, parent, wx.ID_ANY)
-        assert isinstance(tcs, list)
         self.uuid = None
         self.role = 'EnumPaneRole.PANE_TCV'
         self._iconRepo = UtilIconRepo()
-        self._tcs = tcs
+        self._tcsRunner = tcs_runner
         self._currentTcsIdx = 0
         #self._testPanel = TestPanel(self)
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -70,9 +69,9 @@ class TCViewerPanel(wx.Panel):
         self.dvlc.AppendTextColumn('CaseContext', 0, width=640)
         self.dvlc.AppendBitmapColumn('Status', 1, width=18)
         self.dvlcMainWin = self.dvlc.FindWindow('wxdataviewctrlmainwindow')
-        for tcs in self._tcs:
+        for step in self._tcsRunner.cases:
             _icon = self._get_status_icon(EnumTCStatus.INITED)
-            self.dvlc.AppendItem((tcs, _icon), EnumTCStatus.INITED)
+            self.dvlc.AppendItem((str(step), _icon), EnumTCStatus.INITED)
         if self.dvlc.GetItemCount() > 0:
             self.dvlc.SelectRow(0)
         # bind event
@@ -93,11 +92,6 @@ class TCViewerPanel(wx.Panel):
         self.SetSizer(self.mainSizer)
         self.Layout()
         self.Fit()
-
-    def _on_mouse_motion(self, evt):
-        _hit_item, _hit_column = self.dvlc.HitTest(evt.GetPosition())
-        print('Hit On:', self.dvlc.ItemToRow(_hit_item), _hit_column)
-        evt.Skip()
 
     def _get_status_icon(self, status):
         _img_lst = self._iconRepo.get_image_list()

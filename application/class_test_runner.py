@@ -20,15 +20,17 @@
 #
 # ------------------------------------------------------------------------------
 from collections import OrderedDict
+from pubsub import pub
+from application.define import EnumTCStatus, EnumAppSignals
 
 
 class MBTRunner:
     def __init__(self, features=None):
         self.features = OrderedDict()
+        self.cases = list()
         if features is not None and isinstance(features, list):
             [self.features.update({x.uuid: x}) for x in features]
             self.build()
-        self.suites = list()
         self.cursor = 0
 
     def add_feature(self, feature):
@@ -39,42 +41,20 @@ class MBTRunner:
             self.features.pop(uuid)
 
     def build(self):
-        self.suites.clear()
+        self.cases.clear()
         for uid, feature in self.features.items():
-            [self.suites.append(x) for x in feature]
+            [self.cases.append(x) for x in feature]
 
     def next(self):
-        _params = {'cursor': self.cursor,
-                   'total': len(self.suites),
-                   }
-        _progress_info = urllib.parse.urlencode(_params, doseq=True)
-        if self.cursor >= len(self.suites):
-            _state_info = 'state=END'
-            _res = '%s&%s' % (_state_info, _progress_info)
-        else:
-            _state_info = 'state=OK'
-            _res = self.suites[self.cursor]
-            self.cursor += 1
-            _res = '%s&%s&%s' % (_state_info, _res, _progress_info)
-        return _res
+        if self.cursor + 1 == len(self.cases):
+            return '__END__'
+        _case = self.cases[self.cursor]
+        pub.sendMessage(EnumAppSignals.sigV2VCurrentTCChanged.value, index=self.cursor)
+        self.cursor += 1
+        return _case
 
-    def get_percent(self):
-        if self.suites:
-            return self.cursor / len(self.suites)
-        else:
-            return .0
+    def set_state(self, state):
+        pub.sendMessage(EnumAppSignals.sigV2VCurrentTCStatusChanged.value, status=state)
 
-    def abort(self):
-        return True
-
-    def restart(self):
-        self.build()
+    def reset(self):
         self.cursor = 0
-        return True
-
-    def restart_from(self, cursor):
-        if cursor < len(self.suites):
-            self.cursor = cursor
-            return True
-        else:
-            return False

@@ -29,11 +29,11 @@ class MBTEvent:
         if kwargs.get('description'): self.description = kwargs.get('description')
         self.readonly = kwargs.get('readonly', False)
         self.visible = kwargs.get('visible', True)
-        self.data = OrderedDict()
+        self.data = dict()
         _data = kwargs.get('data')
         if _data is None:
             return
-        if isinstance(_data, OrderedDict):
+        if isinstance(_data, dict) or isinstance(_data, OrderedDict):
             self.data = _data
         elif isinstance(_data, list):
             for x in _data:

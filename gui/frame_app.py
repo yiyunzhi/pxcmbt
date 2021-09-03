@@ -49,6 +49,7 @@ from .dialog_tc import TCDialog
 from application.utils_helper import *
 from application.class_yaml_tag import *
 from application.class_feature import Feature
+from application.class_test_runner import MBTRunner
 
 
 # fixme: default project close occure a error. No such file or directory: 'C:\\Users\\LiuZhang\\PycharmProjects\\pxcmbt\\projects\\default\\ui.pepc'
@@ -462,22 +463,26 @@ class FrameMain(wx.Frame):
             _busy = PBI.PyBusyInfo('Processing...', parent=None, title="ProcessInfo")
             wx.Yield()
             _root_feature = Feature('Root',
+                                    util_get_uuid_string(),
                                     self._currentProject,
+                                    None,
                                     self._panelProjectMgr.contentPanel.get_root_state_uuid(),
                                     self._panelProjectMgr.contentPanel.get_root_event_uuid(),
                                     )
-            _user_features = self._get_all_user_feature()
+            _user_features = self._get_all_user_feature(_root_feature)
+            _mbt_runner=MBTRunner(_user_features)
             del _busy
-            _dlg = TCDialog([], self)
+            _dlg = TCDialog(_mbt_runner, self)
             _ret = _dlg.ShowModal()
+            _dlg.Destroy()
         else:
             wx.MessageBox('properly you need to open a project firstly', 'Info', wx.OK_DEFAULT)
 
-    def _get_all_user_feature(self):
+    def _get_all_user_feature(self,root_feature):
         _res = list()
         _rsv_uids = self._panelProjectMgr.contentPanel.get_all_user_features()
-        for name, stc_uid, evt_uid, rsv_uid in _rsv_uids:
-            _res.append(Feature(name, self._currentProject, stc_uid, evt_uid, rsv_uid))
+        for name,uuid, stc_uid, evt_uid, rsv_uid in _rsv_uids:
+            _res.append(Feature(name, uuid,self._currentProject,root_feature, stc_uid, evt_uid, rsv_uid))
         return _res
 
     def on_tb_pane_save(self, evt):

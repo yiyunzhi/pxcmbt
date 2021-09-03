@@ -36,6 +36,6 @@ class TCControllerPanel(wx.Panel):
         _state = evt.GetEventObject().GetValue()
         if _state:
             self.runStopBtn.SetLabelText('STOP')
-            pub.sendMessage(EnumAppSignals.sigV2VTCCtrlStateChanged.value, state=_state)
         else:
             self.runStopBtn.SetLabelText('RUN')
+        pub.sendMessage(EnumAppSignals.sigV2VTCCtrlStateChanged.value, state=_state)
